@@ -70,7 +70,7 @@ jobs:
           service_account: ${{ secrets.GCP_SA }}
       
       - name: run terragrunt
-        uses: autero1/action-terragrunt@v1.1.0
+        uses: autero1/action-terragrunt@v1.2.0
         with:
           terragrunt_version: ${{ inputs.tg_version }}
 
