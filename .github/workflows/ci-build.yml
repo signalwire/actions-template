@@ -118,11 +118,11 @@ jobs:
         FILE: ${{ inputs.FILE }}
         CONTEXT: ${{ inputs.CONTEXT }}
         PLATFORMS: ${{ inputs.PLATFORMS }}
+        TAG: ${{ inputs.TAG }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
         DOCKERHUB_USERNAME: ${{secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{secrets.DOCKERHUB_TOKEN }}
-        TAG: ${{ inputs.TAG }}
         BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
     
     - uses: ./actions/.github/actions/trivy
