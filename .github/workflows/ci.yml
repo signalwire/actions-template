@@ -72,6 +72,10 @@ on:
         required: false
         type: string
         default: "6.0.403"
+      SUBMODULES_PRIVATE: 
+        required: false
+        type: boolean
+        default: true
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -119,6 +123,7 @@ jobs:
     with:
       PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
       SUBMODULES_RECURSIVE: ${{ inputs.SUBMODULES_RECURSIVE }}
+      SUBMODULES_PRIVATE: ${{ inputs.SUBMODULES_PRIVATE }}
       ENABLE_GPG: ${{ inputs.ENABLE_GPG }}
       GPG_FILE: ${{ inputs.GPG_FILE }}
       PUSH: ${{ inputs.PUSH }}
