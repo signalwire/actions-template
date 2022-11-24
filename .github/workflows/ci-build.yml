@@ -129,7 +129,7 @@ jobs:
       name: Trivy Scan
       if: github.event_name == 'pull_request'
       with:
-        IMAGE: ${{ steps.build.outputs.imagetag }}
+        IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
         TRIVY_IGNORES: ./actions/.github/actions/trivy/.trivyignore
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
