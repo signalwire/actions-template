@@ -45,7 +45,8 @@ runs:
         certificate-ttl: 1h
 
         kubernetes-cluster: ${{ inputs.K8S_CLUSTER_NAME }}
-
+    - name: Install Kubectl
+      uses: azure/setup-kubectl@v3
     - name: test kubectl
       run: kubectl get all
       shell: bash
