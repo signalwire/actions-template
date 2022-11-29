@@ -48,7 +48,7 @@ on:
         type: string
     secrets:
       TELEPORT_CA_PIN:
-        required: true
+        required: false
       TELEPORT_TOKEN:
         required: true
       GH_APPROVAL_APP_ID:
