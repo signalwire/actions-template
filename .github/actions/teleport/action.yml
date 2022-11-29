@@ -46,6 +46,9 @@ runs:
 
         kubernetes-cluster: ${{ inputs.K8S_CLUSTER_NAME }}
 
+    - name: test kubectl
+      run: kubectl get all
+      shell: bash
     # - name: Connect to Kubernetes
     #   run: >
     #     tsh -i ./opt/machine-id/identity
