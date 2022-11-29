@@ -1,0 +1,81 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Kubernetes Deploy
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      RUNNER:
+        required: false
+        default: self-hosted
+        type: string
+      APPROVERS:
+        required: false
+        type: string
+      TELEPORT_PROXY_URL:
+        required: true
+        type: string
+      IMAGE_TAG:
+        required: false
+        type: string
+      TELEPORT_JOIN_METHOD:
+        required: false
+        default: github
+        type: string
+      K8S_CLUSTER_NAME:
+        required: true
+        type: string
+    secrets:
+      TELEPORT_CA_PIN:
+        required: true
+      TELEPORT_TOKEN:
+        required: true
+      GH_APPROVAL_APP_ID:
+        required: false
+      GH_APPROVAL_APP_PKEY:
+        required: false
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  deploy:
+    # The type of runner that the job will run on
+    runs-on: ${{ inputs.RUNNER }}
+    name: Build
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - uses: ./actions/.github/actions/approval
+      name: Request approval
+      if: ${{ inputs.APPROVERS != null }}
+      env:
+        GH_APPROVAL_APP_ID: ${{ secrets.GH_APPROVAL_APP_ID }}
+        GH_APPROVAL_APP_PKEY: ${{ secrets.GH_APPROVAL_APP_PKEY }}
+      with:
+        APPROVERS: ${{ inputs.APPROVERS }}
+    
+    - uses: ./actions/.github/actions/teleport
+      name: Connect to a Kubernetes Cluster using Teleport
+      env:
+        TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+        CA_PIN: ${{ secrets.TELEPORT_CA_PIN }}
+      with:
+        PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+        JOIN_METHOD: ${{ inputs.TELEPORT_JOIN_METHOD }}
+        K8S_CLUSTER_NAME: ${{ inputs.K8S_CLUSTER_NAME }}
+
+
+    # - uses: ./actions/.github/actions/helm-local
+    #   name: Deploy to a Swarm Cluster
+    #   env:
+    #     PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
+    #     ENDPOINT_ID: ${{ secrets.ENDPOINT_ID }}
+    #   with:
+    #     STACK_NAME: ${{ inputs.STACK_NAME }}
+    #     IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+
+

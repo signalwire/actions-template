@@ -1,5 +1,5 @@
-name: Kubectl statics deploy
-
+name: Helm local deploy
+description: Deploy a local Helm Chart to a Kubernetes Cluster
 
 inputs:
   APP_NAME:
@@ -27,4 +27,4 @@ runs:
       uses: WyriHaximus/github-action-helm3@v2
       with:
         exec: helm upgrade '${{ inputs.APP_NAME }}' ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.CHART_PATH }}/${{ inputs.VALUES_FILE }}.yaml
-        kubeconfig: '${{ inputs.KUBECONFIG }}'
+        kubeconfig: ${{ inputs.KUBECONFIG }}

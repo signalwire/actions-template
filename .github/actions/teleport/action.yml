@@ -1,0 +1,41 @@
+name: Build and pushing docker
+description: Buld and push image to SignalWire registry
+
+inputs:
+  TELEPORT_VERSION:
+    required: false
+    default: 11.1.0
+  PROXY_URL:
+    required: true
+  JOIN_METHOD:
+    required: false
+    default: github
+  K8S_CLUSTER_NAME:
+    required: true
+  
+runs:
+  using: "composite"
+  steps:
+    - name: Fetch Teleport binaries
+      uses: gravitational/teleport-actions/setup@main
+      with:
+        version: ${{ inputs.TELEPORT_VERSION }}
+
+    - name: Fetch credentials
+      run: >
+        tbot start
+        --join-method=${{ inputs.JOIN_METHOD }}
+        --token=${{ env.TOKEN }}
+        --ca-pin=${{ env.CA_PIN }}
+        --auth-server=${{ inputs.PROXY_URL }}
+        --oneshot
+        --destination-dir=./opt/machine-id
+        --data-dir=./opt/machine-id-data
+      shell: bash
+
+    - name: Connect to Kubernetes
+      run: >
+        tsh -i ./opt/machine-id/identity
+        --proxy=${{ inputs.PROXY_URL }} 
+        kube login ${{ inputs.K8S_CLUSTER_NAME }}
+      shell: bash
