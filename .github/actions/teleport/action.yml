@@ -25,7 +25,7 @@ runs:
       # env:
       #   TOKEN: ${{ env.TOKEN }}
       #   TELEPORT_CA_PIN: ${{ env.TELEPORT_CA_PIN }}
-      run: |
+      run: >
         tbot start
         --auth-server=${{ inputs.PROXY_URL }}
         --join-method=${{ inputs.JOIN_METHOD }}
