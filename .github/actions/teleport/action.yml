@@ -25,7 +25,7 @@ runs:
       env:
         TOKEN: ${{ env.TOKEN }}
         CA_PIN: ${{ env.CA_PIN }}
-      run: >
+      run: |
         tbot start
         --join-method=${{ inputs.JOIN_METHOD }}
         --token="${{ env.TOKEN }}"
