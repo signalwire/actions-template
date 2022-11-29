@@ -4,16 +4,11 @@ description: Deploy a local Helm Chart to a Kubernetes Cluster
 inputs:
   APP_NAME:
     required: true
-    type: string
   CHART_PATH:
     required: true
-    type: string
   NAMESPACE:
     required: true
-    type: string
   VALUES_FILE:  
-    required: true
-  KUBECONFIG:
     required: true
         
 runs:
@@ -22,9 +17,8 @@ runs:
     - name: Install Helm
       uses: azure/setup-helm@v1
       with:
-        version: v3.8.1
-    - name: Deploy
-      uses: WyriHaximus/github-action-helm3@v2
-      with:
-        exec: helm upgrade '${{ inputs.APP_NAME }}' ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.CHART_PATH }}/${{ inputs.VALUES_FILE }}.yaml
-        kubeconfig: ${{ inputs.KUBECONFIG }}
+        version: 3.9.0
+    
+    - name: Helm upgrade --install
+      run: helm upgrade ${{ inputs.APP_NAME }} ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.CHART_PATH }}/${{ inputs.VALUES_FILE }}.yaml
+      shell: bash
