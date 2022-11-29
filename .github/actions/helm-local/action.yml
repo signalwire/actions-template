@@ -20,5 +20,5 @@ runs:
         version: 3.9.0
     
     - name: Helm upgrade --install
-      run: helm upgrade ${{ inputs.APP_NAME }} ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.CHART_PATH }}/${{ inputs.VALUES_FILE }}.yaml
+      run: helm upgrade ${{ inputs.APP_NAME }} ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.VALUES_FILE }}
       shell: bash
