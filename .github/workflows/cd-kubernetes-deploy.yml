@@ -9,7 +9,6 @@ on:
     inputs:
       ENVIRONMENT:
         required: false
-        default: staging
         type: string
       RUNNER:
         required: false
