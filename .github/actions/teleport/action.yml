@@ -25,8 +25,8 @@ runs:
       run: >
         tbot start
         --join-method=${{ inputs.JOIN_METHOD }}
-        --token=${{ env.TOKEN }}
-        --ca-pin=${{ env.CA_PIN }}
+        --token="${{ env.TOKEN }}"
+        --ca-pin="${{ env.CA_PIN }}"
         --auth-server=${{ inputs.PROXY_URL }}
         --oneshot
         --destination-dir=./opt/machine-id
