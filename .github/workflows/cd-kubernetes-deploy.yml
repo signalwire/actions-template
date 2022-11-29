@@ -49,6 +49,14 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: feat/teleport
+        path: actions
+        
+
     - uses: ./actions/.github/actions/approval
       name: Request approval
       if: ${{ inputs.APPROVERS != null }}
