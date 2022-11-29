@@ -27,10 +27,10 @@ runs:
       #   TELEPORT_CA_PIN: ${{ env.TELEPORT_CA_PIN }}
       run: |
         tbot start
+        --auth-server=${{ inputs.PROXY_URL }}
         --join-method=${{ inputs.JOIN_METHOD }}
         --token=${{ env.TOKEN }}
         --ca-pin=${{ env.CA_PIN }}
-        --auth-server=${{ inputs.PROXY_URL }}
         --oneshot
         --destination-dir=./opt/machine-id
         --data-dir=./opt/machine-id-data
