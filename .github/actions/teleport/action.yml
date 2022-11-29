@@ -1,0 +1,48 @@
+name: Build and pushing docker
+description: Buld and push image to SignalWire registry
+
+inputs:
+  TELEPORT_VERSION:
+    required: false
+    default: 11.1.0
+  PROXY_URL:
+    required: true
+  JOIN_METHOD:
+    required: false
+    default: github
+  K8S_CLUSTER_NAME:
+    required: true
+  
+runs:
+  using: "composite"
+  steps:
+    - name: Fetch Teleport binaries
+      uses: gravitational/teleport-actions/setup@main
+      with:
+        version: ${{ inputs.TELEPORT_VERSION }}
+
+    # - name: Fetch credentials
+    #   run: >
+    #     tbot start
+    #     --auth-server=${{ inputs.PROXY_URL }}
+    #     --join-method=${{ inputs.JOIN_METHOD }}
+    #     --token=${{ env.TOKEN }}
+    #     --ca-pin=${{ env.CA_PIN }}
+    #     --oneshot
+    #     --destination-dir=./opt/machine-id
+    #     --data-dir=./opt/machine-id-data
+    #   shell: bash
+    - name: Authorize against Teleport
+      id: auth
+      uses: gravitational/teleport-actions/auth-k8s@v1
+      with:
+        # Specify the publically accessible address of your Teleport proxy.
+        proxy: ${{ inputs.PROXY_URL }}
+        # Specify the name of the join token for your bot.
+        token: ${{ env.TOKEN }}
+        # Specify the length of time that the generated credentials should be
+        # valid for. This is optional and defaults to "1h"
+        certificate-ttl: 1h
+
+        kubernetes-cluster: ${{ inputs.K8S_CLUSTER_NAME }}
+    
