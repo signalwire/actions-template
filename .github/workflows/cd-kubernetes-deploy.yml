@@ -40,6 +40,11 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   deploy:
+    permissions:
+      # The "id-token: write" permission is required or tbot will not be able to authenticate.
+      id-token: write
+      contents: read
+      
     # The type of runner that the job will run on
     runs-on: ${{ inputs.RUNNER }}
     name: Build
