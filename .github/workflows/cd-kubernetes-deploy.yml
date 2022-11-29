@@ -7,6 +7,10 @@ on:
 
   workflow_call:
     inputs:
+      ENVIRONMENT:
+        required: false
+        default: staging
+        type: string
       RUNNER:
         required: false
         default: self-hosted
@@ -64,6 +68,7 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ${{ inputs.RUNNER }}
     name: Build
+    environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
     - uses: actions/checkout@v3
