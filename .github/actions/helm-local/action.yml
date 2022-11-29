@@ -18,7 +18,11 @@ runs:
       uses: azure/setup-helm@v1
       with:
         version: 3.9.0
-    
+        
+    - name: Fetch dependencies
+      run: helm dep update ${{ inputs.CHART_PATH }}
+      shell: bash
+
     - name: Helm upgrade --install
       run: helm upgrade ${{ inputs.APP_NAME }} ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.VALUES_FILE }}
       shell: bash
