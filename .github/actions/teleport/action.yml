@@ -21,20 +21,28 @@ runs:
       with:
         version: ${{ inputs.TELEPORT_VERSION }}
 
-    - name: Fetch credentials
-      # env:
-      #   TOKEN: ${{ env.TOKEN }}
-      #   TELEPORT_CA_PIN: ${{ env.TELEPORT_CA_PIN }}
-      run: >
-        tbot start
-        --auth-server=${{ inputs.PROXY_URL }}
-        --join-method=${{ inputs.JOIN_METHOD }}
-        --token=${{ env.TOKEN }}
-        --ca-pin=${{ env.CA_PIN }}
-        --oneshot
-        --destination-dir=./opt/machine-id
-        --data-dir=./opt/machine-id-data
-      shell: bash
+    # - name: Fetch credentials
+    #   run: >
+    #     tbot start
+    #     --auth-server=${{ inputs.PROXY_URL }}
+    #     --join-method=${{ inputs.JOIN_METHOD }}
+    #     --token=${{ env.TOKEN }}
+    #     --ca-pin=${{ env.CA_PIN }}
+    #     --oneshot
+    #     --destination-dir=./opt/machine-id
+    #     --data-dir=./opt/machine-id-data
+    #   shell: bash
+    - name: Authorize against Teleport
+      id: auth
+      uses: gravitational/teleport-actions/auth@main
+      with:
+        # Specify the publically accessible address of your Teleport proxy.
+        proxy: ${{ inputs.PROXY_URL }}
+        # Specify the name of the join token for your bot.
+        token: ${{ env.TOKEN }}
+        # Specify the length of time that the generated credentials should be
+        # valid for. This is optional and defaults to "1h"
+        certificate-ttl: 1h
 
     - name: Connect to Kubernetes
       run: >

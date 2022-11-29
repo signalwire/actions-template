@@ -24,6 +24,9 @@ on:
         required: false
         default: github
         type: string
+      TELEPORT_VERSION:
+        required: false
+        type: string
       K8S_CLUSTER_NAME:
         required: true
         type: string
@@ -44,7 +47,7 @@ jobs:
       # The "id-token: write" permission is required or tbot will not be able to authenticate.
       id-token: write
       contents: read
-      
+
     # The type of runner that the job will run on
     runs-on: ${{ inputs.RUNNER }}
     name: Build
@@ -72,7 +75,7 @@ jobs:
         APPROVERS: ${{ inputs.APPROVERS }}
     
     - uses: ./actions/.github/actions/teleport
-      name: Connect to a Kubernetes Cluster using Teleport
+      name: Connecting to ${{ inputs.K8S_CLUSTER_NAME}} using Teleport
       env:
         TOKEN: ${{ secrets.TELEPORT_TOKEN }}
         CA_PIN: ${{ secrets.TELEPORT_CA_PIN }}
@@ -80,7 +83,7 @@ jobs:
         PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
         JOIN_METHOD: ${{ inputs.TELEPORT_JOIN_METHOD }}
         K8S_CLUSTER_NAME: ${{ inputs.K8S_CLUSTER_NAME }}
-
+        TELEPORT_VERSION: ${{ inputs.TELEPORT_VERSION }}
 
     # - uses: ./actions/.github/actions/helm-local
     #   name: Deploy to a Swarm Cluster
