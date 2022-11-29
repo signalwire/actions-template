@@ -22,13 +22,13 @@ runs:
         version: ${{ inputs.TELEPORT_VERSION }}
 
     - name: Fetch credentials
-      env:
-        TOKEN: ${{ env.TOKEN }}
-        TELEPORT_CA_PIN: ${{ env.TELEPORT_CA_PIN }}
+      # env:
+      #   TOKEN: ${{ env.TOKEN }}
+      #   TELEPORT_CA_PIN: ${{ env.TELEPORT_CA_PIN }}
       run: |
         tbot start
         --join-method=${{ inputs.JOIN_METHOD }}
-        --token=${{ env.TELEPORT_CA_PIN }}
+        --token=${{ env.TOKEN }}
         --ca-pin=${{ env.CA_PIN }}
         --auth-server=${{ inputs.PROXY_URL }}
         --oneshot

@@ -70,7 +70,7 @@ jobs:
       name: Connect to a Kubernetes Cluster using Teleport
       env:
         TOKEN: ${{ secrets.TELEPORT_TOKEN }}
-        TELEPORT_CA_PIN: ${{ secrets.TELEPORT_CA_PIN }}
+        CA_PIN: ${{ secrets.TELEPORT_CA_PIN }}
       with:
         PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
         JOIN_METHOD: ${{ inputs.TELEPORT_JOIN_METHOD }}
