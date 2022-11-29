@@ -24,12 +24,12 @@ runs:
     - name: Fetch credentials
       env:
         TOKEN: ${{ env.TOKEN }}
-        CA_PIN: ${{ env.CA_PIN }}
+        # TELEPORT_CA_PIN: ${{ env.CA_PIN }}
       run: |
         tbot start
         --join-method=${{ inputs.JOIN_METHOD }}
-        --token="${{ env.TOKEN }}"
-        --ca-pin="${{ env.CA_PIN }}"
+        --token=${{ env.TELEPORT_CA_PIN }}
+        --ca-pin=${{ env.CA_PIN }}
         --auth-server=${{ inputs.PROXY_URL }}
         --oneshot
         --destination-dir=./opt/machine-id
