@@ -34,7 +34,7 @@ runs:
     #   shell: bash
     - name: Authorize against Teleport
       id: auth
-      uses: gravitational/teleport-actions/auth@main
+      uses: gravitational/teleport-actions/auth-k8s@v1
       with:
         # Specify the publically accessible address of your Teleport proxy.
         proxy: ${{ inputs.PROXY_URL }}
