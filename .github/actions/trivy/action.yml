@@ -4,6 +4,8 @@ description: Trivy docker container vulnerability assessment
 inputs:
   IMAGE:
     required: true
+  TRIVY_IGNORES:
+    required: false
     
 runs:
   using: "composite"
@@ -14,3 +16,4 @@ runs:
       image: ${{ inputs.IMAGE }}
       severity: HIGH
       trivy_version: "0.22.0"
+      trivyignores: ${{ inputs.TRIVY_IGNORES}}

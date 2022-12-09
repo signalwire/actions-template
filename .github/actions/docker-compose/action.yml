@@ -1,5 +1,5 @@
 name: Run Docker compose file
-description: Buld and push image to SignalWire registry
+description: Only run docker containers based on compose files
 
 inputs:
   COMPOSE_FILE:
