@@ -1,0 +1,141 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Docker build/Push & deploy
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_call:
+    inputs:
+      PROJECT_NAME:
+        required: true
+        type: string
+      PR_MESSAGE:
+        required: false
+        type: boolean
+        default: false
+      SWARM_DEPLOY:
+        required: true
+        type: boolean
+        default: false
+      SWARM_SERVICE:
+        required: true
+        type: string
+        default: signalwire-docs_docs
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+      ENDPOINTID:
+        required: false
+      PORTAINER_API_KEY:
+        required: false
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "deploy"
+  buildpush:
+    # The type of runner that the job will run on
+    runs-on: [ ubuntu-latest]
+
+    outputs:
+      imagetag: ${{ steps.meta.outputs.tags }}
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    - name: Configure buildx
+      run: export DOCKER_CLI_EXPERIMENTAL=enabled
+
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        # list of Docker images to use as base name for tags
+        images: |
+          signalwire/${{ inputs.PROJECT_NAME }}
+        # generate Docker tags based on the following events/attributes
+        tags: |
+          type=schedule
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=sha
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and export to Docker
+      uses: docker/build-push-action@v3
+      with:
+        load: true
+        tags: ${{ steps.meta.outputs.tags }}
+
+    - name: Test
+      if: github.event_name == 'pull_request'
+      id: test
+      run: |
+        docker run -d --rm --name test ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+        sleep 20
+        docker logs test > logs.txt
+        EXECUTIONLOG=$(cat logs.txt)
+        EXECUTIONLOG="${EXECUTIONLOG//'%'/'%25'}"
+        EXECUTIONLOG="${EXECUTIONLOG//$'\n'/'%0A'}"
+        EXECUTIONLOG="${EXECUTIONLOG//$'\r'/'%0D'}"
+        echo "::set-output name=container-logs::$EXECUTIONLOG"
+    - name: Update Pull Request
+      uses: actions/github-script@v6
+      if: github.event_name == 'pull_request' && github.event.inputs.PR_MESSAGE == true
+      env:
+        LOGPRINT: "${{ steps.test.outputs.container-logs }}"
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `#### Container logs are listed bellow 📝\`
+          <details><summary>Show Logs</summary>
+          \`\`\`\n
+          ${process.env.LOGPRINT}
+          \`\`\`
+          </details>
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+    - name: Build and push
+      # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: docker/build-push-action@v3
+      with:
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        # cache-from: type=gha
+        # cache-to: type=gha,mode=max
+
+  swarmdeploy:
+    name: "Deploy to Swarm cluster"
+    needs: [ "buildpush" ]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to Swarm
+        run: |
+          # Retrieve service spec
+          curl -s -H "X-API-Key: ${{env.PORTAINER_API_KEY}}" https://deploy.signalwire.cloud/api/endpoints/${{secrets.ENDPOINTID}}/docker/services/${{inputs.SWARM_SERVICE}} > service.spec.json
+          # Pull service version from spec (required for update)
+          version=$(jq '.Version.Index' service.spec.json)
+          # Create request body for service update; Set image tag to tag of newly built image
+          jq '.Spec.TaskTemplate.ContainerSpec.Image="${{needs.buildpush.outputs.imagetag}}" | .Spec' service.spec.json > update.spec.json
+          # Update the service
+          curl -s -X POST -H "X-API-Key: ${{env.PORTAINER_API_KEY}}" https://deploy.signalwire.cloud/api/endpoints/${{secrets.ENDPOINTID}}/docker/services/${{inputs.SWARM_SERVICE}}/update?version=$version -d @update.spec.json
+        env:
+          PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
+          ENDPOINTID: ${{ secrets.ENDPOINTID }}
