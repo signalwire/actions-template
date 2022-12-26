@@ -17,7 +17,7 @@ runs:
   using: "composite"
   steps:
     - name: Fetch Teleport binaries
-      uses: gravitational/teleport-actions/setup@main
+      uses: gravitational/teleport-actions/setup@v1
       with:
         version: ${{ inputs.TELEPORT_VERSION }}
 
