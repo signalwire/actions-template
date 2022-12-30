@@ -4,20 +4,26 @@ description: Buld and push image to SignalWire registry
 inputs:
   PROJECT_NAME:
     required: true
+    description: 'Project naming matching registry repo'
   PUSH:
     required: false
     default: 'false'
+    description: 'Whenever you want to push an image to regsitry'
   FILE:
     required: false
     default: ./Dockerfile
+    description: 'Docker file location'
   CONTEXT:  
     required: false
     default: .
+    description: 'Build context'
   PLATFORMS:
     required: false
     default: linux/amd64
+    description: 'Target build platforms'
   TAG:
     required: false
+    description: 'Image tag'
     default: |
       type=schedule
       type=ref,event=pr
@@ -28,6 +34,11 @@ inputs:
   BUILD_ARGS:
     required: false
     default: ''
+    description: 'Extra build args'
+  REGISTRY:
+    required: false
+    default: 'registry.hub.docker.com'
+    description: 'Registry URL'
 outputs:
   IMAGE_TAG:
     description: "Export image tag"
@@ -52,9 +63,19 @@ runs:
         tags: |
           ${{ inputs.TAG }}
     
-    - name: Login to DockerHub
+    - name: Login to ${{ inputs.REGISTRY }}
       uses: docker/login-action@v2
+      if: ${{ inputs.REGISTRY == "gcr.io"}}
       with:
+        registry: ${{ inputs.REGISTRY }}
+        username: oauth2accesstoken
+        password: ${{ env.GCLOUD_ACCESS_TOKEN }}
+
+    - name: Login to ${{ inputs.REGISTRY }}
+      uses: docker/login-action@v2
+      if: ${{ inputs.REGISTRY != "gcr.io"}}
+      with:
+        registry: ${{ inputs.REGISTRY }}
         username: ${{ env.DOCKERHUB_USERNAME }}
         password: ${{ env.DOCKERHUB_TOKEN }}
 
