@@ -39,6 +39,10 @@ inputs:
     required: false
     default: 'registry.hub.docker.com'
     description: 'Registry URL'
+  IMAGE_REPO:
+    required: false
+    default: 'signalwire'
+    description: 'The default registry repo owner.'
 outputs:
   IMAGE_TAG:
     description: "Export image tag"
@@ -58,7 +62,7 @@ runs:
       with:
         # list of Docker images to use as base name for tags
         images: |
-          signalwire/${{ inputs.PROJECT_NAME }}
+          ${{ inputs.IMAGE_REPO }}/${{ inputs.PROJECT_NAME }}
         # generate Docker tags based on the following events/attributes
         tags: |
           ${{ inputs.TAG }}

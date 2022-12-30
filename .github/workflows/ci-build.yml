@@ -63,6 +63,11 @@ on:
         type: string
         default: id_token
         description: 'The default token format generated when authenticating.'
+      IMAGE_REPO:
+        type: string
+        required: false
+        default: 'signalwire'
+        description: 'The default registry repo owner.'
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -144,6 +149,7 @@ jobs:
         PLATFORMS: ${{ inputs.PLATFORMS }}
         TAG: ${{ inputs.TAG }}
         REGISTRY: ${{ inputs.REGISTRY }}
+        IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
         DOCKERHUB_USERNAME: ${{secrets.DOCKERHUB_USERNAME }}
