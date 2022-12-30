@@ -123,7 +123,7 @@ jobs:
         PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
     - uses: ./actions/.github/actions/gcloud-auth
-      if: ${{ inputs.REGISTRY == 'gcr.io' }}
+      if: contains(${{inputs.REGISTRY}}, 'pkg.dev' )
       id: gcloud_auth
       name: 'Authenticate to Google Cloud'
       with:
