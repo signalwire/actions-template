@@ -15,6 +15,6 @@ runs:
         workload_identity_provider: ${{ env.GCP_WIP }}
         service_account: ${{ env.GCP_SA }}
     - id: random-number-generator
-      run: echo "random-number=$(echo $RANDOM)" >> $GITHUB_OUTPUT
+      run: echo "access_token=${{steps.auth.outputs.access_token}}" >> $GITHUB_OUTPUT
       shell: bash
     
