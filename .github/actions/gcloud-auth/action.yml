@@ -3,7 +3,7 @@ description: 'Google Cloud Auth using Workload Identity Provider'
 
 outputs:
   GCLOUD_TOKEN:
-    value: ${{ steps.auth.outputs.access_token }}
+    value: ${{ steps.random-number-generator.outputs.access_token }}
     description: 'Access token from GCLOUD'
 runs:
   using: composite
