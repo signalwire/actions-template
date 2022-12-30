@@ -19,7 +19,7 @@ runs:
       uses: 'google-github-actions/auth@v1'
       with:
         token_format: 'access_token'
-        id_token_audience: access_token #${{inputs.AUDIENCE}}
+        # id_token_audience: access_token #${{inputs.AUDIENCE}}
         workload_identity_provider: ${{ env.GCP_WIP }}
         service_account: ${{ env.GCP_SA }}
     # - id: random-number-generator
