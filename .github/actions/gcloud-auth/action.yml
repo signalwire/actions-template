@@ -2,7 +2,7 @@ name: 'GCloud Auth'
 description: 'Google Cloud Auth using Workload Identity Provider'
 
 outputs:
-  GCLOUD_ACCESS_TOKEN:
+  GCLOUD_TOKEN:
     value: ${{ steps.auth.outputs.access_token }}
     description: 'Access token from GCLOUD'
 runs:
