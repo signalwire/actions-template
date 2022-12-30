@@ -65,7 +65,7 @@ runs:
     
     - name: Login to ${{ inputs.REGISTRY }}
       uses: docker/login-action@v2
-      if: contains(${{inputs.REGISTRY}}, pkg.dev )
+      if: ${{inputs.REGISTRY}} == 'us-east1-docker.pkg.dev'
       with:
         registry: ${{ inputs.REGISTRY }}
         username: 'oauth2accesstoken'
@@ -73,7 +73,7 @@ runs:
 
     - name: Login to ${{ inputs.REGISTRY }}
       uses: docker/login-action@v2
-      if: contains(${{inputs.REGISTRY}}, docker.com )
+      if: ${{inputs.REGISTRY}} == 'registry.hub.docker.com'
       with:
         registry: ${{ inputs.REGISTRY }}
         username: ${{ env.DOCKERHUB_USERNAME }}
