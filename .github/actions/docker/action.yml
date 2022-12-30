@@ -62,7 +62,7 @@ runs:
       with:
         # list of Docker images to use as base name for tags
         images: |
-          ${{ inputs.IMAGE_REPO }}/${{ inputs.PROJECT_NAME }}
+          ${{ inputs.REGISTRY }}/${{ inputs.IMAGE_REPO }}/${{ inputs.PROJECT_NAME }}
         # generate Docker tags based on the following events/attributes
         tags: |
           ${{ inputs.TAG }}
