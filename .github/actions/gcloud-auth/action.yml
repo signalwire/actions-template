@@ -3,12 +3,12 @@ description: 'Google Cloud Auth using Workload Identity Provider'
 
 outputs:
   GCLOUD_ACCESS_TOKEN:
-    value: ${{ steps.random-number-generator.outputs.random-number }}
+    value: ${{ steps.auth.outputs.access_token }}
     description: 'Access token from GCLOUD'
 runs:
   using: composite
   steps:
-    - id: 'auth'
+    - id: auth
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v1'
       with:
