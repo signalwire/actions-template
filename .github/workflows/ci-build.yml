@@ -120,7 +120,7 @@ jobs:
 
     - uses: ./actions/.github/actions/gcloud-auth
       if: ${{ inputs.REGISTRY == 'gcr.io' }}
-      id: auth
+      id: gcloud_auth
       name: 'Authenticate to Google Cloud'
       env:
         GCP_WIP: ${{ secrets.GCP_WIP }}
@@ -142,7 +142,7 @@ jobs:
         DOCKERHUB_USERNAME: ${{secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{secrets.DOCKERHUB_TOKEN }}
         BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
-        GCLOUD_ACCESS_TOKEN: ${{ steps.auth.outputs.GCLOUD_ACCESS_TOKEN }}    
+        GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.GCLOUD_ACCESS_TOKEN }}    
     
     - uses: ./actions/.github/actions/trivy
       name: Trivy Scan
