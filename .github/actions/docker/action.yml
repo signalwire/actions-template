@@ -73,7 +73,7 @@ runs:
 
     - name: Login to ${{ inputs.REGISTRY }}
       uses: docker/login-action@v2
-      if: contains(${{inputs.REGISTRY}}, 'docker' )
+      if: contains(${{inputs.REGISTRY}}, 'docker.com' )
       with:
         registry: ${{ inputs.REGISTRY }}
         username: ${{ env.DOCKERHUB_USERNAME }}
