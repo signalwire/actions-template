@@ -59,6 +59,9 @@ on:
       REGISTRY:
         type: string
         required: false
+      AUDIENCE:
+        default: ''
+        required: false
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -122,6 +125,8 @@ jobs:
       if: ${{ inputs.REGISTRY == 'gcr.io' }}
       id: gcloud_auth
       name: 'Authenticate to Google Cloud'
+      with:
+        AUDIENCE: ${{ inputs.AUDIENCE }}
       env:
         GCP_WIP: ${{ secrets.GCP_WIP }}
         GCP_SA: ${{ secrets.GCP_SA }}

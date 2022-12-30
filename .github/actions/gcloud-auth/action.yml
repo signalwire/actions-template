@@ -5,6 +5,12 @@ outputs:
   GCLOUD_TOKEN:
     value: ${{ steps.auth.outputs.access_token }}
     description: 'Access token from GCLOUD'
+
+inputs:
+  AUDIENCE:
+    default: ''
+    required: false
+    description: 'The audience for the token, such as the API or account that this token grants access to.'
 runs:
   using: composite
   steps:
@@ -13,6 +19,7 @@ runs:
       uses: 'google-github-actions/auth@v1'
       with:
         token_format: 'access_token'
+        id_audience: 'finance-swire'
         workload_identity_provider: ${{ env.GCP_WIP }}
         service_account: ${{ env.GCP_SA }}
     # - id: random-number-generator
