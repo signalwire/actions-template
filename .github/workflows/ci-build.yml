@@ -83,7 +83,6 @@ jobs:
     runs-on: ubuntu-latest 
     name: BUILD
     permissions:
-      # The "id-token: write" permission is required or tbot will not be able to authenticate.
       id-token: write
       contents: read
     outputs:
