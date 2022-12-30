@@ -142,7 +142,7 @@ jobs:
         DOCKERHUB_USERNAME: ${{secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{secrets.DOCKERHUB_TOKEN }}
         BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
-        GCLOUD_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}    
+        GCLOUD_ACCESS_TOKEN: ${{ steps.auth.outputs.GCLOUD_ACCESS_TOKEN }}    
     
     - uses: ./actions/.github/actions/trivy
       name: Trivy Scan
