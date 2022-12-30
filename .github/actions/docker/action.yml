@@ -68,12 +68,12 @@ runs:
       if: contains(${{inputs.REGISTRY}}, 'pkg.dev' )
       with:
         registry: ${{ inputs.REGISTRY }}
-        username: oauth2accesstoken
+        username: 'oauth2accesstoken'
         password: ${{ env.GCLOUD_ACCESS_TOKEN }}
 
     - name: Login to ${{ inputs.REGISTRY }}
       uses: docker/login-action@v2
-      if: ${{ inputs.REGISTRY != 'gcr.io'}}
+      if: contains(${{inputs.REGISTRY}}, 'docker' )
       with:
         registry: ${{ inputs.REGISTRY }}
         username: ${{ env.DOCKERHUB_USERNAME }}
