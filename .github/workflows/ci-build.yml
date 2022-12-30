@@ -62,6 +62,7 @@ on:
       AUDIENCE:
         default: ''
         required: false
+        type: string
     secrets:
       DOCKERHUB_USERNAME:
         required: true
