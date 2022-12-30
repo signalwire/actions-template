@@ -17,10 +17,7 @@ runs:
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v1'
       with:
-        token_format: 'access_token'
+        token_format: ${{ inputs.TOKEN_FORMAT }}
         workload_identity_provider: ${{ env.GCP_WIP }}
         service_account: ${{ env.GCP_SA }}
-    # - id: random-number-generator
-    #   run: echo "access_token=${{steps.auth.outputs.access_token}}" >> $GITHUB_OUTPUT
-    #   shell: bash
     

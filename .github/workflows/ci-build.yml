@@ -59,11 +59,15 @@ on:
       REGISTRY:
         type: string
         required: false
+      TOKEN_FORMAT:
+        type: string
+        default: id_token
+        description: 'The default token format generated when authenticating.'
     secrets:
       DOCKERHUB_USERNAME:
-        required: true
+        required: false
       DOCKERHUB_TOKEN:
-        required: true
+        required: false
       GITHUBTOKEN:
         required: true
       GPG_PASSPHRASE:
@@ -124,6 +128,7 @@ jobs:
       name: 'Authenticate to Google Cloud'
       with:
         AUDIENCE: ${{ inputs.AUDIENCE }}
+        TOKEN_FORMAT: ${{ inputs.TOKEN_FORMAT }}
       env:
         GCP_WIP: ${{ secrets.GCP_WIP }}
         GCP_SA: ${{ secrets.GCP_SA }}
