@@ -70,9 +70,9 @@ on:
         required: false
       GH_BOT_DEPLOY_KEY:
         required: false
-      GH_SA:
+      GCP_SA:
         required: false
-      GH_WIP:
+      GCP_WIP:
         required: false
 
 
