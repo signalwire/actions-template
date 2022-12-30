@@ -70,6 +70,10 @@ on:
         required: false
       GH_BOT_DEPLOY_KEY:
         required: false
+      GH_SA:
+        required: false
+      GH_WIP:
+        required: false
 
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
