@@ -56,6 +56,9 @@ on:
         required: false
         type: boolean
         default: true
+      REGISTRY:
+        type: string
+        required: false
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -127,6 +130,7 @@ jobs:
         CONTEXT: ${{ inputs.CONTEXT }}
         PLATFORMS: ${{ inputs.PLATFORMS }}
         TAG: ${{ inputs.TAG }}
+        REGISTRY: ${{ inputs.REGISTRY }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
         DOCKERHUB_USERNAME: ${{secrets.DOCKERHUB_USERNAME }}
