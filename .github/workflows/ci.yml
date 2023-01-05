@@ -139,3 +139,8 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
+  TEST:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ secrets.HI }}
+
