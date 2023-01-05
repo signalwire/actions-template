@@ -56,6 +56,10 @@ on:
         required: false
         type: boolean
         default: true
+      ENVIRONMENT:
+        required: true
+        type: string
+        default: ''
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -75,6 +79,7 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest 
     name: BUILD
+    environment: ${{inputs.ENVIRONMENT}}
 
     outputs:
       IMAGE_TAG: ${{ steps.build.outputs.IMAGE_TAG }}

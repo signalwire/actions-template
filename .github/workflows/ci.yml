@@ -76,6 +76,9 @@ on:
         required: false
         type: boolean
         default: true
+      ENVIRONMENT:
+        required: true
+        type: string
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -109,6 +112,7 @@ jobs:
       TEST_DEPENDENCIES: ${{ inputs.TEST_DEPENDENCIES }}
       DEPENDENCIES_FILE: ${{ inputs.DEPENDENCIES_FILE }}
       SUBMODULES_RECURSIVE: ${{ inputs.SUBMODULES_RECURSIVE }}
+      # ENVIRONMENT: ${{ inputs.ENVIRONMENT}}
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
@@ -130,6 +134,7 @@ jobs:
       FILE: ${{ inputs.FILE }}
       CONTEXT: ${{ inputs.CONTEXT }}
       PLATFORMS: ${{ inputs.PLATFORMS }}
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT}}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
