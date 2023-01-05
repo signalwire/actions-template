@@ -164,6 +164,7 @@ jobs:
         cache-to: type=gha,mode=max
         file: ${{ inputs.FILE }}
         context: ${{ inputs.CONTEXT }}
+        secrets: ${{inputs.MANUAL_ENV}}
         platforms: ${{ inputs.PLATFORMS }}
         build-args: ${{ inputs.BUILD_ARGS }}
 
