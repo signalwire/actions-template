@@ -190,6 +190,7 @@ jobs:
           ${{ steps.meta.outputs.tags }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        secrets: ${{inputs.MANUAL_ENV}}
         file: ${{ inputs.FILE }}
         context: ${{ inputs.CONTEXT }}
         platforms: ${{ inputs.PLATFORMS }}
