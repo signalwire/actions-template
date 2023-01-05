@@ -59,6 +59,9 @@ on:
       ENVIRONMENT:
         required: true
         type: string
+      MANUAL_ENV:
+        type: string
+        required: false
     secrets:
       DOCKERHUB_USERNAME:
         required: true
@@ -81,7 +84,7 @@ jobs:
     outputs:
       IMAGE_TAG: ${{ steps.build.outputs.IMAGE_TAG }}
     steps:
-    - run: echo ${{secrets.HI}}
+    - run: echo ${{inputs.MANUAL_STRING}}
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
