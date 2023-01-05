@@ -79,6 +79,9 @@ on:
       ENVIRONMENT:
         required: true
         type: string
+      TARGET: 
+        required: false
+        type: string
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -141,6 +144,8 @@ jobs:
 
   TEST:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.TARGET }}
     steps:
       - run: echo ${{ secrets.HI }}
+      - run: echo ${{ inputs.TARGET }}
 
