@@ -122,9 +122,6 @@ jobs:
   #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
   BUILD:
-    strategy:
-      matrix:
-        target: [ ci ]
     name: BUILD
     # needs: CHECK
     uses: signalwire/actions-template/.github/workflows/ci-build.yml@test_env
