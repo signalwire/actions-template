@@ -131,6 +131,7 @@ jobs:
         DOCKERHUB_TOKEN: ${{secrets.DOCKERHUB_TOKEN }}
         BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
     
+    - run: echo "::set-output name=image_tag::$${{ steps.build.outputs.IMAGE_TAG }}"
     # - uses: ./actions/.github/actions/trivy
     #   name: Trivy Scan
     #   if: github.event_name == 'pull_request'
