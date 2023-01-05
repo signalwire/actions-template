@@ -144,7 +144,7 @@ jobs:
 
   TEST:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.TARGET }}
+    # environment: ${{ inputs.TARGET }}
     steps:
       - run: echo ${{ secrets.HI }}
       - run: echo ${{ inputs.TARGET }}
