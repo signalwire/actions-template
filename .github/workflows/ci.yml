@@ -90,8 +90,6 @@ on:
         required: true
       DOCKERHUB_TOKEN:
         required: true
-      GITHUBTOKEN:
-        required: true
       GPG_PASSPHRASE:
         required: false
       GH_BOT_DEPLOY_KEY:
@@ -137,7 +135,7 @@ jobs:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
-      GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
+      GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
