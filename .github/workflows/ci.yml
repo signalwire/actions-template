@@ -123,7 +123,7 @@ jobs:
   BUILD:
     name: BUILD
     needs: CHECK
-    uses: signalwire/actions-template/.github/workflows/ci-build.yml@test_ci
+    uses: signalwire/actions-template/.github/workflows/ci-build.yml@test_env
     with:
       PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
       SUBMODULES_RECURSIVE: ${{ inputs.SUBMODULES_RECURSIVE }}
