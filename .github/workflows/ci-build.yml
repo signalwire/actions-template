@@ -84,8 +84,6 @@ jobs:
     outputs:
       IMAGE_TAG: ${{ steps.build.outputs.IMAGE_TAG }}
     steps:
-    - run: echo ${{inputs.MANUAL_ENV}} > .env      
-    - run: cat .env
 
     - uses: actions/checkout@v3
       with:
