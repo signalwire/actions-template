@@ -68,24 +68,23 @@ runs:
       with:
         # list of Docker images to use as base name for tags
         images: |
-          ${{ inputs.REGISTRY }}/${{ inputs.IMAGE_REPO }}/${{ inputs.PROJECT_NAME }}
+          signalwire/${{ inputs.PROJECT_NAME }}
         # generate Docker tags based on the following events/attributes
         tags: |
           ${{ inputs.TAG }}
     
-    - name: Login to ${{ inputs.REGISTRY }}
-      uses: docker/login-action@v2
-      if: contains(inputs.REGISTRY, 'pkg.dev' )
-      with:
-        registry: ${{ inputs.REGISTRY }}
-        username: 'oauth2accesstoken'
-        password: ${{ env.GCLOUD_ACCESS_TOKEN }}
+    # - name: Login to ${{ inputs.REGISTRY }}
+    #   uses: docker/login-action@v2
+    #   if: contains(inputs.REGISTRY, 'pkg.dev' )
+    #   with:
+    #     registry: ${{ inputs.REGISTRY }}
+    #     username: 'oauth2accesstoken'
+    #     password: ${{ env.GCLOUD_ACCESS_TOKEN }}
 
-    - name: Login to ${{ inputs.REGISTRY }}
+    - name: Login to DockerHub
       uses: docker/login-action@v2
-      if: contains(inputs.REGISTRY, 'docker.com' )
+      # if: contains(inputs.REGISTRY, 'docker.com' )
       with:
-        registry: ${{ inputs.REGISTRY }}
         username: ${{ env.DOCKERHUB_USERNAME }}
         password: ${{ env.DOCKERHUB_TOKEN }}
 
