@@ -73,8 +73,6 @@ on:
         required: false
       DOCKERHUB_TOKEN:
         required: false
-      GITHUBTOKEN:
-        required: true
       GPG_PASSPHRASE:
         required: false
       GH_BOT_DEPLOY_KEY:
