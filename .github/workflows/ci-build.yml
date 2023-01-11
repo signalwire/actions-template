@@ -73,7 +73,7 @@ on:
         required: false
       DOCKERHUB_TOKEN:
         required: false
-      GITHUBTOKEN:
+      GITHUB_TOKEN:
         required: true
       GPG_PASSPHRASE:
         required: false
