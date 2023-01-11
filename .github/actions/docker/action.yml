@@ -52,9 +52,9 @@ runs:
   using: "composite"
   steps:
   
-    # - name: Configure buildx
-    #   run: export DOCKER_CLI_EXPERIMENTAL=enabled && export DOCKER_TLS_CERTDIR="" && export DOCKER_HOST='docker'
-    #   shell: bash
+    - name: Configure buildx
+      run: export DOCKER_CLI_EXPERIMENTAL=enabled && export DOCKER_TLS_CERTDIR="" && export DOCKER_HOST='docker'
+      shell: bash
 
     - name: Configure buildx
       run: docker context create builders
