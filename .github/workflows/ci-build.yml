@@ -73,7 +73,7 @@ on:
         required: false
       DOCKERHUB_TOKEN:
         required: false
-      GITHUB_TOKEN:
+      GITHUBTOKEN:
         required: true
       GPG_PASSPHRASE:
         required: false
@@ -151,7 +151,7 @@ jobs:
         REGISTRY: ${{ inputs.REGISTRY }}
         IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUBTOKEN: ${{ secrets.GITHUBTOKEN }}
         DOCKERHUB_USERNAME: ${{secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{secrets.DOCKERHUB_TOKEN }}
         BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
