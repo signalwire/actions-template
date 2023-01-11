@@ -59,6 +59,7 @@ on:
       REGISTRY:
         type: string
         required: false
+        default: registry.hub.docker.com
       TOKEN_FORMAT:
         type: string
         default: id_token
