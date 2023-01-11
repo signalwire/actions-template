@@ -1,0 +1,63 @@
+name: 'Deploy to Google Cloud Run'
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: true
+        type: string
+      RUNNER:
+        required: false
+        type: string
+        default: self-hosted
+      APPROVERS:
+        required: false
+        type: string
+    secrets:
+      GCP_SA:
+        required: false
+      GCP_WIP:
+        required: false
+      GH_APPROVAL_APP_ID:
+        required: false
+      GH_APPROVAL_APP_PKEY:
+        required: false
+
+jobs:
+  cloudrun:
+    name: 'Cloud Run Deploy'
+    runs-on: ${{ inputs.RUNNER }}
+    environment:
+      name: ${{ inputs.ENVIRONMENT }}
+    
+    permissions: write-all
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Checkout actions
+        uses: actions/checkout@v3
+        with:
+          repository: signalwire/actions-template
+          ref: main
+          path: actions
+
+      - uses: ./actions/.github/actions/approval
+        name: Request approval
+        if: ${{ inputs.APPROVERS != null }}
+        env:
+          GH_APPROVAL_APP_ID: ${{ secrets.GH_APPROVAL_APP_ID }}
+          GH_APPROVAL_APP_PKEY: ${{ secrets.GH_APPROVAL_APP_PKEY }}
+        with:
+          APPROVERS: ${{ inputs.APPROVERS }}
+
+      - uses: ./actions/.github/actions/gcloud-auth
+        name: 'Authenticate to Google Cloud'
+        env:
+          GCP_WIP: ${{ secrets.GCP_WIP }}
+          GCP_SA: ${{ secrets.GCP_SA }}
+      
+      
