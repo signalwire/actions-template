@@ -52,9 +52,10 @@ runs:
   using: "composite"
   steps:
   
-    # - name: Configure buildx
-    #   run: export DOCKER_CLI_EXPERIMENTAL=enabled && export DOCKER_TLS_CERTDIR="" && export DOCKER_HOST='docker'
-    #   shell: bash
+    - name: Configure buildx
+      run: export DOCKER_CLI_EXPERIMENTAL=enabled && export DOCKER_TLS_CERTDIR="" && export DOCKER_HOST='docker'
+      shell: bash
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
       with:
@@ -97,8 +98,8 @@ runs:
         load: true
         tags: |
           ${{ steps.meta.outputs.tags }}
-        # cache-from: type=gha
-        # cache-to: type=gha,mode=max
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
         file: ${{ inputs.FILE }}
         context: ${{ inputs.CONTEXT }}
         platforms: ${{ inputs.PLATFORMS }}
@@ -125,8 +126,8 @@ runs:
         push: true
         tags: |
           ${{ steps.meta.outputs.tags }}
-        # cache-from: type=gha
-        # cache-to: type=gha,mode=max
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
         file: ${{ inputs.FILE }}
         context: ${{ inputs.CONTEXT }}
         platforms: ${{ inputs.PLATFORMS }}

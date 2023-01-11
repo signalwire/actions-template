@@ -151,7 +151,7 @@ jobs:
         REGISTRY: ${{ inputs.REGISTRY }}
         IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         DOCKERHUB_USERNAME: ${{secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{secrets.DOCKERHUB_TOKEN }}
         BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
@@ -161,7 +161,7 @@ jobs:
       name: Trivy Scan
       if: github.event_name == 'pull_request'
       with:
-        IMAGE: ${{ steps.build.outputs.tags }}
+        IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
         TRIVY_IGNORES: ./actions/.github/actions/trivy/.trivyignore
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
