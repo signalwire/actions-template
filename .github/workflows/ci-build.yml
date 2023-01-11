@@ -126,16 +126,17 @@ jobs:
       env:
         PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-    - uses: ./actions/.github/actions/gcloud-auth
-      if: contains(${{inputs.REGISTRY}}, 'pkg.dev' )
-      id: gcloud_auth
-      name: 'Authenticate to Google Cloud'
-      with:
-        AUDIENCE: ${{ inputs.AUDIENCE }}
-        TOKEN_FORMAT: ${{ inputs.TOKEN_FORMAT }}
-      env:
-        GCP_WIP: ${{ secrets.GCP_WIP }}
-        GCP_SA: ${{ secrets.GCP_SA }}
+    # Remove unitil use it
+    # - uses: ./actions/.github/actions/gcloud-auth
+    #   if: contains(${{inputs.REGISTRY}}, 'pkg.dev' )
+    #   id: gcloud_auth
+    #   name: 'Authenticate to Google Cloud'
+    #   with:
+    #     AUDIENCE: ${{ inputs.AUDIENCE }}
+    #     TOKEN_FORMAT: ${{ inputs.TOKEN_FORMAT }}
+    #   env:
+    #     GCP_WIP: ${{ secrets.GCP_WIP }}
+    #     GCP_SA: ${{ secrets.GCP_SA }}
 
     - uses: ./actions/.github/actions/docker
       name: Docker build
