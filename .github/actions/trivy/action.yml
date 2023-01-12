@@ -11,7 +11,7 @@ runs:
   using: "composite"
   steps:
   - uses: aquasecurity/trivy-action@master
-    # continue-on-error: true
+    id: scan
     with:
       image-ref: ${{ inputs.IMAGE }}
       format: 'table'
@@ -24,15 +24,16 @@ runs:
   # - run: ls -l
   #   shell: bash
 
-  # - name: Load plan file
-  #   id: read
-  #   uses: juliangruber/read-file-action@v1
-  #   with:
-  #     path: container_scan.txt 
+  - name: Load plan file
+    id: read
+    if: steps..outcome.scan != 'success'
+    uses: juliangruber/read-file-action@v1
+    with:
+      path: container_scan.txt 
 
   - name: Create Issue on container scan
     uses: dacbd/create-issue-action@v1
-    if: ${{ failure() }}
+    if: steps..outcome.scan != 'success'
     with:
       title: Vulnerability Detected ${{inputs.PROJECT_NAME}}
       token: ${{ env.PAT }}
@@ -46,6 +47,6 @@ runs:
         status -        `${{ job.status }}`
         Vulnerabilities -
         
-        ${{ echo "$(cat container_scan.txt)" }}
+        ${{ steps.read.outputs.content }}
       assignees: ${{ github.actor }}
       labels: team/devops,security,vulnerability,docker
