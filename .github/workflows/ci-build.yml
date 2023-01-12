@@ -116,7 +116,7 @@ jobs:
       with:
         submodules: 'recursive'
     
-    - run: git submodules status > REVISION
+    - run: git submodule status > REVISION
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
 
     - name: Checkout actions
