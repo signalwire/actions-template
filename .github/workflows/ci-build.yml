@@ -184,7 +184,6 @@ jobs:
         PAT: ${{ secrets.CI_PAT }}
 
     - name: Create Issue on container scan
-      # if: ${{ failure() }}
       uses: dacbd/create-issue-action@v1
       with:
         token: ${{ secrets.PAT_CI }}
@@ -197,7 +196,7 @@ jobs:
           Workflow name - `${{ github.workflow }}`
           Job -           `${{ github.job }}`
           status -        `${{ job.status }}`
-          # Vulnerabilities - `${{ steps.read.outputs.content }}`
+          Vulnerabilities - ``
         assignees: ${{ github.actor }}
 
     - name: Create Issue From File
