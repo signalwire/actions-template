@@ -39,7 +39,7 @@ runs:
 
   - name: Create Issue on container scan
     uses: dacbd/create-issue-action@v1
-    if: steps..outcome.scan != 'success'
+    if: steps.scan.outcome.scan != 'success'
     with:
       title: Vulnerability Detected ${{inputs.PROJECT_NAME}}
       token: ${{ env.PAT }}
