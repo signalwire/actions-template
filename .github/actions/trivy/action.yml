@@ -13,14 +13,14 @@ runs:
   - run: ls -l /contrib
     shell: bash
 
-    
+
   - uses: aquasecurity/trivy-action@master
     id: scan
     continue-on-error: true
     with:
       image-ref: ${{ inputs.IMAGE }}
       template: "@actions/.github/actions/trivy/template.tpl"
-      format: 'template'
+      format: template
       severity: 'HIGH,CRITICAL'
       exit-code: '1'
       ignore-unfixed: true
