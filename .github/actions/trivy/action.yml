@@ -9,23 +9,24 @@ runs:
   using: "composite"
   steps:
   - uses: aquasecurity/trivy-action@master
+    continue-on-error: true
     with:
       image-ref: ${{ inputs.IMAGE }}
       format: 'table'
       severity: 'HIGH,CRITICAL'
-      exit-code: '0'
+      exit-code: '1'
       ignore-unfixed: true
       vuln-type: 'os,library'
-      output: container_scan.md 
+      output: container_scan.txt
 
   # - run: touch output.md
   #   shell: bash
 
-  # - name: Load plan file
-  #   id: read
-  #   uses: juliangruber/read-file-action@v1
-  #   with:
-  #     path: ./container_scan.txt 
+  - name: Load plan file
+    id: read
+    uses: juliangruber/read-file-action@v1
+    with:
+      path: ./container_scan.txt 
 
   - name: Create Issue on container scan
     uses: dacbd/create-issue-action@v1
@@ -40,7 +41,7 @@ runs:
         Workflow name - `${{ github.workflow }}`
         Job -           `${{ github.job }}`
         status -        `${{ job.status }}`
-        Vulnerabilities - ``
+        Vulnerabilities - `${{ steps.read.outputs.contents}}`
       assignees: ${{ github.actor }}
   # - name: Create Issue From File
   #   uses: peter-evans/create-issue-from-file@v4
