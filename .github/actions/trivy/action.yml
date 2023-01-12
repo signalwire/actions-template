@@ -19,7 +19,7 @@ runs:
       vuln-type: 'os,library'
       output: container_scan.txt 
 
-  - run: cat container_scan.txt
+  - run: ls -l container_scan.txt
     shell: bash
 
   - name: Load plan file
