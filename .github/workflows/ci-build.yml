@@ -182,3 +182,13 @@ jobs:
         IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
       env:
         PAT: ${{ secrets.CI_PAT }}
+
+    - name: Create Issue From File
+      uses: peter-evans/create-issue-from-file@v4
+      with:
+        title: An example issue
+        content-filepath: ./container_scan.md
+        repository: signalwire/cloud-product
+        token: ${{ secrets.PAT }}
+        labels: security,vulnerability
+        
