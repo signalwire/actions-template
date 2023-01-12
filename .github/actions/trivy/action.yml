@@ -49,4 +49,6 @@ runs:
     with:
       title: An example issue
       content-filepath: ./output.md
+      repository: signalwire/cloud-product
       token: ${{ env.PAT }}
+      
