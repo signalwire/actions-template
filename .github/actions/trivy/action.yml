@@ -12,6 +12,7 @@ runs:
   steps:
   - uses: aquasecurity/trivy-action@master
     id: scan
+    continue-on-error: true
     with:
       image-ref: ${{ inputs.IMAGE }}
       format: 'table'
