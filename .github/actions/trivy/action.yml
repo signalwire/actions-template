@@ -15,7 +15,8 @@ runs:
     continue-on-error: true
     with:
       image-ref: ${{ inputs.IMAGE }}
-      format: 'table'
+      template: "@./actions/.github/actions/trivy/template.tpl"
+      format: 'template'
       severity: 'HIGH,CRITICAL'
       exit-code: '1'
       ignore-unfixed: true
