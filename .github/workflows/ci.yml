@@ -76,6 +76,10 @@ on:
         required: false
         type: boolean
         default: true
+      DOCKER_SCAN:
+        type: boolean
+        default: true
+        description: 'Whenever Trivy scan should run'
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -130,6 +134,7 @@ jobs:
       FILE: ${{ inputs.FILE }}
       CONTEXT: ${{ inputs.CONTEXT }}
       PLATFORMS: ${{ inputs.PLATFORMS }}
+      DOCKER_SCAN: ${{ inputs.DOCKER_SCAN }}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
