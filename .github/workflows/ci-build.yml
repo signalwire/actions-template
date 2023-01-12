@@ -179,7 +179,7 @@ jobs:
       name: Trivy Scan
       if: github.event_name == 'pull_request' && inputs.CONTAINER_SCAN == true
       with:
-        IMAGE: ${{ steps.build.outputs.IMAGE_TAG[0] }}
+        IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
         PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
       env:
         PAT: ${{ secrets.CI_PAT }}
