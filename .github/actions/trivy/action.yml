@@ -22,15 +22,6 @@ runs:
       vuln-type: 'os,library'
       output: container_scan.txt
 
-  - run: echo ${{ steps.scan.outputs }}
-    shell: bash
-  
-  - run: echo ${{ steps.scan.outcome }}
-    shell: bash
-  
-  - run: echo ${{ steps.scan.conclusion }}
-    shell: bash
-
   - name: Load plan file
     id: read
     if: steps.scan.outcome != 'success'
