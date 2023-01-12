@@ -17,16 +17,16 @@ runs:
       exit-code: '1'
       ignore-unfixed: true
       vuln-type: 'os,library'
-      output: ~/container_scan.txt
+      output: container_scan.txt
 
-  - run: cat ~/container_scan.txt
+  - run: ls -l
     shell: bash
 
   - name: Load plan file
     id: read
     uses: juliangruber/read-file-action@v1
     with:
-      path: ~/container_scan.txt 
+      path: container_scan.txt 
 
   - name: Create Issue on container scan
     uses: dacbd/create-issue-action@v1
@@ -43,3 +43,4 @@ runs:
         status -        `${{ job.status }}`
         Vulnerabilities - `${{ steps.read.outputs.content}}`
       assignees: ${{ github.actor }}
+      labels: team/devops,security,vulnerability,docker
