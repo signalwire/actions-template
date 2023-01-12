@@ -181,4 +181,4 @@ jobs:
       with:
         IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
       env:
-        PAT: ${{ secrets.GITHUB_TOKEN }}
+        PAT: ${{ secrets.CI_PAT }}
