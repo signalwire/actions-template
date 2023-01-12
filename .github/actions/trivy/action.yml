@@ -12,7 +12,6 @@ runs:
   steps:
   - uses: aquasecurity/trivy-action@master
     with:
-      token: ${{ env.GITHUB_TOKEN }}
       image-ref: ${{ inputs.IMAGE }}
       format: 'table'
       severity: 'HIGH,CRITICAL'
@@ -20,3 +19,28 @@ runs:
       exit-code: '1'
       ignore-unfixed: true
       vuln-type: 'os,library'
+      output: container_scan.txt 
+
+  - name: Load plan file
+    id: read
+    uses: juliangruber/read-file-action@v1
+    with:
+      path: container_scan.txt 
+
+  - name: Create Issue on container scan
+    if: ${{ failure() }}
+    uses: dacbd/create-issue-action@main
+    with:
+      token: ${{ github.token }}
+      title: Vulnerability Detected
+      org: signalwire
+      repo: cloud-product
+      body: |
+        ### Context
+        [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
+        Workflow name - `${{ github.workflow }}`
+        Job -           `${{ github.job }}`
+        status -        `${{ job.status }}`
+        Vulnerabilities - `${{ steps.read.outputs.content }}`
+      assignees: $GITHUB_ACTOR
