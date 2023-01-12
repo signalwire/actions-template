@@ -26,13 +26,13 @@ runs:
     id: read
     uses: juliangruber/read-file-action@v1
     with:
-      path: container_scan.txt 
+      path: ./container_scan.txt 
 
   - name: Create Issue on container scan
-    # if: ${{ failure() }}
-    uses: dacbd/create-issue-action@main
+    if: ${{ failure() }}
+    uses: actions-ecosystem/action-create-issue@v1
     with:
-      token: ${{ env.PAT }}
+      github_token: ${{ env.PAT }}
       title: Vulnerability Detected
       repo: signalwire/cloud-product
       body: |
