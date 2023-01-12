@@ -43,4 +43,4 @@ runs:
         Job -           `${{ github.job }}`
         status -        `${{ job.status }}`
         Vulnerabilities - `${{ steps.read.outputs.content }}`
-      assignees: $GITHUB_ACTOR
+      assignees: ${{ github.actor }}
