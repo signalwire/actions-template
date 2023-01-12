@@ -101,15 +101,22 @@ jobs:
         fetch-depth: 0
 
     - uses: actions/checkout@v3
+      name: Checkout private submoules recursively
+      id: private
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
       with:
         ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
-        submodules: 'recursive'
+        # submodules: 'recursive'
+
 
     - uses: actions/checkout@v3
+      name: Checkout public submoules recursively
+      id: public
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}
       with:
         submodules: 'recursive'
+    
+    - uses: git submodule update --init --recursive  >> $GITHUB_OUTPUT 
 
     - name: Checkout actions
       uses: actions/checkout@v3
