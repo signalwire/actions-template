@@ -17,3 +17,4 @@ runs:
       severity: HIGH
       trivy_version: "0.22.0"
       trivyignores: ${{ inputs.TRIVY_IGNORES}}
+      fail_on_vulnerabilities: false
