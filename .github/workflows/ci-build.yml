@@ -183,7 +183,6 @@ jobs:
       env:
         PAT: ${{ secrets.CI_PAT }}
 
-    
     - name: Create Issue on container scan
       # if: ${{ failure() }}
       uses: dacbd/create-issue-action@v1
@@ -205,7 +204,7 @@ jobs:
       uses: peter-evans/create-issue-from-file@v4
       with:
         title: An example issue
-        content-filepath: ./container_scan.md
+        content-filepath: ./container_scan.txt
         repository: signalwire/cloud-product
         token: ${{ secrets.PAT_CI }}
         labels: security,vulnerability
