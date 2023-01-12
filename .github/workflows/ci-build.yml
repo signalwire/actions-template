@@ -109,15 +109,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    # - run: touch output.md
-    # - name: Create Issue From File
-    #   uses: peter-evans/create-issue-from-file@v4
-    #   with:
-    #     title: An example issue
-    #     content-filepath: ./output.md
-    #     token: ${{ secrets.CI_PAT }}
-    #     repository: signalwire/cloud-product
-
     - uses: actions/checkout@v3
       name: Checkout private submoules recursively
       id: private

@@ -48,7 +48,7 @@ runs:
     uses: peter-evans/create-issue-from-file@v4
     with:
       title: An example issue
-      content-filepath: ./output.md
+      content-filepath: ./container_scan.txt
       repository: signalwire/cloud-product
       token: ${{ env.PAT }}
       
