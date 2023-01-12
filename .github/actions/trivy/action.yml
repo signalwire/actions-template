@@ -41,6 +41,6 @@ runs:
         Workflow name - `${{ github.workflow }}`
         Job -           `${{ github.job }}`
         status -        `${{ job.status }}`
-        Vulnerabilities - `${{ steps.read.outputs.content}}`
+        Vulnerabilities - ```${{ steps.read.outputs.content}}```
       assignees: ${{ github.actor }}
       labels: team/devops,security,vulnerability,docker
