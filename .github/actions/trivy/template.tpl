@@ -1,4 +1,4 @@
-<h2>{{- escapeXML ( index . 0 ).Target }} - Trivy Report - {{ getCurrentTime }}</h2>
+<h2>{{- escapeXML ( index . 0 ).Target }} - Trivy Report </h2>
 <table>
 {{- range . }}
   <tr class="group-header"><th colspan="6">{{ escapeXML .Type }}</th></tr>
