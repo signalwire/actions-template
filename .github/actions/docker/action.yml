@@ -120,7 +120,7 @@ runs:
         echo "name=container-logs::$EXECUTIONLOG" >> $GITHUB_OUTPUT
     
     - name: Build and push
-      if: ${{ inputs.PUSH == 'true' }}
+      if: ${{ inputs.PUSH == 'true' && github.event_name != 'pull_request'}}
       uses: docker/build-push-action@v3
       with:
         push: true
