@@ -116,7 +116,8 @@ jobs:
       with:
         submodules: 'recursive'
     
-    - uses: git submodule update --init --recursive  >> $GITHUB_OUTPUT 
+    - run: git submodule update --init --recursive  >> $GITHUB_OUTPUT 
+      name: submodules
 
     - name: Checkout actions
       uses: actions/checkout@v3
