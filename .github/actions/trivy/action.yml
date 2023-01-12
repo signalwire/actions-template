@@ -34,8 +34,7 @@ runs:
     with:
       token: ${{ env.PAT }}
       title: Vulnerability Detected
-      org: signalwire
-      repo: cloud-product
+      repo: signalwire/cloud-product
       body: |
         ### Context
         [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
