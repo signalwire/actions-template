@@ -26,7 +26,7 @@ runs:
 
   - name: Load plan file
     id: read
-    if: steps..outcome.scan != 'success'
+    if: steps.scan.outcome.scan != 'success'
     uses: juliangruber/read-file-action@v1
     with:
       path: container_scan.txt 
