@@ -188,7 +188,7 @@ jobs:
       with:
         title: Vulnerability Detected
         token: ${{ secrets.CI_PAT }}
-        repo: signalwire/cloud-product
+        repo: cloud-product
         body: |
           ### Context
           [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
