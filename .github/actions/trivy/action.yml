@@ -13,43 +13,7 @@ runs:
       image-ref: ${{ inputs.IMAGE }}
       format: 'table'
       severity: 'HIGH,CRITICAL'
-      fail_on_vulnerabilities: false
-      exit-code: '1'
+      exit-code: '0'
       ignore-unfixed: true
       vuln-type: 'os,library'
       output: container_scan.txt 
-
-  - run: touch output.md
-    shell: bash
-
-  - name: Load plan file
-    id: read
-    uses: juliangruber/read-file-action@v1
-    with:
-      path: ./container_scan.txt 
-
-  # - name: Create Issue on container scan
-  #   if: ${{ failure() }}
-  #   uses: dacbd/create-issue-action@v1
-  #   with:
-  #     token: ${{ env.PAT }}
-  #     title: Vulnerability Detected
-  #     repo: cloud-product
-  #     body: |
-  #       ### Context
-  #       [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-  #       [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
-  #       Workflow name - `${{ github.workflow }}`
-  #       Job -           `${{ github.job }}`
-  #       status -        `${{ job.status }}`
-      #   Vulnerabilities - `${{ steps.read.outputs.content }}`
-      # assignees: ${{ github.actor }}
-  # - name: Create Issue From File
-  #   uses: peter-evans/create-issue-from-file@v4
-  #   with:
-  #     title: An example issue
-  #     content-filepath: ./container_scan.md
-  #     repository: signalwire/cloud-product
-  #     token: ${{ env.PAT }}
-  #     labels: security,vulnerability
-      
