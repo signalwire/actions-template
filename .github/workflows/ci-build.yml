@@ -106,7 +106,7 @@ jobs:
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
       with:
         ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
-        # submodules: 'recursive'
+        submodules: 'recursive'
 
 
     - uses: actions/checkout@v3
@@ -116,9 +116,8 @@ jobs:
       with:
         submodules: 'recursive'
     
-    - run: cat .gitmodules
-    - run: git submodule update --init --recursive  >> $GITHUB_OUTPUT 
-      name: submodules
+    - run: git submodules status > REVISION
+      if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
 
     - name: Checkout actions
       uses: actions/checkout@v3
