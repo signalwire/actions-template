@@ -4,6 +4,8 @@ description: Trivy docker container vulnerability assessment
 inputs:
   IMAGE:
     required: true
+  PROJECT_NAME:
+    required: true
     
 runs:
   using: "composite"
@@ -30,8 +32,9 @@ runs:
 
   - name: Create Issue on container scan
     uses: dacbd/create-issue-action@v1
+    if: ${{ failure() }}
     with:
-      title: Vulnerability Detected
+      title: Vulnerability Detected ${{inputs.PROJECT_NAME}}
       token: ${{ env.PAT }}
       repo: cloud-product
       body: |
@@ -41,6 +44,8 @@ runs:
         Workflow name - `${{ github.workflow }}`
         Job -           `${{ github.job }}`
         status -        `${{ job.status }}`
-        Vulnerabilities - ```${{ steps.read.outputs.content}}```
+        Vulnerabilities -
+        
+        ${{ steps.read.outputs.content}}
       assignees: ${{ github.actor }}
       labels: team/devops,security,vulnerability,docker

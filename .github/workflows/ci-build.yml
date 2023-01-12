@@ -180,31 +180,6 @@ jobs:
       if: github.event_name == 'pull_request' && inputs.CONTAINER_SCAN == true
       with:
         IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
+        PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
       env:
         PAT: ${{ secrets.CI_PAT }}
-
-    # - name: Create Issue on container scan
-    #   uses: dacbd/create-issue-action@v1
-    #   with:
-    #     title: Vulnerability Detected
-    #     token: ${{ secrets.CI_PAT }}
-    #     repo: cloud-product
-    #     body: |
-    #       ### Context
-    #       [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-    #       [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
-    #       Workflow name - `${{ github.workflow }}`
-    #       Job -           `${{ github.job }}`
-    #       status -        `${{ job.status }}`
-    #       Vulnerabilities - ``
-    #     assignees: ${{ github.actor }}
-
-    # - name: Create Issue From File
-    #   uses: peter-evans/create-issue-from-file@v4
-    #   with:
-    #     title: An example issue
-    #     content-filepath: ./container_scan.txt
-    #     repository: signalwire/cloud-product
-    #     token: ${{ secrets.PAT_CI }}
-    #     labels: security,vulnerability
-        
