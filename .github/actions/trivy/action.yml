@@ -29,7 +29,7 @@ runs:
       path: container_scan.txt 
 
   - name: Create Issue on container scan
-    if: ${{ failure() }}
+    # if: ${{ failure() }}
     uses: dacbd/create-issue-action@main
     with:
       token: ${{ env.PAT }}
