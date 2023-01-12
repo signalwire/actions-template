@@ -109,95 +109,95 @@ jobs:
       with:
         fetch-depth: 0
 
-    # - uses: actions/checkout@v3
-    #   name: Checkout private submoules recursively
-    #   id: private
-    #   if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
-    #   with:
-    #     ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
-    #     submodules: 'recursive'
-
-
-    # - uses: actions/checkout@v3
-    #   name: Checkout public submoules recursively
-    #   id: public
-    #   if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}
-    #   with:
-    #     submodules: 'recursive'
-    
-    # - run: git submodule status > REVISION
-    #   if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
-
-    # - name: Checkout actions
-    #   uses: actions/checkout@v3
-    #   with:
-    #     repository: signalwire/actions-template
-    #     ref: feat_improvecaching
-    #     path: actions
-        
-    # - uses: ./actions/.github/actions/gpg
-    #   name: Enable GPG
-    #   if: ${{ inputs.ENABLE_GPG  == true }}
-    #   with:
-    #     FILE: ${{ inputs.GPG_FILE }}
-    #   env:
-    #     PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-
-    # # Remove unitil use it
-    # # - uses: ./actions/.github/actions/gcloud-auth
-    # #   if: contains(${{inputs.REGISTRY}}, 'pkg.dev' )
-    # #   id: gcloud_auth
-    # #   name: 'Authenticate to Google Cloud'
-    # #   with:
-    # #     AUDIENCE: ${{ inputs.AUDIENCE }}
-    # #     TOKEN_FORMAT: ${{ inputs.TOKEN_FORMAT }}
-    # #   env:
-    # #     GCP_WIP: ${{ secrets.GCP_WIP }}
-    # #     GCP_SA: ${{ secrets.GCP_SA }}
-
-    # - uses: ./actions/.github/actions/docker
-    #   name: Docker build
-    #   id: build
-    #   with:
-    #     PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
-    #     PUSH: ${{ inputs.PUSH }}
-    #     FILE: ${{ inputs.FILE }}
-    #     CONTEXT: ${{ inputs.CONTEXT }}
-    #     PLATFORMS: ${{ inputs.PLATFORMS }}
-    #     TAG: ${{ inputs.TAG }}
-    #     REGISTRY: ${{ inputs.REGISTRY }}
-    #     IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
-    #     CONTAINER_TEST: ${{ inputs.CONTAINER_TEST }}
-    #     BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #     DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-    #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-    #     # GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.GCLOUD_TOKEN }}    
-    
-    # - uses: ./actions/.github/actions/trivy
-    #   name: Trivy Scan
-    #   if: github.event_name == 'pull_request' && inputs.CONTAINER_SCAN == true
-    #   with:
-    #     IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
-    #   env:
-    #     PAT: ${{ secrets.CI_PAT }}
-
-    - name: Create Issue on container scan
-      uses: dacbd/create-issue-action@v1
+    - uses: actions/checkout@v3
+      name: Checkout private submoules recursively
+      id: private
+      if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
       with:
-        title: Vulnerability Detected
-        token: ${{ secrets.CI_PAT }}
-        repo: cloud-product
-        body: |
-          ### Context
-          [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
-          Workflow name - `${{ github.workflow }}`
-          Job -           `${{ github.job }}`
-          status -        `${{ job.status }}`
-          Vulnerabilities - ``
-        assignees: ${{ github.actor }}
+        ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+        submodules: 'recursive'
+
+
+    - uses: actions/checkout@v3
+      name: Checkout public submoules recursively
+      id: public
+      if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}
+      with:
+        submodules: 'recursive'
+    
+    - run: git submodule status > REVISION
+      if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
+
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: feat_improvecaching
+        path: actions
+        
+    - uses: ./actions/.github/actions/gpg
+      name: Enable GPG
+      if: ${{ inputs.ENABLE_GPG  == true }}
+      with:
+        FILE: ${{ inputs.GPG_FILE }}
+      env:
+        PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+    # Remove unitil use it
+    # - uses: ./actions/.github/actions/gcloud-auth
+    #   if: contains(${{inputs.REGISTRY}}, 'pkg.dev' )
+    #   id: gcloud_auth
+    #   name: 'Authenticate to Google Cloud'
+    #   with:
+    #     AUDIENCE: ${{ inputs.AUDIENCE }}
+    #     TOKEN_FORMAT: ${{ inputs.TOKEN_FORMAT }}
+    #   env:
+    #     GCP_WIP: ${{ secrets.GCP_WIP }}
+    #     GCP_SA: ${{ secrets.GCP_SA }}
+
+    - uses: ./actions/.github/actions/docker
+      name: Docker build
+      id: build
+      with:
+        PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
+        PUSH: ${{ inputs.PUSH }}
+        FILE: ${{ inputs.FILE }}
+        CONTEXT: ${{ inputs.CONTEXT }}
+        PLATFORMS: ${{ inputs.PLATFORMS }}
+        TAG: ${{ inputs.TAG }}
+        REGISTRY: ${{ inputs.REGISTRY }}
+        IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
+        CONTAINER_TEST: ${{ inputs.CONTAINER_TEST }}
+        BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        # GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.GCLOUD_TOKEN }}    
+    
+    - uses: ./actions/.github/actions/trivy
+      name: Trivy Scan
+      if: github.event_name == 'pull_request' && inputs.CONTAINER_SCAN == true
+      with:
+        IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
+      env:
+        PAT: ${{ secrets.CI_PAT }}
+
+    # - name: Create Issue on container scan
+    #   uses: dacbd/create-issue-action@v1
+    #   with:
+    #     title: Vulnerability Detected
+    #     token: ${{ secrets.CI_PAT }}
+    #     repo: cloud-product
+    #     body: |
+    #       ### Context
+    #       [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+    #       [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
+    #       Workflow name - `${{ github.workflow }}`
+    #       Job -           `${{ github.job }}`
+    #       status -        `${{ job.status }}`
+    #       Vulnerabilities - ``
+    #     assignees: ${{ github.actor }}
 
     # - name: Create Issue From File
     #   uses: peter-evans/create-issue-from-file@v4
