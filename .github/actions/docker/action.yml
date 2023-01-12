@@ -43,6 +43,9 @@ inputs:
     required: false
     default: 'signalwire'
     description: 'The default registry repo owner.'
+  CONTAINER_TEST:
+    default: 'true'
+    description: 'Whenever the container should be tested on pr.'
 outputs:
   IMAGE_TAG:
     description: "Export image tag"
