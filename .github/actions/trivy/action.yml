@@ -33,14 +33,14 @@ runs:
 
   - name: Load plan file
     id: read
-    if: steps.scan.outcome.scan != 'success'
+    if: steps.scan.outcome != 'success'
     uses: juliangruber/read-file-action@v1
     with:
       path: container_scan.txt 
 
   - name: Create Issue on container scan
     uses: dacbd/create-issue-action@v1
-    if: steps.scan.outcome.scan != 'success'
+    if: steps.scan.outcome != 'success'
     with:
       title: Vulnerability Detected ${{inputs.PROJECT_NAME}}
       token: ${{ env.PAT }}
