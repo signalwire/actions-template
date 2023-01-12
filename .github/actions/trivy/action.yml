@@ -14,7 +14,7 @@ runs:
     with:
       token: ${{ env.GITHUB_TOKEN }}
       image: ${{ inputs.IMAGE }}
-      severity: HIGH
+      severity: HIGH,CRITICAL
       trivy_version: "0.22.0"
       trivyignores: ${{ inputs.TRIVY_IGNORES}}
       fail_on_vulnerabilities: false
