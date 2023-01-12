@@ -187,7 +187,7 @@ jobs:
       uses: dacbd/create-issue-action@v1
       with:
         title: Vulnerability Detected
-        token: ${{ secrets.PAT_CI }}
+        token: ${{ github.token}}
         repo: signalwire/cloud-product
         body: |
           ### Context
@@ -199,12 +199,12 @@ jobs:
           Vulnerabilities - ``
         assignees: ${{ github.actor }}
 
-    - name: Create Issue From File
-      uses: peter-evans/create-issue-from-file@v4
-      with:
-        title: An example issue
-        content-filepath: ./container_scan.txt
-        repository: signalwire/cloud-product
-        token: ${{ secrets.PAT_CI }}
-        labels: security,vulnerability
+    # - name: Create Issue From File
+    #   uses: peter-evans/create-issue-from-file@v4
+    #   with:
+    #     title: An example issue
+    #     content-filepath: ./container_scan.txt
+    #     repository: signalwire/cloud-product
+    #     token: ${{ secrets.PAT_CI }}
+    #     labels: security,vulnerability
         
