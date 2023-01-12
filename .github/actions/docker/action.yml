@@ -46,10 +46,10 @@ inputs:
   CONTAINER_TEST:
     default: 'true'
     description: 'Whenever the container should be tested on pr.'
-outputs:
-  IMAGE_TAG:
-    description: "Export image tag"
-    value: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+# outputs:
+#   IMAGE_TAG:
+#     description: "Export image tag"
+#     value: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
     
 runs:
   using: "composite"
@@ -135,3 +135,7 @@ runs:
         context: ${{ inputs.CONTEXT }}
         platforms: ${{ inputs.PLATFORMS }}
         build-args: ${{ inputs.BUILD_ARGS }}
+
+    - name: Exporting image tag
+      run: echo "IMAGE_TAG=${{ fromJSON(steps.meta.outputs.json).tags[0] }}" >> $GITHUB_OUTPUT
+      shell: bash
