@@ -14,7 +14,7 @@ runs:
       format: 'table'
       severity: 'HIGH,CRITICAL'
       fail_on_vulnerabilities: false
-      # exit-code: '1'
+      exit-code: '1'
       ignore-unfixed: true
       vuln-type: 'os,library'
       output: container_scan.txt 
