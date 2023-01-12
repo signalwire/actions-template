@@ -187,7 +187,7 @@ jobs:
       uses: dacbd/create-issue-action@v1
       with:
         title: Vulnerability Detected
-        token: ${{ github.token}}
+        token: ${{ secrets.PAT_CI }}
         repo: signalwire/cloud-product
         body: |
           ### Context
