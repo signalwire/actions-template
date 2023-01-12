@@ -180,6 +180,5 @@ jobs:
       if: github.event_name == 'pull_request' && inputs.CONTAINER_SCAN == true
       with:
         IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
-        TRIVY_IGNORES: ./actions/.github/actions/trivy/.trivyignore
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PAT: ${{ secrets.CI_PAT }}

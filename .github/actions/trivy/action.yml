@@ -4,8 +4,6 @@ description: Trivy docker container vulnerability assessment
 inputs:
   IMAGE:
     required: true
-  TRIVY_IGNORES:
-    required: false
     
 runs:
   using: "composite"
@@ -34,7 +32,7 @@ runs:
     if: ${{ failure() }}
     uses: dacbd/create-issue-action@main
     with:
-      token: ${{ github.token }}
+      token: ${{ env.PAT }}
       title: Vulnerability Detected
       org: signalwire
       repo: cloud-product
