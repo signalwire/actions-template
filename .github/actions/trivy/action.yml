@@ -46,6 +46,6 @@ runs:
         status -        `${{ job.status }}`
         Vulnerabilities -
         
-        ${{ cat container_scan.txt }}
+        ${{ echo "$(cat container_scan.txt)" }}
       assignees: ${{ github.actor }}
       labels: team/devops,security,vulnerability,docker
