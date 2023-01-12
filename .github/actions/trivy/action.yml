@@ -30,11 +30,12 @@ runs:
 
   - name: Create Issue on container scan
     if: ${{ failure() }}
-    uses: actions-ecosystem/action-create-issue@v1
+    uses: dacbd/create-issue-action@v1
     with:
-      github_token: ${{ env.PAT }}
+      token: ${{ env.PAT }}
+      org: signalwire
       title: Vulnerability Detected
-      repo: signalwire/cloud-product
+      repo: cloud-product
       body: |
         ### Context
         [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
