@@ -106,7 +106,7 @@ runs:
         build-args: ${{ inputs.BUILD_ARGS }}
 
     - name: Test
-      if: github.event_name == 'pull_request'
+      if: github.event_name == 'pull_request' && inputs.CONTAINER_TEST == 'true'
       id: test
       shell: bash
       run: |

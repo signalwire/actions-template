@@ -76,10 +76,14 @@ on:
         required: false
         type: boolean
         default: true
-      DOCKER_SCAN:
+      CONTAINER_SCAN:
         type: boolean
         default: true
         description: 'Whenever Trivy scan should run'
+      CONTAINER_TEST:
+        type: boolean
+        default: true
+        description: 'Whenever the container should be tested on pr.'
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -134,7 +138,8 @@ jobs:
       FILE: ${{ inputs.FILE }}
       CONTEXT: ${{ inputs.CONTEXT }}
       PLATFORMS: ${{ inputs.PLATFORMS }}
-      DOCKER_SCAN: ${{ inputs.DOCKER_SCAN }}
+      CONTAINER_SCAN: ${{ inputs.CONTAINER_SCAN }}
+      CONTAINER_TEST: ${{ inputs.CONTAINER_TEST }}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       GITHUBTOKEN: ${{ secrets.GITHUB_TOKEN }}
