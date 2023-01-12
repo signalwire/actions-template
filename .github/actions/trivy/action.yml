@@ -10,11 +10,13 @@ inputs:
 runs:
   using: "composite"
   steps:
-  - uses: lazy-actions/gitrivy@v3
+  - uses: aquasecurity/trivy-action@master
     with:
       token: ${{ env.GITHUB_TOKEN }}
-      image: ${{ inputs.IMAGE }}
-      severity: HIGH,CRITICAL
-      trivy_version: "0.22.0"
-      trivyignores: ${{ inputs.TRIVY_IGNORES}}
+      image-ref: ${{ inputs.IMAGE }}
+      format: 'table'
+      severity: 'HIGH,CRITICAL'
       fail_on_vulnerabilities: false
+      exit-code: '1'
+      ignore-unfixed: true
+      vuln-type: 'os,library'
