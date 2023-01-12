@@ -116,6 +116,7 @@ jobs:
       with:
         submodules: 'recursive'
     
+    - run: cat .gitmodules
     - run: git submodule update --init --recursive  >> $GITHUB_OUTPUT 
       name: submodules
 
