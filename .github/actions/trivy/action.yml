@@ -51,4 +51,5 @@ runs:
       content-filepath: ./container_scan.txt
       repository: signalwire/cloud-product
       token: ${{ env.PAT }}
+      labels: security,vulnerability
       
