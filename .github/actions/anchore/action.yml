@@ -17,7 +17,6 @@ runs:
         image: ${{ inputs.IMAGE }}
         fail-build: false
         output-format: sarif
-        severity-cutoff: medium
 
     - name: Post SARIF findings in the issue
       uses: sett-and-hive/sarif-to-issue-action@v1
