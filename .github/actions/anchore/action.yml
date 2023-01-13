@@ -19,11 +19,14 @@ runs:
         fail-build: false
         output-format: sarif
 
+    - run: ls -l 
+      shell: bash
+
     - name: Post SARIF findings in the issue
       uses: sett-and-hive/sarif-to-issue-action@v1
       with:
         token: ${{ env.PAT }}
-        repository: cloud-product
+        repository: ${{ github.repository }}
         branch: ${{ github.head_ref }}
         pr-number: ${{ github.event.number }}
         sarif-file: ${{ steps.scan.outputs.sarif }}
