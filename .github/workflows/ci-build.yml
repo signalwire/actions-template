@@ -77,7 +77,7 @@ on:
         type: boolean
         default: true
         description: 'Whenever the container should be tested on pr.'
-      COINTAINER_TEST_COMMAND:
+      CONTAINER_TEST_COMMAND:
         type: string
         default: ''
         description: 'A custom command to test the docker container.'
