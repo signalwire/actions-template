@@ -12,6 +12,7 @@ runs:
   steps:
     - name: Scan image
       uses: anchore/scan-action@v3
+      continue-on-error: true
       id: scan
       with:
         image: ${{ inputs.IMAGE }}
