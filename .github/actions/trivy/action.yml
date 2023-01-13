@@ -16,9 +16,9 @@ runs:
       image-ref: ${{ inputs.IMAGE }}
       template: "@actions/.github/actions/trivy/template.tpl"
       format: template
-      severity: 'CRITICAL'
+      severity: 'MEDIUM'
       exit-code: '1'
-      ignore-unfixed: true
+      ignore-unfixed: false
       vuln-type: 'os,library'
       security-checks: vuln
       output: container_scan.txt
@@ -59,9 +59,9 @@ runs:
       image-ref: ${{ inputs.IMAGE }}
       template: "@actions/.github/actions/trivy/template.tpl"
       format: template
-      severity: 'HIGH'
+      severity: 'LOW'
       exit-code: '1'
-      ignore-unfixed: true
+      ignore-unfixed: false
       vuln-type: 'os,library'
       security-checks: vuln
       output: container_scan_high.txt
