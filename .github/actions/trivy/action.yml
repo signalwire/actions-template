@@ -75,7 +75,7 @@ runs:
   
   - name: Create comment on HIGH vulnerabilities
     uses: peter-evans/create-or-update-comment@v2
-    if: steps.scanHigh.outcome != 'success' && steps.initialIssue.outcome == 'sucess'
+    if: steps.scanHigh.outcome != 'success' && steps.initialIssue.conclusion == 'sucess'
     with:
       issue-number: ${{ steps.initalIssue.outputs.number }}
       repo: cloud-product
@@ -94,7 +94,7 @@ runs:
 
   - name: Create Issue for HIGH Vulnerabilities
     uses: dacbd/create-issue-action@v1
-    if: steps.scanHigh.outcome != 'success' && steps.initialIssue.outcome != 'sucess'
+    if: steps.scanHigh.outcome != 'success' && steps.initialIssue.conclusion != 'sucess'
     with:
       title: Vulnerability Detected ${{inputs.PROJECT_NAME}}
       token: ${{ env.PAT }}
