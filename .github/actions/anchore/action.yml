@@ -22,7 +22,7 @@ runs:
     - name: Post SARIF findings in the issue
       uses: sett-and-hive/sarif-to-issue-action@v1
       with:
-        token: ${{ github.token }}
+        token: ${{ env.PAT }}
         repository: ${{ github.repository }}
         branch: ${{ github.head_ref }}
         pr-number: ${{ github.event.number }}

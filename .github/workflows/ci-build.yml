@@ -186,5 +186,5 @@ jobs:
       with:
         IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
       #   PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
-      # env:
-      #   PAT: ${{ secrets.CI_PAT }}
+      env:
+        PAT: ${{ secrets.CI_PAT }}
