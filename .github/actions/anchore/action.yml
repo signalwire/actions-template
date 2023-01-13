@@ -1,0 +1,31 @@
+name: Trivy scan
+description: Trivy docker container vulnerability assessment
+
+inputs:
+  IMAGE:
+    required: true
+  PROJECT_NAME:
+    required: true
+    
+runs:
+  using: "composite"
+  steps:
+    - name: Scan image
+      uses: anchore/scan-action@v3
+      id: scan
+      with:
+        image: ${{ inputs.IMAGE }}
+        fail-build: false
+        output-format: sarif
+        severity-cutoff: medium
+
+    - name: Post SARIF findings in the issue
+      uses: sett-and-hive/sarif-to-issue-action@v1
+      with:
+        token: ${{ github.token }}
+        repository: ${{ github.repository }}
+        branch: ${{ github.head_ref }}
+        pr-number: ${{ github.event.number }}
+        sarif-file: ${{ setps.scan.output.sarif }}
+        title: "Security scanning results"
+        odc-sarif: false
