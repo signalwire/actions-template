@@ -94,7 +94,6 @@ runs:
 
   - name: Create Issue for HIGH Vulnerabilities
     uses: dacbd/create-issue-action@v1
-    id: initialissue
     if: steps.scanHigh.outcome != 'success' && steps.initialIssue.outcome != 'sucess'
     with:
       title: Vulnerability Detected ${{inputs.PROJECT_NAME}}
