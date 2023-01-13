@@ -12,28 +12,29 @@ runs:
   steps:
 
   - uses: aquasecurity/trivy-action@master
-    id: scan
+    id: scanCritical
     continue-on-error: true
     with:
       image-ref: ${{ inputs.IMAGE }}
       template: "@actions/.github/actions/trivy/template.tpl"
       format: template
-      severity: 'HIGH,CRITICAL'
+      severity: 'CRITICAL'
       exit-code: '1'
       ignore-unfixed: true
       vuln-type: 'os,library'
       output: container_scan.txt
 
   - name: Load plan file
-    id: read
-    if: steps.scan.outcome != 'success'
+    id: readCritical
+    if: steps.scanCritical.outcome != 'success'
     uses: juliangruber/read-file-action@v1
     with:
       path: container_scan.txt 
 
   - name: Create Issue on container scan
     uses: dacbd/create-issue-action@v1
-    if: steps.scan.outcome != 'success'
+    id: initialIssue
+    if: steps.scanCritical.outcome != 'success'
     with:
       title: Vulnerability Detected ${{inputs.PROJECT_NAME}}
       token: ${{ env.PAT }}
@@ -47,6 +48,67 @@ runs:
         status -        `${{ job.status }}`
         Vulnerabilities -
         
-        ${{ steps.read.outputs.content }}
+        ${{ steps.readCritical.outputs.content }}
+      assignees: ${{ github.actor }}
+      labels: team/devops,security,vulnerability,docker
+
+
+  - uses: aquasecurity/trivy-action@master
+    id: scanHigh
+    continue-on-error: true
+    with:
+      image-ref: ${{ inputs.IMAGE }}
+      template: "@actions/.github/actions/trivy/template.tpl"
+      format: template
+      severity: 'HIGH'
+      exit-code: '1'
+      ignore-unfixed: true
+      vuln-type: 'os,library'
+      output: container_scan_high.txt
+
+  - name: Load plan file
+    id: readHigh
+    if: steps.scanHigh.outcome != 'success'
+    uses: juliangruber/read-file-action@v1
+    with:
+      path: container_scan_high.txt 
+  
+  - name: Create comment on HIGH vulnerabilities
+    uses: peter-evans/create-or-update-comment@v2
+    if: steps.scanHigh.outcome != 'success' && steps.initialIssue.outcome == 'sucess'
+    with:
+      issue-number: ${{ steps.initalIssue.outputs.number }}
+      repo: cloud-product
+      token: ${{ env.PAT }}
+      body: |
+       ### Context
+        [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
+        Workflow name - `${{ github.workflow }}`
+        Job -           `${{ github.job }}`
+        status -        `${{ job.status }}`
+        Vulnerabilities -
+        
+        ${{ steps.readHigh.outputs.content }}
+      reactions: '+1'
+
+  - name: Create Issue for HIGH Vulnerabilities
+    uses: dacbd/create-issue-action@v1
+    id: initialissue
+    if: steps.scanHigh.outcome != 'success' && steps.initialIssue.outcome != 'sucess'
+    with:
+      title: Vulnerability Detected ${{inputs.PROJECT_NAME}}
+      token: ${{ env.PAT }}
+      repo: cloud-product
+      body: >
+        ### Context
+        [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
+        Workflow name - `${{ github.workflow }}`
+        Job -           `${{ github.job }}`
+        status -        `${{ job.status }}`
+        Vulnerabilities -
+        
+        ${{ steps.readHigh.outputs.content }}
       assignees: ${{ github.actor }}
       labels: team/devops,security,vulnerability,docker
