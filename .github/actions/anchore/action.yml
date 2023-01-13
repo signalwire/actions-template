@@ -28,7 +28,7 @@ runs:
         token: ${{ env.PAT }}
         repository: ${{ github.repository }}
         branch: ${{ github.head_ref }}
-        pr-number: ${{ github.event.number }}
+        pr_number: ${{ github.event.number }}
         sarif-file: ${{ steps.scan.outputs.sarif }}
         title: "Security scanning results ${{ inputs.IMAGE }}"
         odc-sarif: false
