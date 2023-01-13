@@ -23,7 +23,7 @@ runs:
       uses: sett-and-hive/sarif-to-issue-action@v1
       with:
         token: ${{ env.PAT }}
-        repository: ${{ github.repository }}
+        repository: cloud-product
         branch: ${{ github.head_ref }}
         pr-number: ${{ github.event.number }}
         sarif-file: ${{ steps.scan.outputs.sarif }}
