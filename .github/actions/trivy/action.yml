@@ -35,7 +35,7 @@ runs:
     id: initialIssue
     if: steps.scanCritical.outcome != 'success'
     with:
-      title: CRITICAL Vulnerability Detected ${{inputs.IMAGE}}
+      title: CRITICAL Vulnerability Detected ${{inputs.IMAGE_TAG }}
       token: ${{ env.PAT }}
       repo: ci-testing
       body: >
@@ -96,7 +96,7 @@ runs:
     uses: dacbd/create-issue-action@v1
     if: steps.scanHigh.outcome != 'success' && steps.initialIssue.conclusion != 'sucess'
     with:
-      title: HIGH Vulnerability Detected ${{inputs.PROJECT_NAME}}
+      title: HIGH Vulnerability Detected ${{inputs.IMAGE_TAG}}
       token: ${{ env.PAT }}
       repo: cloud-product
       body: >
