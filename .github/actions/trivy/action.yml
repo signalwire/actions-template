@@ -24,7 +24,6 @@ runs:
       vuln-type: 'os,library'
       security-checks: vuln
       output: container_scan.txt
-      timeout: 10m0s
 
   - name: Load plan file
     id: readCritical
@@ -67,7 +66,6 @@ runs:
       ignore-unfixed: true
       vuln-type: 'os,library'
       security-checks: vuln
-      timeout: 10m0s
       output: container_scan_high.txt
 
   - name: Load plan file
