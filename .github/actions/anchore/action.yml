@@ -29,3 +29,6 @@ runs:
         sarif-file: ${{ steps.scan.outputs.sarif }}
         title: "Security scanning results ${{ inputs.IMAGE }}"
         odc-sarif: false
+
+    - run: cat ${{ steps.scan.outputs.sarif }}
+      shell: bash
