@@ -16,7 +16,7 @@ runs:
       image-ref: ${{ inputs.IMAGE }}
       template: "@actions/.github/actions/trivy/template.tpl"
       format: template
-      severity: 'CRITICAL'
+      severity: 'LOW'
       exit-code: '1'
       ignore-unfixed: true
       vuln-type: 'os,library'
@@ -35,9 +35,9 @@ runs:
     id: initialIssue
     if: steps.scanCritical.outcome != 'success'
     with:
-      title: Vulnerability Detected ${{inputs.IMAGE}}
+      title: CRITICAL Vulnerability Detected ${{inputs.IMAGE}}
       token: ${{ env.PAT }}
-      repo: cloud-product
+      repo: ci-testing
       body: >
         ### Context
         [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
@@ -59,7 +59,7 @@ runs:
       image-ref: ${{ inputs.IMAGE }}
       template: "@actions/.github/actions/trivy/template.tpl"
       format: template
-      severity: 'HIGH'
+      severity: 'LOW'
       exit-code: '1'
       ignore-unfixed: true
       vuln-type: 'os,library'
@@ -73,32 +73,32 @@ runs:
     with:
       path: container_scan_high.txt 
   
-  # - name: Create comment on HIGH vulnerabilities
-  #   uses: peter-evans/create-or-update-comment@v2
-  #   if: steps.scanHigh.outcome != 'success' && steps.initialIssue.conclusion == 'sucess'
-  #   with:
-  #     issue-number: ${{ steps.initalIssue.outputs.number }}
-  #     repo: cloud-product
-  #     token: ${{ env.PAT }}
-  #     body: |
-  #      ### Context
-  #       [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-  #       [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
-  #       Workflow name - `${{ github.workflow }}`
-  #       Job -           `${{ github.job }}`
-  #       status -        `${{ job.status }}`
-  #       Vulnerabilities -
+  - name: Create comment on HIGH vulnerabilities
+    uses: peter-evans/create-or-update-comment@v2
+    if: steps.scanHigh.outcome != 'success' && steps.initialIssue.conclusion == 'sucess'
+    with:
+      issue-number: ${{ steps.initalIssue.outputs.number }}
+      repo: ci-testing
+      token: ${{ env.PAT }}
+      body: |
+       ### Context
+        [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
+        Workflow name - `${{ github.workflow }}`
+        Job -           `${{ github.job }}`
+        status -        `${{ job.status }}`
+        Vulnerabilities -
         
-  #       ${{ steps.readHigh.outputs.content }}
-  #     reactions: '+1'
+        ${{ steps.readHigh.outputs.content }}
+      reactions: '+1'
 
   - name: Create Issue for HIGH Vulnerabilities
     uses: dacbd/create-issue-action@v1
     if: steps.scanHigh.outcome != 'success' && steps.initialIssue.conclusion != 'sucess'
     with:
-      title: Vulnerability Detected ${{inputs.PROJECT_NAME}}
+      title: HIGH Vulnerability Detected ${{inputs.PROJECT_NAME}}
       token: ${{ env.PAT }}
-      repo: cloud-product
+      repo: ci-testing
       body: >
         ### Context
         [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
