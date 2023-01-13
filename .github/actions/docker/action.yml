@@ -46,7 +46,7 @@ inputs:
   CONTAINER_TEST:
     default: 'true'
     description: 'Whenever the container should be tested on pr.'
-  COINTAINER_TEST_COMMAND:
+  CONTAINER_TEST_COMMAND:
     default: ''
     description: 'A custom command to test the docker container.'
 outputs:
@@ -116,7 +116,7 @@ runs:
       id: test
       shell: bash
       run: |
-        docker run -d --rm --name test ${{ fromJSON(steps.meta.outputs.json).tags[0] }} ${{ inputs.COINTAINER_TEST_COMMAND }}
+        docker run -d --rm --name test ${{ fromJSON(steps.meta.outputs.json).tags[0] }} ${{ inputs.CONTAINER_TEST_COMMAND }}
         sleep 20
         docker logs test > logs.txt
         EXECUTIONLOG=$(cat logs.txt)
