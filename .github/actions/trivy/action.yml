@@ -4,9 +4,7 @@ description: Trivy docker container vulnerability assessment
 inputs:
   IMAGE:
     required: true
-  PROJECT_NAME:
-    required: true
-    
+
 runs:
   using: "composite"
   steps:
@@ -37,7 +35,7 @@ runs:
     id: initialIssue
     if: steps.scanCritical.outcome != 'success'
     with:
-      title: Vulnerability Detected ${{inputs.PROJECT_NAME}}
+      title: Vulnerability Detected ${{inputs.IMAGE}}
       token: ${{ env.PAT }}
       repo: cloud-product
       body: >
@@ -75,24 +73,24 @@ runs:
     with:
       path: container_scan_high.txt 
   
-  - name: Create comment on HIGH vulnerabilities
-    uses: peter-evans/create-or-update-comment@v2
-    if: steps.scanHigh.outcome != 'success' && steps.initialIssue.conclusion == 'sucess'
-    with:
-      issue-number: ${{ steps.initalIssue.outputs.number }}
-      repo: cloud-product
-      token: ${{ env.PAT }}
-      body: |
-       ### Context
-        [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-        [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
-        Workflow name - `${{ github.workflow }}`
-        Job -           `${{ github.job }}`
-        status -        `${{ job.status }}`
-        Vulnerabilities -
+  # - name: Create comment on HIGH vulnerabilities
+  #   uses: peter-evans/create-or-update-comment@v2
+  #   if: steps.scanHigh.outcome != 'success' && steps.initialIssue.conclusion == 'sucess'
+  #   with:
+  #     issue-number: ${{ steps.initalIssue.outputs.number }}
+  #     repo: cloud-product
+  #     token: ${{ env.PAT }}
+  #     body: |
+  #      ### Context
+  #       [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+  #       [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
+  #       Workflow name - `${{ github.workflow }}`
+  #       Job -           `${{ github.job }}`
+  #       status -        `${{ job.status }}`
+  #       Vulnerabilities -
         
-        ${{ steps.readHigh.outputs.content }}
-      reactions: '+1'
+  #       ${{ steps.readHigh.outputs.content }}
+  #     reactions: '+1'
 
   - name: Create Issue for HIGH Vulnerabilities
     uses: dacbd/create-issue-action@v1
