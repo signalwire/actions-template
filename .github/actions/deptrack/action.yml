@@ -1,10 +1,7 @@
 name: DependencyTrack dependencies analysys
 
 inputs:
-  PROJECT_NAME:
-    required: true
-    type: string
-  PROJECT_VERSION:
+  DEPENDENCYTRACK_URL:
     required: true
     type: string
 runs:
@@ -14,8 +11,8 @@ runs:
       uses: CycloneDX/gh-node-module-generatebom@master
     - uses: DependencyTrack/gh-upload-sbom@v1.0.0
       with:
-        serverhostname: ${{ env.DEPENDENCYTRACK_URL }}
+        serverhostname: ${{ inputs.DEPENDENCYTRACK_URL }}
         apikey: ${{ env.DEPENDENCYTRACK_APIKEY }}
-        projectname: ${{ inputs.PROJECT_NAME }}
-        projectversion: ${{ inputs.PROJECT_VERSION }}
+        projectname: ${{ github.repository }}
+        projectversion: ${{ github.event.number }}
         autocreate: true

@@ -180,11 +180,11 @@ jobs:
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         # GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.GCLOUD_TOKEN }}    
     
-    - uses: ./actions/.github/actions/anchore
-      name: Container Scan
-      if: github.event_name == 'pull_request' && inputs.CONTAINER_SCAN == true
-      with:
-        IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
-      #   PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
-      env:
-        PAT: ${{ secrets.CI_PAT }}
+    # - uses: ./actions/.github/actions/docker-scan
+    #   name: Container Scan
+    #   if: github.event_name == 'pull_request' && inputs.CONTAINER_SCAN == true
+    #   with:
+    #     IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
+    #   #   PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
+    #   env:
+    #     PAT: ${{ secrets.CI_PAT }}
