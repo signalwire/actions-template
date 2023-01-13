@@ -22,6 +22,7 @@ runs:
       exit-code: '1'
       ignore-unfixed: true
       vuln-type: 'os,library'
+      security-checks: vuln
       output: container_scan.txt
 
   - name: Load plan file
@@ -64,6 +65,7 @@ runs:
       exit-code: '1'
       ignore-unfixed: true
       vuln-type: 'os,library'
+      security-checks: vuln
       output: container_scan_high.txt
 
   - name: Load plan file
