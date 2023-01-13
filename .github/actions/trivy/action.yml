@@ -18,7 +18,7 @@ runs:
       format: template
       severity: 'LOW'
       exit-code: '1'
-      ignore-unfixed: true
+      ignore-unfixed: false
       vuln-type: 'os,library'
       security-checks: vuln
       output: container_scan.txt
@@ -61,7 +61,7 @@ runs:
       format: template
       severity: 'LOW'
       exit-code: '1'
-      ignore-unfixed: true
+      ignore-unfixed: false
       vuln-type: 'os,library'
       security-checks: vuln
       output: container_scan_high.txt
