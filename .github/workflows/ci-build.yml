@@ -136,7 +136,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: signalwire/actions-template
-        ref: feat_improvecaching
+        ref: dev
         path: actions
         
     - uses: ./actions/.github/actions/gpg
@@ -151,7 +151,7 @@ jobs:
     # - uses: ./actions/.github/actions/gcloud-auth
     #   if: contains(${{inputs.REGISTRY}}, 'pkg.dev' )
     #   id: gcloud_auth
-    #   name: 'Authenticate to Google Cloud'
+    #   name: 'Authenticate to Googl Cloud'
     #   with:
     #     AUDIENCE: ${{ inputs.AUDIENCE }}
     #     TOKEN_FORMAT: ${{ inputs.TOKEN_FORMAT }}
