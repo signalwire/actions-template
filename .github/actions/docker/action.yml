@@ -138,8 +138,6 @@ runs:
         context: ${{ inputs.CONTEXT }}
         platforms: ${{ inputs.PLATFORMS }}
         build-args: ${{ inputs.BUILD_ARGS }}
-<<<<<<< Updated upstream
-=======
 
     # - name: Scanning image
     #   if: github.event_name == 'pull_request'
