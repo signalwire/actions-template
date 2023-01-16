@@ -121,16 +121,16 @@ jobs:
         ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
         submodules: 'recursive'
 
-
     - uses: actions/checkout@v3
       name: Checkout public submoules recursively
       id: public
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}
       with:
         submodules: 'recursive'
-    
+
     - run: git submodule status > REVISION
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
+
 
     - name: Checkout actions
       uses: actions/checkout@v3
@@ -189,3 +189,4 @@ jobs:
     #   #   PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
     #   env:
     #     PAT: ${{ secrets.CI_PAT }}
+    
