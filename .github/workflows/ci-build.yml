@@ -59,6 +59,7 @@ on:
       REGISTRY:
         type: string
         required: false
+        default: registry.hub.docker.com
       TOKEN_FORMAT:
         type: string
         default: id_token
@@ -68,13 +69,23 @@ on:
         required: false
         default: 'signalwire'
         description: 'The default registry repo owner.'
+      CONTAINER_SCAN:
+        type: boolean
+        default: true
+        description: 'Whenever Trivy scan should run.'
+      CONTAINER_TEST:
+        type: boolean
+        default: true
+        description: 'Whenever the container should be tested on pr.'
+      CONTAINER_TEST_COMMAND:
+        type: string
+        default: ''
+        description: 'A custom command to test the docker container.'
     secrets:
       DOCKERHUB_USERNAME:
         required: false
       DOCKERHUB_TOKEN:
         required: false
-      GITHUBTOKEN:
-        required: true
       GPG_PASSPHRASE:
         required: false
       GH_BOT_DEPLOY_KEY:
@@ -87,9 +98,10 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  
   build:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest-16-cores
     name: BUILD
     permissions:
       id-token: write
@@ -102,21 +114,29 @@ jobs:
         fetch-depth: 0
 
     - uses: actions/checkout@v3
+      name: Checkout private submoules recursively
+      id: private
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
       with:
-        ssh-key: ${{ env.GH_BOT_DEPLOY_KEY }}
+        ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
         submodules: 'recursive'
 
+
     - uses: actions/checkout@v3
+      name: Checkout public submoules recursively
+      id: public
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}
       with:
         submodules: 'recursive'
+    
+    - run: git submodule status > REVISION
+      if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
 
     - name: Checkout actions
       uses: actions/checkout@v3
       with:
         repository: signalwire/actions-template
-        ref: feat/cloud-run
+        ref: feat_improvecaching
         path: actions
         
     - uses: ./actions/.github/actions/gpg
@@ -127,16 +147,17 @@ jobs:
       env:
         PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-    - uses: ./actions/.github/actions/gcloud-auth
-      if: contains(${{inputs.REGISTRY}}, 'pkg.dev' )
-      id: gcloud_auth
-      name: 'Authenticate to Google Cloud'
-      with:
-        AUDIENCE: ${{ inputs.AUDIENCE }}
-        TOKEN_FORMAT: ${{ inputs.TOKEN_FORMAT }}
-      env:
-        GCP_WIP: ${{ secrets.GCP_WIP }}
-        GCP_SA: ${{ secrets.GCP_SA }}
+    # Remove unitil use it
+    # - uses: ./actions/.github/actions/gcloud-auth
+    #   if: contains(${{inputs.REGISTRY}}, 'pkg.dev' )
+    #   id: gcloud_auth
+    #   name: 'Authenticate to Google Cloud'
+    #   with:
+    #     AUDIENCE: ${{ inputs.AUDIENCE }}
+    #     TOKEN_FORMAT: ${{ inputs.TOKEN_FORMAT }}
+    #   env:
+    #     GCP_WIP: ${{ secrets.GCP_WIP }}
+    #     GCP_SA: ${{ secrets.GCP_SA }}
 
     - uses: ./actions/.github/actions/docker
       name: Docker build
@@ -150,18 +171,20 @@ jobs:
         TAG: ${{ inputs.TAG }}
         REGISTRY: ${{ inputs.REGISTRY }}
         IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
+        BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
+        CONTAINER_TEST: ${{ inputs.CONTAINER_TEST }}
+        CONTAINER_TEST_COMMAND: ${{ inputs.CONTAINER_TEST_COMMAND }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        DOCKERHUB_USERNAME: ${{secrets.DOCKERHUB_USERNAME }}
-        DOCKERHUB_TOKEN: ${{secrets.DOCKERHUB_TOKEN }}
-        BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
-        GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.GCLOUD_TOKEN }}    
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        # GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.GCLOUD_TOKEN }}    
     
     - uses: ./actions/.github/actions/trivy
-      name: Trivy Scan
-      if: github.event_name == 'pull_request'
+      name: Container Scan
+      if: github.event_name == 'pull_request' && inputs.CONTAINER_SCAN == true
       with:
         IMAGE: ${{ steps.build.outputs.IMAGE_TAG }}
-        TRIVY_IGNORES: ./actions/.github/actions/trivy/.trivyignore
+      #   PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PAT: ${{ secrets.CI_PAT }}
