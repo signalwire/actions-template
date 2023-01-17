@@ -81,6 +81,10 @@ on:
         type: string
         default: ''
         description: 'A custom command to test the docker container.'
+      RUNNER:
+        type: string
+        default: 'ubuntu'
+        description: 'The default runner.'
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -101,7 +105,7 @@ jobs:
   
   build:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest-16-cores
+    runs-on: ${{ inputs.RUNNER }}
     name: BUILD
     permissions:
       id-token: write
@@ -136,7 +140,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: signalwire/actions-template
-        ref: dev
+        ref: main
         path: actions
         
     - uses: ./actions/.github/actions/gpg

@@ -49,7 +49,7 @@ runs:
         
         ${{ steps.readCritical.outputs.content }}
       assignees: ${{ github.actor }}
-      labels: team/devops,security,vulnerability,docker
+      labels: team/devops,area/security,type/vulnerability,docker
 
 
   - uses: aquasecurity/trivy-action@master
@@ -110,4 +110,4 @@ runs:
         
         ${{ steps.readHigh.outputs.content }}
       assignees: ${{ github.actor }}
-      labels: team/devops,security,vulnerability,docker
+      labels: team/devops,area/security,type/vulnerability,docker
