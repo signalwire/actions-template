@@ -4,16 +4,110 @@ description: Trivy docker container vulnerability assessment
 inputs:
   IMAGE:
     required: true
-  TRIVY_IGNORES:
-    required: false
-    
+
 runs:
   using: "composite"
   steps:
-  - uses: lazy-actions/gitrivy@v3
+
+  - uses: aquasecurity/trivy-action@master
+    id: scanCritical
+    continue-on-error: true
     with:
-      token: ${{ env.GITHUB_TOKEN }}
-      image: ${{ inputs.IMAGE }}
-      severity: HIGH
-      trivy_version: "0.22.0"
-      trivyignores: ${{ inputs.TRIVY_IGNORES}}
+      image-ref: ${{ inputs.IMAGE }}
+      template: "@actions/.github/actions/trivy/template.tpl"
+      format: template
+      severity: 'CRITICAL'
+      exit-code: '1'
+      ignore-unfixed: true
+      vuln-type: 'os,library'
+      security-checks: vuln
+      output: container_scan.txt
+
+  - name: Load plan file
+    id: readCritical
+    if: steps.scanCritical.outcome != 'success'
+    uses: juliangruber/read-file-action@v1
+    with:
+      path: container_scan.txt 
+
+  - name: Create Issue on container scan
+    uses: dacbd/create-issue-action@v1
+    id: initialIssue
+    if: steps.scanCritical.outcome != 'success'
+    with:
+      title: CRITICAL Vulnerability Detected ${{inputs.IMAGE_TAG }}
+      token: ${{ env.PAT }}
+      repo: ci-testing
+      body: >
+        ### Context
+        [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
+        Workflow name - `${{ github.workflow }}`
+        Job -           `${{ github.job }}`
+        status -        `${{ job.status }}`
+        Vulnerabilities -
+        
+        ${{ steps.readCritical.outputs.content }}
+      assignees: ${{ github.actor }}
+      labels: team/devops,area/security,type/vulnerability,docker
+
+
+  - uses: aquasecurity/trivy-action@master
+    id: scanHigh
+    continue-on-error: true
+    with:
+      image-ref: ${{ inputs.IMAGE }}
+      template: "@actions/.github/actions/trivy/template.tpl"
+      format: template
+      severity: 'HIGH'
+      exit-code: '1'
+      ignore-unfixed: true
+      vuln-type: 'os,library'
+      security-checks: vuln
+      output: container_scan_high.txt
+
+  - name: Load plan file
+    id: readHigh
+    if: steps.scanHigh.outcome != 'success'
+    uses: juliangruber/read-file-action@v1
+    with:
+      path: container_scan_high.txt 
+  
+  - name: Create comment on HIGH vulnerabilities
+    uses: peter-evans/create-or-update-comment@v2
+    if: steps.scanHigh.outcome != 'success' && steps.initialIssue.conclusion == 'sucess'
+    with:
+      issue-number: ${{ steps.initalIssue.outputs.number }}
+      repository: cloud-product
+      token: ${{ env.PAT }}
+      body: |
+       ### Context
+        [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
+        Workflow name - `${{ github.workflow }}`
+        Job -           `${{ github.job }}`
+        status -        `${{ job.status }}`
+        Vulnerabilities -
+        
+        ${{ steps.readHigh.outputs.content }}
+      reactions: '+1'
+
+  - name: Create Issue for HIGH Vulnerabilities
+    uses: dacbd/create-issue-action@v1
+    if: steps.scanHigh.outcome != 'success' && steps.initialIssue.conclusion != 'sucess'
+    with:
+      title: HIGH Vulnerability Detected ${{inputs.IMAGE_TAG}}
+      token: ${{ env.PAT }}
+      repo: cloud-product
+      body: >
+        ### Context
+        [Failed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        [Codebase](https://github.com/${{ github.repository }}/tree/${{ github.sha }})
+        Workflow name - `${{ github.workflow }}`
+        Job -           `${{ github.job }}`
+        status -        `${{ job.status }}`
+        Vulnerabilities -
+        
+        ${{ steps.readHigh.outputs.content }}
+      assignees: ${{ github.actor }}
+      labels: team/devops,area/security,type/vulnerability,docker

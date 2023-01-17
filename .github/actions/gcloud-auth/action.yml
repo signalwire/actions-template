@@ -1,0 +1,23 @@
+name: 'GCloud Auth'
+description: 'Google Cloud Auth using Workload Identity Provider'
+
+outputs:
+  GCLOUD_TOKEN:
+    value: ${{ steps.auth.outputs.access_token }}
+    description: 'Access token from GCLOUD'
+
+inputs:
+  TOKEN_FORMAT:
+    default: id_token
+    description: 'The default token format generated when authenticating.'
+runs:
+  using: composite
+  steps:
+    - id: auth
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        token_format: ${{ inputs.TOKEN_FORMAT }}
+        workload_identity_provider: ${{ env.GCP_WIP }}
+        service_account: ${{ env.GCP_SA }}
+    
