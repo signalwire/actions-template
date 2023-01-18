@@ -60,7 +60,7 @@ jobs:
   # This workflow contains a single job called "deploy"
   ci:
     # The type of runner that the job will run on
-    runs-on: [ self-hosted ]
+    runs-on: ${{ inputs.RUNNER }}
     name: CI_CHECK
     steps:
     - uses: actions/checkout@v3
