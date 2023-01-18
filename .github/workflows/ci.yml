@@ -106,6 +106,7 @@ on:
 jobs:
   CHECK:
     name: CI
+    uses: signalwire/actions-template/.github/workflows/ci-check.yml@main 
     with:
       PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
       LANGUAGE: ${{ inputs.LANGUAGE }}
@@ -126,6 +127,7 @@ jobs:
   BUILD:
     name: BUILD
     needs: CHECK
+    uses: signalwire/actions-template/.github/workflows/ci-build.yml@main
     with:
       PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
       SUBMODULES_RECURSIVE: ${{ inputs.SUBMODULES_RECURSIVE }}
