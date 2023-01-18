@@ -1,0 +1,111 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Kubernetes Deploy
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: self-hosted
+        type: string
+      APPROVERS:
+        required: false
+        type: string
+      TELEPORT_PROXY_URL:
+        required: true
+        type: string
+      IMAGE_TAG:
+        required: false
+        type: string
+      TELEPORT_JOIN_METHOD:
+        required: false
+        default: github
+        type: string
+      TELEPORT_VERSION:
+        required: false
+        type: string
+        default: 11.1.0
+      K8S_CLUSTER_NAME:
+        required: true
+        type: string
+      PROJECT_NAME:
+        required: true
+        type: string
+      CHART_PATH:
+        required: true
+        type: string
+      NAMESPACE:
+        required: true
+        type: string
+      VALUES_FILE_PATH:  
+        required: true
+        type: string
+    secrets:
+      TELEPORT_CA_PIN:
+        required: false
+      TELEPORT_TOKEN:
+        required: true
+      GH_APPROVAL_APP_ID:
+        required: false
+      GH_APPROVAL_APP_PKEY:
+        required: false
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  deploy:
+    permissions:
+      id-token: write
+      contents: read
+
+    # The type of runner that the job will run on
+    runs-on: ${{ inputs.RUNNER }}
+    name: Deploy
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+        
+    - uses: ./actions/.github/actions/approval
+      name: Request approval
+      if: ${{ inputs.APPROVERS != null }}
+      env:
+        GH_APPROVAL_APP_ID: ${{ secrets.GH_APPROVAL_APP_ID }}
+        GH_APPROVAL_APP_PKEY: ${{ secrets.GH_APPROVAL_APP_PKEY }}
+      with:
+        APPROVERS: ${{ inputs.APPROVERS }}
+    
+    - uses: ./actions/.github/actions/teleport
+      name: Connecting to ${{ inputs.K8S_CLUSTER_NAME }} using Teleport
+      env:
+        TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+        CA_PIN: ${{ secrets.TELEPORT_CA_PIN }}
+      with:
+        PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+        JOIN_METHOD: ${{ inputs.TELEPORT_JOIN_METHOD }}
+        K8S_CLUSTER_NAME: ${{ inputs.K8S_CLUSTER_NAME }}
+        TELEPORT_VERSION: ${{ inputs.TELEPORT_VERSION }}
+
+    - uses: ./actions/.github/actions/helm-local
+      name: Rollout helm Chart to ${{ inputs.K8S_CLUSTER_NAME }} on ${{ inputs.NAMESPACE }} namespace
+      with:
+        APP_NAME: ${{ inputs.PROJECT_NAME }}
+        CHART_PATH: ${{ inputs.CHART_PATH }}
+        NAMESPACE: ${{ inputs.NAMESPACE }}
+        VALUES_FILE: ${{ inputs.VALUES_FILE_PATH }}
+
+
