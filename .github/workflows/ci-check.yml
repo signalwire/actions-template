@@ -41,6 +41,10 @@ on:
         required: false
         type: boolean
         default: false
+      RUNNER:
+        type: string
+        default: 'ubuntu'
+        description: 'The default runner.'
     secrets:
       SONAR_HOST_URL:
         required: false
