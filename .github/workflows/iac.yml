@@ -33,7 +33,7 @@ on:
       TELEPORT_VERSION:
         required: false
         type: string
-        default: 11.1.0
+        default: 11.2.1
       TELEPORT_APP:
         required: false
         type: string
