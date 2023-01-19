@@ -65,14 +65,17 @@ runs:
 
         kubernetes-cluster: ${{ inputs.K8S_CLUSTER_NAME }}
     
-    - name: Execute scripts on remote
-      if: inputs.FILES != ''
-      run: >
-        RSYNC_RSH='tsh ssh'
-        tsh -i ${{ steps.auth.outputs.identity-file }} ssh ${{ inputs.USERNAME }}@${{ inputs.HOSTNAME }} sh ${{ inputs.SCRIPT_PATH }}
-      shell: bash
+    # - name: Execute scripts on remote
+    #   if: inputs.FILES != ''
+    #   run: >
+    #     RSYNC_RSH='tsh ssh'
+    #     tsh -i ${{ steps.auth.outputs.identity-file }} ssh ${{ inputs.USERNAME }}@${{ inputs.HOSTNAME }} sh ${{ inputs.SCRIPT_PATH }}
+    #   shell: bash
 
+    # - name: Login to ${{inputs.TELEPORT_APP}}
+    #   if: inputs.TELEPORT_APP != ''
+    #   run: tsh -i ${{ steps.auth.outputs.identity-file }} app login ${{inputs.TELEPORT_APP}}
+    #   shell: bash
     - name: Login to ${{inputs.TELEPORT_APP}}
-      if: inputs.TELEPORT_APP != ''
-      run: tsh -i ${{ steps.auth.outputs.identity-file }} app login ${{inputs.TELEPORT_APP}}
+      run: tsh -i ${{ steps.auth.outputs.identity-file }} ls
       shell: bash
