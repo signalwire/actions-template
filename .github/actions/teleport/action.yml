@@ -74,5 +74,6 @@ runs:
 
     - name: Login to ${{inputs.TELEPORT_APP}}
       if: inputs.TELEPORT_APP != ''
-      run: tsh app login ${{inputs.TELEPORT_APP}}
+      # run: tsh app login ${{inputs.TELEPORT_APP}}
+      run: tsh app ls
       shell: bash
