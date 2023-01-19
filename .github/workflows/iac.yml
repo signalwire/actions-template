@@ -34,6 +34,10 @@ on:
         required: false
         type: string
         default: 11.1.0
+      TELEPORT_APP:
+        required: false
+        type: string
+        default: 11.1.0
     secrets:
       PRIVATE_SSH_KEY_TFMODULES:
         required: false #TODO: fix-it
@@ -80,6 +84,7 @@ jobs:
           PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
           JOIN_METHOD: ${{ inputs.TELEPORT_JOIN_METHOD }}
           TELEPORT_VERSION: ${{ inputs.TELEPORT_VERSION }}
+          TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
 
       # - uses: webfactory/ssh-agent@v0.7.0
       #   with:
