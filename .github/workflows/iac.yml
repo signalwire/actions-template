@@ -55,6 +55,8 @@ on:
         required: false
       GH_APPROVAL_APP_PKEY:
         required: false
+      TELEPORT_TOKEN:
+        required: false
 
 jobs:
   terragrunt:
