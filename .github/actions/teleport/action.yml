@@ -24,31 +24,31 @@ runs:
       with:
         version: ${{ inputs.TELEPORT_VERSION }}
 
-    # - name: Fetch credentials using Machine ID
-    #   id: auth
-    #   uses: teleport-actions/auth@v1
-    #   if: inputs.K8S_CLUSTER_NAME == ''
-    #   with:
-    #     # Use the address of the auth/proxy server for your own cluster.
-    #     proxy: ${{ inputs.PROXY_URL }}
-    #     # Use the name of the join token resource you created in step 1.
-    #     token: ${{ env.TOKEN }}
-    #     # Specify the length of time that the generated credentials should be
-    #     # valid for. This is optional and defaults to "1h"
-    #     certificate-ttl: 1h
+    - name: Fetch credentials using Machine ID
+      id: auth
+      uses: teleport-actions/auth@v1
+      if: inputs.K8S_CLUSTER_NAME == ''
+      with:
+        # Use the address of the auth/proxy server for your own cluster.
+        proxy: ${{ inputs.PROXY_URL }}
+        # Use the name of the join token resource you created in step 1.
+        token: ${{ env.TOKEN }}
+        # Specify the length of time that the generated credentials should be
+        # valid for. This is optional and defaults to "1h"
+        certificate-ttl: 1h
 
-    - name: Fetch credentials
-      # if: inputs.HOSTNAME != ''
-      run: >
-        tbot start
-        --auth-server=${{ inputs.PROXY_URL }}
-        --join-method=${{ inputs.JOIN_METHOD }}
-        --token=${{ env.TOKEN }}
-        --ca-pin=${{ env.CA_PIN }}
-        --oneshot
-        --destination-dir=./opt/machine-id
-        --data-dir=./opt/machine-id-data
-      shell: bash
+    # - name: Fetch credentials
+    #   # if: inputs.HOSTNAME != ''
+    #   run: >
+    #     tbot start
+    #     --auth-server=${{ inputs.PROXY_URL }}
+    #     --join-method=${{ inputs.JOIN_METHOD }}
+    #     --token=${{ env.TOKEN }}
+    #     --ca-pin=${{ env.CA_PIN }}
+    #     --oneshot
+    #     --destination-dir=./opt/machine-id
+    #     --data-dir=./opt/machine-id-data
+    #   shell: bash
 
     - name: Authorize against Teleport
       id: auth_k8s
