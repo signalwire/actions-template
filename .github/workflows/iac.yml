@@ -36,11 +36,11 @@ on:
         default: 11.1.0
     secrets:
       PRIVATE_SSH_KEY_TFMODULES:
-        required: true
+        required: false #TODO: fix-it
       AWS_ACCESS_KEY_ID:
-        required: true
+        required: false #TODO: fix-it
       AWS_ACCESS_KEY_SECRET:
-        required: true
+        required: false #TODO: fix-it
       TF_VAR_DO_TOKEN:
         required: false
       GCP_SA:
