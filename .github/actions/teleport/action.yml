@@ -4,7 +4,7 @@ description: Buld and push image to SignalWire registry
 inputs:
   TELEPORT_VERSION:
     required: false
-    default: 11.1.0
+    default: 11.2.1
   PROXY_URL:
     required: true
   JOIN_METHOD:
