@@ -74,5 +74,5 @@ runs:
 
     - name: Login to ${{inputs.TELEPORT_APP}}
       if: inputs.TELEPORT_APP != ''
-      run: tsh app login ${{inputs.TELEPORT_APP}}
+      run: tsh -i ${{ steps.auth.outputs.identity-file }} app login ${{inputs.TELEPORT_APP}}
       shell: bash
