@@ -20,6 +20,20 @@ on:
       APPROVERS:
         required: false
         type: string
+      TELEPORT_PROXY_URL:
+        required: true
+        type: string
+      IMAGE_TAG:
+        required: false
+        type: string
+      TELEPORT_JOIN_METHOD:
+        required: false
+        default: github
+        type: string
+      TELEPORT_VERSION:
+        required: false
+        type: string
+        default: 11.1.0
     secrets:
       PRIVATE_SSH_KEY_TFMODULES:
         required: true
@@ -51,107 +65,123 @@ jobs:
       - name: 'Checkout'
         uses: actions/checkout@v3
 
-      - uses: webfactory/ssh-agent@v0.7.0
+      - name: Checkout actions
+        uses: actions/checkout@v3
         with:
-          ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY_TFMODULES }}
-      
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
-          aws-region: ${{ inputs.AWS_REGION }}
+          repository: signalwire/actions-template
+          ref: feat/teleport-app
+          path: actions
 
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v1'
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WIP }}
-          service_account: ${{ secrets.GCP_SA }}
-      
-      - name: run terragrunt
-        uses: autero1/action-terragrunt@v1.2.0
-        with:
-          terragrunt_version: ${{ inputs.tg_version }}
-
-      - name: Terragrunt init
-        id: init
-        working-directory: ${{ inputs.WORKING_DIR }}
-        run: terragrunt run-all init
-      
-      - name: Terragrunt validate
-        id: validate
-        run: terragrunt run-all validate
-        working-directory: ${{ inputs.WORKING_DIR }}
-
-      - name: Terragrunt plan
-        id: plan
-        run: terragrunt run-all plan -no-color > plan.txt
-        working-directory: ${{ inputs.WORKING_DIR }}
+      - uses: ./actions/.github/actions/teleport
+        name: Connecting to ${{ inputs.K8S_CLUSTER_NAME }} using Teleport
         env:
-          TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
+          TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+        with:
+          PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+          JOIN_METHOD: ${{ inputs.TELEPORT_JOIN_METHOD }}
+          TELEPORT_VERSION: ${{ inputs.TELEPORT_VERSION }}
+
+      # - uses: webfactory/ssh-agent@v0.7.0
+      #   with:
+      #     ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY_TFMODULES }}
       
-      - name: Load plan file
-        id: read
-        uses: juliangruber/read-file-action@v1
-        with:
-          path: ${{ inputs.WORKING_DIR }}/plan.txt
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
+      #     aws-region: ${{ inputs.AWS_REGION }}
 
-      - name: Terraform Plan Status
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
-
-      - name: Update Pull Request
-        uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
-        env:
-          PLANPRINT: "terraform\n${{ steps.read.outputs.content }}"
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = `### Refers to \`${{ inputs.WORKING_DIR }}\`
-            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-
-            <details><summary>Show Plan</summary>
-
-            \`\`\`\n
-            ${process.env.PLANPRINT}
-            \`\`\`
-
-            </details>
-
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+      # - id: 'auth'
+      #   name: 'Authenticate to Google Cloud'
+      #   uses: 'google-github-actions/auth@v1'
+      #   with:
+      #     workload_identity_provider: ${{ secrets.GCP_WIP }}
+      #     service_account: ${{ secrets.GCP_SA }}
       
-      - name: Generate token
-        id: generate_token
-        uses: tibdex/github-app-token@v1
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        with:
-          app_id: ${{ secrets.GH_APPROVAL_APP_ID }}
-          private_key: ${{ secrets.GH_APPROVAL_APP_PKEY }}
+      # - name: run terragrunt
+      #   uses: autero1/action-terragrunt@v1.2.0
+      #   with:
+      #     terragrunt_version: ${{ inputs.tg_version }}
 
-      - name: Wait for approval
-        uses: trstringer/manual-approval@v1
-        timeout-minutes: 60
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        with:
-          secret: ${{ steps.generate_token.outputs.token }}
-          approvers: ${{ inputs.APPROVERS }}
-          minimum-approvals: 1
+      # - name: Terragrunt init
+      #   id: init
+      #   working-directory: ${{ inputs.WORKING_DIR }}
+      #   run: terragrunt run-all init
+      
+      # - name: Terragrunt validate
+      #   id: validate
+      #   run: terragrunt run-all validate
+      #   working-directory: ${{ inputs.WORKING_DIR }}
 
-      - name: Terragrunt apply-all
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terragrunt apply-all --terragrunt-non-interactive
-        working-directory: ${{ inputs.WORKING_DIR }}
-        env:
-          TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
+      # - name: Terragrunt plan
+      #   id: plan
+      #   run: terragrunt run-all plan -no-color > plan.txt
+      #   working-directory: ${{ inputs.WORKING_DIR }}
+      #   env:
+      #     TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
+      
+      # - name: Load plan file
+      #   id: read
+      #   uses: juliangruber/read-file-action@v1
+      #   with:
+      #     path: ${{ inputs.WORKING_DIR }}/plan.txt
+
+      # - name: Terraform Plan Status
+      #   if: steps.plan.outcome == 'failure'
+      #   run: exit 1
+
+      # - name: Update Pull Request
+      #   uses: actions/github-script@v6
+      #   if: github.event_name == 'pull_request'
+      #   env:
+      #     PLANPRINT: "terraform\n${{ steps.read.outputs.content }}"
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     script: |
+      #       const output = `### Refers to \`${{ inputs.WORKING_DIR }}\`
+      #       #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+      #       #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+      #       #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+      #       #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+
+      #       <details><summary>Show Plan</summary>
+
+      #       \`\`\`\n
+      #       ${process.env.PLANPRINT}
+      #       \`\`\`
+
+      #       </details>
+
+      #       *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+      #       github.rest.issues.createComment({
+      #         issue_number: context.issue.number,
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         body: output
+      #       })
+      
+      # - name: Generate token
+      #   id: generate_token
+      #   uses: tibdex/github-app-token@v1
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      #   with:
+      #     app_id: ${{ secrets.GH_APPROVAL_APP_ID }}
+      #     private_key: ${{ secrets.GH_APPROVAL_APP_PKEY }}
+
+      # - name: Wait for approval
+      #   uses: trstringer/manual-approval@v1
+      #   timeout-minutes: 60
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      #   with:
+      #     secret: ${{ steps.generate_token.outputs.token }}
+      #     approvers: ${{ inputs.APPROVERS }}
+      #     minimum-approvals: 1
+
+      # - name: Terragrunt apply-all
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      #   run: terragrunt apply-all --terragrunt-non-interactive
+      #   working-directory: ${{ inputs.WORKING_DIR }}
+      #   env:
+      #     TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}

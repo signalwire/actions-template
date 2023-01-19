@@ -11,7 +11,10 @@ inputs:
     required: false
     default: github
   K8S_CLUSTER_NAME:
-    required: true
+    required: false
+  TELEPORT_APP:
+    required: false
+    description: An app registered on teleport to connect via proxy.
   
 runs:
   using: "composite"
@@ -24,7 +27,7 @@ runs:
     - name: Fetch credentials using Machine ID
       id: auth
       uses: teleport-actions/auth@v1
-      if: inputs.K8S_CLUSTER_NAME != ''
+      if: inputs.K8S_CLUSTER_NAME == ''
       with:
         # Use the address of the auth/proxy server for your own cluster.
         proxy: ${{ inputs.PROXY_URL }}
@@ -67,4 +70,9 @@ runs:
       run: >
         RSYNC_RSH='tsh ssh'
         tsh -i ${{ steps.auth.outputs.identity-file }} ssh ${{ inputs.USERNAME }}@${{ inputs.HOSTNAME }} sh ${{ inputs.SCRIPT_PATH }}
+      shell: bash
+
+    - name: Login to ${{inputs.TELEPORT_APP}}
+      if: inputs.TELEPORT_APP != ''
+      run: tsh app login ${{inputs.TELEPORT_APP}}
       shell: bash
