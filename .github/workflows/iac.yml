@@ -37,6 +37,30 @@ on:
         required: false
       GH_APPROVAL_APP_PKEY:
         required: false
+      OS_AUTH_URL:
+        required: true
+      OS_IDENTITY_API_VERSION:
+        required: true
+      OS_PROJECT_DOMAIN_NAME:
+        required: true
+      OS_USER_DOMAIN_NAME:
+        required: true
+      OVH_ENDPOINT:
+        required: true
+      OS_TENANT_ID:
+        required: true
+      OS_TENANT_NAME:
+        required: true
+      OS_USERNAME:
+        required: true
+      OS_PASSWORD:
+        required: true
+      OVH_APPLICATION_KEY:
+        required: true
+      OVH_APPLICATION_SECRET:
+        required: true
+      OVH_CONSUMER_KEY:
+        required: true
 
 jobs:
   terragrunt:
@@ -90,7 +114,19 @@ jobs:
         working-directory: ${{ inputs.WORKING_DIR }}
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
-      
+          OS_AUTH_URL: https://auth.cloud.ovh.net/v3
+          OS_IDENTITY_API_VERSION: 3
+          OS_PROJECT_DOMAIN_NAME: Default
+          OS_USER_DOMAIN_NAME: Default
+          OVH_ENDPOINT: ovh-ca
+          OS_TENANT_ID: ${{ secrets.OS_TENANT_ID }}
+          OS_TENANT_NAME: ${{ secrets.OS_TENANT_NAME }}
+          OS_USERNAME: ${{ secrets.OS_USERNAME }}
+          OS_PASSWORD: ${{ secrets.OS_PASSWORD }}
+          OVH_APPLICATION_KEY: ${{ secrets.OVH_APPLICATION_KEY }}
+          OVH_APPLICATION_SECRET: ${{ secrets.OVH_APPLICATION_SECRET }}
+          OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
+
       - name: Load plan file
         id: read
         uses: juliangruber/read-file-action@v1
@@ -155,3 +191,15 @@ jobs:
         working-directory: ${{ inputs.WORKING_DIR }}
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
+          OS_AUTH_URL: https://auth.cloud.ovh.net/v3
+          OS_IDENTITY_API_VERSION: 3
+          OS_PROJECT_DOMAIN_NAME: Default
+          OS_USER_DOMAIN_NAME: Default
+          OVH_ENDPOINT: ovh-ca
+          OS_TENANT_ID: ${{ secrets.OS_TENANT_ID }}
+          OS_TENANT_NAME: ${{ secrets.OS_TENANT_NAME }}
+          OS_USERNAME: ${{ secrets.OS_USERNAME }}
+          OS_PASSWORD: ${{ secrets.OS_PASSWORD }}
+          OVH_APPLICATION_KEY: ${{ secrets.OVH_APPLICATION_KEY }}
+          OVH_APPLICATION_SECRET: ${{ secrets.OVH_APPLICATION_SECRET }}
+          OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
