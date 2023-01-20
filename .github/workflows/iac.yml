@@ -37,30 +37,20 @@ on:
         required: false
       GH_APPROVAL_APP_PKEY:
         required: false
-      OS_AUTH_URL:
-        required: true
-      OS_IDENTITY_API_VERSION:
-        required: true
-      OS_PROJECT_DOMAIN_NAME:
-        required: true
-      OS_USER_DOMAIN_NAME:
-        required: true
-      OVH_ENDPOINT:
-        required: true
       OS_TENANT_ID:
-        required: true
+        required: false
       OS_TENANT_NAME:
-        required: true
+        required: false
       OS_USERNAME:
-        required: true
+        required: false
       OS_PASSWORD:
-        required: true
+        required: false
       OVH_APPLICATION_KEY:
-        required: true
+        required: false
       OVH_APPLICATION_SECRET:
-        required: true
+        required: false
       OVH_CONSUMER_KEY:
-        required: true
+        required: false
 
 jobs:
   terragrunt:
