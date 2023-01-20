@@ -140,7 +140,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: signalwire/actions-template
-        ref: main
+        ref: main 
         path: actions
         
     - uses: ./actions/.github/actions/gpg
@@ -179,7 +179,7 @@ jobs:
         CONTAINER_TEST: ${{ inputs.CONTAINER_TEST }}
         CONTAINER_TEST_COMMAND: ${{ inputs.CONTAINER_TEST_COMMAND }}
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         # GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.GCLOUD_TOKEN }}    
