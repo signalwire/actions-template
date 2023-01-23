@@ -65,7 +65,11 @@ jobs:
         cat gpg.key
       env:
         GPG: ${{ secrets.GPG }}
-        
+    
+    - uses: actions/download-artifact@v2
+      with:
+        name: rpm-artifact
+
     - name: Signing Packages
       uses: ./actions/.github/actions/sign-package-action
       with:
