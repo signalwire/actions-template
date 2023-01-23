@@ -44,7 +44,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: signalwire/actions-template
-        ref: main
+        ref: feat/packages
         path: actions
         
     - name: Build RPM
