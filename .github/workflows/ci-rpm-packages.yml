@@ -47,13 +47,13 @@ jobs:
         ref: main
         path: actions
         
-    - name: Docker compose up
-      uses: ./actions/.github/actions/docker-compose
-      with:
-        COMPOSE_FILE: ${{ inputs.COMPOSE_FILE }}
-      env:
-        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Build RPM
+      uses: ./actions/.github/actions/build-rpm-action
+      # with:
+      #   COMPOSE_FILE: ${{ inputs.COMPOSE_FILE }}
+      # env:
+      #   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      #   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - uses: actions/upload-artifact@v2
       with:
