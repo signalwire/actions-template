@@ -1,0 +1,60 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Sign and Distribute RPM Packages
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: self-hosted
+        type: string
+      COMPOSE_FILE:
+        required: true
+        type: string
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  deploy:
+    # permissions:
+      # id-token: write
+      # contents: read
+
+    # The type of runner that the job will run on
+    runs-on: ${{ inputs.RUNNER }}
+    name: Build
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/sign-package-action
+        ref: main
+        path: actions
+
+    - name: Generate GPG file
+      run: echo ${{ secrets.GPG }} >> gpg.key
+        
+    - name: Signing Packages
+      uses: ./actions
+      with:
+        gpgkey_path: ${{ inputs.GPGKEY_PATH }}
+        rpmmacros_path: ${{ inputs.RPMMACROS_PATH}}
+        rpm_path: ${{ inputs.RPM_PATH }}
+        target_path: ${{ inputs.TARGET_PATH }}
+        target_folder: ${{ inputs.TARGET_FOLDER }}
