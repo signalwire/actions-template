@@ -14,21 +14,33 @@ on:
         required: false
         default: self-hosted
         type: string
-      COMPOSE_FILE:
+      GPGKEY_PATH:
         required: true
+        default: ''
+        type: string
+      RPMMACROS_PATH:
+        required: true
+        default: ''
+        type: string
+      RPM_PATH:
+        required: true
+        default: ''
+        type: string
+      TARGET_PATH:
+        required: true
+        default: ''
+        type: string
+      TARGET_FOLDER:
+        required: true
+        default: ''
         type: string
     secrets:
-      DOCKERHUB_USERNAME:
-        required: false
-      DOCKERHUB_TOKEN:
-        required: false
+      GPG:
+        required: true
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   deploy:
-    # permissions:
-      # id-token: write
-      # contents: read
 
     # The type of runner that the job will run on
     runs-on: ${{ inputs.RUNNER }}
