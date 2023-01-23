@@ -60,7 +60,9 @@ jobs:
         path: actions
 
     - name: Generate GPG file
-      run: echo ${{ secrets.GPG }} >> gpg.key
+      run: echo $GPG >> gpg.key
+      env:
+        GPG: ${{ secrets.GPG }}
         
     - name: Signing Packages
       uses: ./actions/.github/actions/sign-package-action
