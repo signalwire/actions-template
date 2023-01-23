@@ -61,7 +61,7 @@ jobs:
 
     - name: Generate GPG file
       run: |
-        echo ${{ secrets.GPG }} >> gpg.key
+        echo $GPG >> gpg.key
         cat gpg.key
       env:
         GPG: ${{ secrets.GPG }}
