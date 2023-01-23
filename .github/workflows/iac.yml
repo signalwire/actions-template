@@ -20,6 +20,10 @@ on:
       APPROVERS:
         required: false
         type: string
+      GCP_ENV:
+        required: false
+        type: boolean
+        default: true
     secrets:
       PRIVATE_SSH_KEY_TFMODULES:
         required: true
@@ -79,6 +83,7 @@ jobs:
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v1'
+        if: inputs.GCP_ENV == true
         with:
           workload_identity_provider: ${{ secrets.GCP_WIP }}
           service_account: ${{ secrets.GCP_SA }}

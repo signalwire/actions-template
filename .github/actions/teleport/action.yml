@@ -48,7 +48,7 @@ runs:
     #   shell: bash
 
     - name: Authorize against Teleport
-      id: auth
+      id: auth-k8s
       if: inputs.K8S_CLUSTER_NAME != ''
       uses: gravitational/teleport-actions/auth-k8s@v1
       with:
