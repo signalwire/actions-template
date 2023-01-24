@@ -51,12 +51,9 @@ jobs:
       uses: ./actions/.github/actions/docker-compose
       with:
         COMPOSE_FILE: ${{ inputs.COMPOSE_FILE }}
-    # - name: Build RPM
-    #   with:
-    #     project_name: ${{ inputs.PROJECT_NAME }}
-    #   # env:
-    #   #   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-    #   #   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - run: mkdir export ; mv *.rpm export
 
