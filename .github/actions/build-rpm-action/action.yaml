@@ -1,11 +1,11 @@
 # action.yml
 name: 'Build RPM Packages'
 description: 'Build RPM packages actions'
-# inputs:
-  # gpgkey_path: 
-  #   description: 'Path to the GPG certificate'
-  #   required: true
-  #   default: ''
+inputs:
+  project_name: 
+    description: 'Default Project Name'
+    required: true
+    default: 'default'
   # rpmmacros_path: 
   #   description: 'Path to the RPM Macros file'
   #   required: true
