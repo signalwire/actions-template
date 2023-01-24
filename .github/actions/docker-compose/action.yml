@@ -18,9 +18,9 @@ runs:
       username: ${{ env.DOCKERHUB_USERNAME }}
       password: ${{ env.DOCKERHUB_TOKEN }}
 
-  # - uses: KengoTODA/actions-setup-docker-compose@main
-  #   with:
-  #     version: '2.12.1'
+  - uses: KengoTODA/actions-setup-docker-compose@main
+    with:
+      version: '2.12.1'
 
   - name: Create default network  
     run: docker network create signalwire_freeswitch
