@@ -2,6 +2,10 @@
 name: 'Sign RPM'
 description: 'Sign RPM packages actions'
 inputs:
+  gpgkey_path: 
+    description: 'Path to the GPG certificate'
+    required: true
+    default: ''
   rpm_path: 
     description: 'Path to the RPM files'
     required: true
