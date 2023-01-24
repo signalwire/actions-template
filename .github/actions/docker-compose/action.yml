@@ -8,12 +8,16 @@ inputs:
   RUN_BACKGROUND:
     required: false
     default: 'false'
+  DOCKERHUB_LOGIN:
+    required: false
+    default: 'false'
     
 runs:
   using: "composite"
   steps:
   - name: Login to DockerHub
     uses: docker/login-action@v2
+    if: inputs.DOCKERHUB_LOGIN == 'false'
     with:
       username: ${{ env.DOCKERHUB_USERNAME }}
       password: ${{ env.DOCKERHUB_TOKEN }}
