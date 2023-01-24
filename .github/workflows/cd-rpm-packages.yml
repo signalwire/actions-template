@@ -14,18 +14,6 @@ on:
         required: false
         default: self-hosted
         type: string
-      GPGKEY_PATH:
-        required: true
-        default: ''
-        type: string
-      RPMMACROS_PATH:
-        required: true
-        default: ''
-        type: string
-      RPM_PATH:
-        required: true
-        default: ''
-        type: string
       TARGET_PATH:
         required: true
         default: ''
