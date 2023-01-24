@@ -48,7 +48,7 @@ jobs:
         path: actions
         
     - name: compose
-      uses: ./actions/.github/actions/compose
+      uses: ./actions/.github/actions/docker-compose
       with:
         COMPOSE_FILE: ${{ inputs.COMPOSE_FILE }}
     # - name: Build RPM
