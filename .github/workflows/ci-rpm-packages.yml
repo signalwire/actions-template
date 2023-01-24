@@ -17,6 +17,10 @@ on:
       COMPOSE_FILE:
         required: true
         type: string
+      RUN_BACKGROUND:
+        required: false
+        type: string
+        default: 'false'
     secrets:
       DOCKERHUB_USERNAME:
         required: false
