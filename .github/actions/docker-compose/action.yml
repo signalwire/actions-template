@@ -5,6 +5,9 @@ inputs:
   COMPOSE_FILE:
     required: false
     default: provisioning/docker-compose.yml
+  RUN_BACKGROUND:
+    required: false
+    default: 'false'
     
 runs:
   using: "composite"
@@ -23,12 +26,13 @@ runs:
     run: docker network create signalwire_freeswitch
     shell: bash
 
-  # - name: Run docker-compose
-  #   run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up -d
-  #   shell: bash
-  - uses: isbang/compose-action@v1.4.1
-    with:
-      compose-file: ${{inputs.COMPOSE_FILE}}
-    env:
-      BUILD_NUMBER: ${{ env.GITHUB_RUN_NUMBER }}
-      HASH: ${{ env.GITHUB_SHA }}
+  - name: Run docker-compose
+    if: inputs.RUN_BACKGROUND == 'false'
+    run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up 
+    shell: bash
+  # - uses: isbang/compose-action@v1.4.1
+  #   with:
+  #     compose-file: ${{inputs.COMPOSE_FILE}}
+  #   env:
+  #     BUILD_NUMBER: ${{ env.GITHUB_RUN_NUMBER }}
+  #     HASH: ${{ env.GITHUB_SHA }}
