@@ -44,7 +44,7 @@ jobs:
 
     # The type of runner that the job will run on
     runs-on: ${{ inputs.RUNNER }}
-    name: Build
+    name: Sign And Distribute Packages
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
@@ -62,9 +62,14 @@ jobs:
     - name: Generate GPG file
       run: |
         echo $GPG >> gpg.key
-        cat gpg.key
       env:
         GPG: ${{ secrets.GPG }}
+    
+    - name: Generate RPM Macros
+      run: |
+        echo $RPM >> .rpmmacros
+      env:
+        RPM: ${{ secrets.RPMMACROS }}
     
     - uses: actions/download-artifact@v2
       with:
@@ -74,7 +79,6 @@ jobs:
       uses: ./actions/.github/actions/sign-package-action
       with:
         gpgkey_path: ./gpg.key
-        rpmmacros_path: ${{ inputs.RPMMACROS_PATH}}
-        rpm_path: ${{ inputs.RPM_PATH }}
+        rpmmacros: ./.rpmmacros
         target_path: ${{ inputs.TARGET_PATH }}
         target_folder: ${{ inputs.TARGET_FOLDER }}

@@ -6,10 +6,6 @@ inputs:
     description: 'Path to the GPG certificate'
     required: true
     default: ''
-  rpmmacros_path: 
-    description: 'Path to the RPM Macros file'
-    required: true
-    default: ''
   rpm_path: 
     description: 'Path to the RPM files'
     required: true
