@@ -22,35 +22,35 @@ runs:
       username: ${{ env.DOCKERHUB_USERNAME }}
       password: ${{ env.DOCKERHUB_TOKEN }}
 
-  # - uses: KengoTODA/actions-setup-docker-compose@main
-  #   with:
-  #     version: '2.12.1'
+  - uses: KengoTODA/actions-setup-docker-compose@main
+    with:
+      version: '2.12.1'
 
   - name: Create default network  
     run: docker network create signalwire_freeswitch
     shell: bash
 
-  # - name: Run docker-compose
-  #   if: inputs.RUN_BACKGROUND == 'false'
-  #   run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up 
-  #   shell: bash
+  - name: Run docker-compose
+    if: inputs.RUN_BACKGROUND == 'false'
+    run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up 
+    shell: bash
   
   # - name: Run docker-compose in background
     # run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up -d
     # shell: bash
-  - uses: isbang/compose-action@v1.4.1
-    if: inputs.RUN_BACKGROUND == 'true'
-    with:
-      compose-file: ${{inputs.COMPOSE_FILE}}
-      down-flags: "--detach"
-    env:
-      BUILD_NUMBER: ${{ env.GITHUB_RUN_NUMBER }}
-      HASH: ${{ env.GITHUB_SHA }}
+  # - uses: isbang/compose-action@v1.4.1
+  #   if: inputs.RUN_BACKGROUND == 'true'
+  #   with:
+  #     compose-file: ${{inputs.COMPOSE_FILE}}
+  #     down-flags: "--detach"
+  #   env:
+  #     BUILD_NUMBER: ${{ env.GITHUB_RUN_NUMBER }}
+  #     HASH: ${{ env.GITHUB_SHA }}
   
-  - uses: isbang/compose-action@v1.4.1
-    if: inputs.RUN_BACKGROUND == 'false'
-    with:
-      compose-file: ${{inputs.COMPOSE_FILE}}
-    env:
-      GITHUB_RUN_ID: ${{ env.GITHUB_RUN_NUMBER }}
-      GITHUB_SHA: ${{ env.GITHUB_SHA }}
+  # - uses: isbang/compose-action@v1.4.1
+  #   if: inputs.RUN_BACKGROUND == 'false'
+  #   with:
+  #     compose-file: ${{inputs.COMPOSE_FILE}}
+  #   env:
+  #     GITHUB_RUN_ID: ${{ env.GITHUB_RUN_NUMBER }}
+  #     GITHUB_SHA: ${{ env.GITHUB_SHA }}
