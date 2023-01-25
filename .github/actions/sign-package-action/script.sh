@@ -1,8 +1,12 @@
 #!/bin/bash
-ls -l
-gpg --import $INPUT_GPGKEY_PATH
+# ls -la
+# printenv
+cp $RPMMACROS /root/.rpmmacros
+cat $RPMMACROS
+gpg --import $GPG_KEY_FILE
 
-cp $INPUT_RPMMACROS_PATH /root/.rpmmacros
+
+cat /root/.rpmmacros
 
 cd $INPUT_RPM_PATH
 echo stuff in incoming
@@ -19,7 +23,7 @@ cd $INPUT_TARGET_PATH
 createrepo $INPUT_TARGET_FOLDER
 
 # Sign metadata once createrepo generates it
-cd x86_64
+cd $INPUT_TARGET_FOLDER
 # You MUST remove repomd.xml.asc, otherwise gpg fails.
 rm -f repodata/repomd.xml.asc
 # You MUST use --batch, otherwise gpg will rise `gpg: cannot open '/dev/tty': No such device or address`
