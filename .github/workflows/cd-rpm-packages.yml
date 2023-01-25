@@ -72,4 +72,4 @@ jobs:
         rpmmacros_path: ./.rpmmacros
         target_path: ${{ inputs.TARGET_PATH }}
         target_folder: ${{ inputs.TARGET_FOLDER }}
-        rpm_path: ./export
+        rpm_path: .
