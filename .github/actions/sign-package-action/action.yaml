@@ -6,6 +6,10 @@ inputs:
     description: 'GPG name'
     required: true
     default: ''
+  gpg_file:
+    required: true
+    default: ''
+    description: 'path to gpg file'
   rpm_path: 
     description: 'Path to the RPM files'
     required: true
