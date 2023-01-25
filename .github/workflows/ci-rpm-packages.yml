@@ -40,9 +40,15 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Build RPM Packages
-      uses: signalwire/build-rpm-packages-action@v0.1
-
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: feat/packages
+        path: actions
+        
+    - name: compose
+      uses: ./actions/.github/actions/docker-compose
       with:
         COMPOSE_FILE: ${{ inputs.COMPOSE_FILE }}
         RUN_BACKGROUND: 'false'
