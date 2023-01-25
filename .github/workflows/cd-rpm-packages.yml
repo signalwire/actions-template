@@ -22,6 +22,10 @@ on:
         required: true
         default: ''
         type: string
+      GPG_NAME:
+        required: true
+        default: ''
+        type: string
     secrets:
       GPG:
         required: true
@@ -62,8 +66,8 @@ jobs:
       uses: ./actions/.github/actions/sign-package-action
       env:
         GPG_KEY_FILE: ${{ steps.gpg-key-secret.outputs.file }}
-        RPMMACROS: ${{ steps.macros.outputs.file }}
       with:
+        gpg_name: ${{inputs.GPG_NAME }}
         target_path: ${{ inputs.TARGET_PATH }}
         target_folder: ${{ inputs.TARGET_FOLDER }}
         rpm_path: .
