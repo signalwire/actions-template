@@ -50,14 +50,14 @@ jobs:
         path: actions
 
     - name: GPG Key Secret File
-      uses: ttd2089/secret-file-action@v1.0.0
+      uses: ttd2089/secret-file-action@main
       id: gpg-key-secret
       with:
         secret: ${{ secrets.GPG }}
         b64-decode: false 
 
     - name: GPG Key Secret File
-      uses: ttd2089/secret-file-action@v1.0.0
+      uses: ttd2089/secret-file-action@main
       id: macros
       with:
         secret: ${{ secrets.RPMMACROS }}
