@@ -6,5 +6,5 @@ WORKDIR /data
 RUN yum install -y rpm-build rpmdevtools rpm-sign createrepo
 COPY script.sh script.sh
 RUN chmod +x script.sh
-CMD ["sh", "script.sh"]
+ENTRYPOINT ["./script.sh"]
 
