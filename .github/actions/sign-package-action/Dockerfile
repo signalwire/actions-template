@@ -4,8 +4,6 @@ RUN mkdir /data
 WORKDIR /data
 
 RUN yum install -y rpm-build rpmdevtools rpm-sign createrepo
-COPY $INPUT_RPMMACROS_PATH /root/.rpmmacros
-RUN gpg --import $INPUT_GPGKEY_PATH
 COPY script.sh script.sh
 RUN chmod +x script.sh
 CMD ["sh", "script.sh"]
