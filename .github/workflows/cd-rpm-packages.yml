@@ -49,17 +49,31 @@ jobs:
         ref: feat/packages
         path: actions
 
-    - name: Generate GPG file
-      run: |
-        echo $GPG >> gpg.key
-      env:
-        GPG: ${{ secrets.GPG }}
+    - name: GPG Key Secret File
+      uses: ttd2089/secret-file-action@v1.1
+      id: gpg-key-secret
+      with:
+        secret: ${{ secrets.GPG }}
+        b64-decode: false 
+
+    - name: GPG Key Secret File
+      uses: ttd2089/secret-file-action@v1.1
+      id: macros
+      with:
+        secret: ${{ secrets.RPMMACROS }}
+        b64-decode: false 
+
+    # - name: Generate GPG file
+    #   run: |
+    #     echo $GPG >> gpg.key
+    #   env:
+    #     GPG: ${{ secrets.GPG }}
     
-    - name: Generate RPM Macros
-      run: |
-        echo $RPM >> .rpmmacros
-      env:
-        RPM: ${{ secrets.RPMMACROS }}
+    # - name: Generate RPM Macros
+    #   run: |
+    #     echo $RPM >> .rpmmacros
+    #   env:
+    #     RPM: ${{ secrets.RPMMACROS }}
     
     - uses: actions/download-artifact@v2
       with:
@@ -67,9 +81,12 @@ jobs:
 
     - name: Signing Packages
       uses: ./actions/.github/actions/sign-package-action
+      env:
+        GPG_KEY_FILE: ${{ steps.gpg-key-secret.outputs.file }}
+        RPMMACROS: ${{ steps.macros.outputs.file }}
       with:
-        gpgkey_path: ./gpg.key
-        rpmmacros_path: ./.rpmmacros
+        # gpgkey_path: ./gpg.key
+        # rpmmacros_path: ./.rpmmacros
         target_path: ${{ inputs.TARGET_PATH }}
         target_folder: ${{ inputs.TARGET_FOLDER }}
         rpm_path: .
