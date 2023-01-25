@@ -49,7 +49,7 @@ jobs:
       id: gpg-key-secret
       with:
         secret: ${{ secrets.GPG }}
-        b64-decode: false 
+        b64-decode: true 
 
     - uses: actions/download-artifact@v2
       with:
