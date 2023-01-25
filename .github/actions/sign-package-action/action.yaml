@@ -10,10 +10,10 @@ inputs:
     description: 'Path to the RPM files'
     required: true
     default: ''
-  # rpmmacros_path: 
-  #   description: 'Path to the rpmmacro files'
-  #   required: true
-  #   default: ''
+  rpmmacros: 
+    description: 'rpmmacro files'
+    required: true
+    default: ''
   target_path:
     description: 'Default path where the packages should be sent to'
     required: true
