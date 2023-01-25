@@ -7,6 +7,9 @@ cat > /root/.rpmmacros <<EOF
 %_gpg_name $INPUT_GPG_NAME
 EOF
 
+ls -l /root
+cat /root/.rpmmacros 
+
 gpg --import $GPG_KEY_FILE
 
 
