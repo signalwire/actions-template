@@ -41,6 +41,10 @@ on:
         required: false
         type: boolean
         default: false
+      RUNNER:
+        type: string
+        default: 'ubuntu'
+        description: 'The default runner.'
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -60,7 +64,7 @@ jobs:
   # This workflow contains a single job called "deploy"
   ci:
     # The type of runner that the job will run on
-    runs-on: [ self-hosted ]
+    runs-on: ${{ inputs.RUNNER }}
     name: CI_CHECK
     steps:
     - uses: actions/checkout@v3
@@ -77,7 +81,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: signalwire/actions-template
-        ref: main
+        ref: main 
         path: actions
 
     - name: Up Test dependencies

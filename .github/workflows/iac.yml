@@ -20,6 +20,10 @@ on:
       APPROVERS:
         required: false
         type: string
+      GCP_ENV:
+        required: false
+        type: boolean
+        default: true
     secrets:
       PRIVATE_SSH_KEY_TFMODULES:
         required: true
@@ -36,6 +40,20 @@ on:
       GH_APPROVAL_APP_ID:
         required: false
       GH_APPROVAL_APP_PKEY:
+        required: false
+      OS_TENANT_ID:
+        required: false
+      OS_TENANT_NAME:
+        required: false
+      OS_USERNAME:
+        required: false
+      OS_PASSWORD:
+        required: false
+      OVH_APPLICATION_KEY:
+        required: false
+      OVH_APPLICATION_SECRET:
+        required: false
+      OVH_CONSUMER_KEY:
         required: false
 
 jobs:
@@ -65,6 +83,7 @@ jobs:
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v1'
+        if: inputs.GCP_ENV == true
         with:
           workload_identity_provider: ${{ secrets.GCP_WIP }}
           service_account: ${{ secrets.GCP_SA }}
@@ -90,7 +109,19 @@ jobs:
         working-directory: ${{ inputs.WORKING_DIR }}
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
-      
+          OS_AUTH_URL: https://auth.cloud.ovh.net/v3
+          OS_IDENTITY_API_VERSION: 3
+          OS_PROJECT_DOMAIN_NAME: Default
+          OS_USER_DOMAIN_NAME: Default
+          OVH_ENDPOINT: ovh-ca
+          OS_TENANT_ID: ${{ secrets.OS_TENANT_ID }}
+          OS_TENANT_NAME: ${{ secrets.OS_TENANT_NAME }}
+          OS_USERNAME: ${{ secrets.OS_USERNAME }}
+          OS_PASSWORD: ${{ secrets.OS_PASSWORD }}
+          OVH_APPLICATION_KEY: ${{ secrets.OVH_APPLICATION_KEY }}
+          OVH_APPLICATION_SECRET: ${{ secrets.OVH_APPLICATION_SECRET }}
+          OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
+
       - name: Load plan file
         id: read
         uses: juliangruber/read-file-action@v1
@@ -155,3 +186,15 @@ jobs:
         working-directory: ${{ inputs.WORKING_DIR }}
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
+          OS_AUTH_URL: https://auth.cloud.ovh.net/v3
+          OS_IDENTITY_API_VERSION: 3
+          OS_PROJECT_DOMAIN_NAME: Default
+          OS_USER_DOMAIN_NAME: Default
+          OVH_ENDPOINT: ovh-ca
+          OS_TENANT_ID: ${{ secrets.OS_TENANT_ID }}
+          OS_TENANT_NAME: ${{ secrets.OS_TENANT_NAME }}
+          OS_USERNAME: ${{ secrets.OS_USERNAME }}
+          OS_PASSWORD: ${{ secrets.OS_PASSWORD }}
+          OVH_APPLICATION_KEY: ${{ secrets.OVH_APPLICATION_KEY }}
+          OVH_APPLICATION_SECRET: ${{ secrets.OVH_APPLICATION_SECRET }}
+          OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
