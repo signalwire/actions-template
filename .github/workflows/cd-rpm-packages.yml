@@ -56,7 +56,7 @@ jobs:
         name: rpm-artifact
 
     - name: Sign RPM
-      uses: signalwire/sign-rpm-packages-action@v0.1.3
+      uses: signalwire/sign-rpm-packages-action@v1.0.0
       with:
         gpg_file: ${{ steps.gpg-key-secret.outputs.file }}
         gpg_name: ${{inputs.GPG_NAME }}
