@@ -14,10 +14,14 @@ on:
         required: false
         default: self-hosted
         type: string
-      COMPOSE_FILE:
+      PROJECT_NAME:
         required: true
         type: string
       RUN_BACKGROUND:
+        required: false
+        type: string
+        default: 'false'
+      PACKAGER:
         required: false
         type: string
         default: 'false'
@@ -49,6 +53,9 @@ jobs:
 
     - name: Build RPM Packages
       uses: signalwire/build-rpm-packages-action@dev
+      with:
+        project_name: ${{inputs.PROJECT_NAME}}
+        packager: ${{inputs.PACKAGER}}
      
     # - name: compose
     #   uses: ./actions/.github/actions/docker-compose
