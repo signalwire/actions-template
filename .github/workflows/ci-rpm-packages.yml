@@ -46,16 +46,19 @@ jobs:
         repository: signalwire/actions-template
         ref: feat/packages
         path: actions
-        
-    - name: compose
-      uses: ./actions/.github/actions/docker-compose
-      with:
-        COMPOSE_FILE: ${{ inputs.COMPOSE_FILE }}
-        RUN_BACKGROUND: 'false'
-        DOCKERHUB_LOGIN: 'false'
-      env:
-        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build RPM Packages
+      uses: signalwire/build-rpm-packages-action@dev
+     
+    # - name: compose
+    #   uses: ./actions/.github/actions/docker-compose
+    #   with:
+    #     COMPOSE_FILE: ${{ inputs.COMPOSE_FILE }}
+    #     RUN_BACKGROUND: 'false'
+    #     DOCKERHUB_LOGIN: 'false'
+    #   env:
+    #     DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+    #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - uses: actions/upload-artifact@v2
       with:
