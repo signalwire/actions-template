@@ -116,5 +116,6 @@ jobs:
         USERNAME: ${{ inputs.USERNAME }}
         HOSTNAME: ${{ inputs.HOSTNAME }}
         EXEC_COMMANDS: ${{ inputs.EXEC_COMMANDS }}
+        FILES_FOLDER: ${{ inputs.FILES_FOLDER }}
       env: 
         TOKEN: ${{ secrets.TELEPORT_TOKEN }}
