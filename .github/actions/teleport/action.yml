@@ -19,6 +19,9 @@ inputs:
   FILES:
     required: false
     description: 'Files to move to remote host'
+  FILES_FOLDER:
+    required: false
+    description: 'Files target folder'
   USERNAME:
     required: false
     description: 'Host username.'
