@@ -78,10 +78,16 @@ runs:
 
         kubernetes-cluster: ${{ inputs.K8S_CLUSTER_NAME }}
     
+    - name: View hosts
+      if: inputs.FILES != ''
+      run: >
+        tsh ls -i ${{ steps.auth.outputs.identity-file }} 
+      shell: bash
+    
     - name: Copy files to remote
       if: inputs.FILES != ''
       run: >
-        tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{ inputs.USERNAME }} ${{ inputs.FILES }} ${{ inputs.USERNAME }}@${{ inputs.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
+        tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{inputs.USERNAME}} ${{ inputs.FILES }} ${{inputs.USERNAME}}@${{ inputs.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
       shell: bash
     
     - name: Execute commands on remote
