@@ -87,5 +87,5 @@ runs:
     - name: Execute commands on remote
       if: inputs.EXEC_COMMANDS != ''
       run: >
-        tsh -i ${{ steps.auth.outputs.identity-file }} --login=${{inputs.USERNAME}} ${{ inputs.HOSTNAME }} ${{ inputs.EXEC_COMMANDS }}
+        tsh -i ${{ steps.auth.outputs.identity-file }} --login=${{inputs.USERNAME}} ${{ inputs.HOSTNAME }} "${{ inputs.EXEC_COMMANDS }}"
       shell: bash
