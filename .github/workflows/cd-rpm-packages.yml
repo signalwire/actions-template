@@ -41,6 +41,10 @@ on:
         type: string
         required: false
         description: 'Files target folder'
+      USERNAME:
+        required: false
+        description: 'Host username.'
+        type: string
       HOSTNAME:
         type: string
         required: false
