@@ -4,7 +4,7 @@ description: Proxy requests using Teleport
 inputs:
   TELEPORT_VERSION:
     required: false
-    default: 11.2.1
+    default: 11.1.0
   JOIN_METHOD:
     required: false
     default: github

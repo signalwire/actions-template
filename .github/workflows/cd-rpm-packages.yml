@@ -113,7 +113,7 @@ jobs:
       with:
         FILES: ${{ inputs.FILES }}
         EXEC_COMMANDS: sudo tar -zxvf ${{ steps.generate-uuid.outputs.uuid }}.tar.gz -C ${{ inputs.TARGET_PATH }}/${{ inputs.TARGET_FOLDER }}
-        FILES_FOLDER: ${{ inputs.FILES_FOLDER }}
+        FILES_FOLDER: /tmp
       env: 
         USERNAME: ${{ secrets.USERNAME }}
         HOSTNAME: ${{ secrets.HOSTNAME }}
