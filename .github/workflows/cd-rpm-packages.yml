@@ -66,6 +66,10 @@ jobs:
     name: Sign And Distribute Packages
     environment: ${{ inputs.ENVIRONMENT }}
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
     - uses: actions/checkout@v3
       with:
