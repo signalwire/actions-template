@@ -111,11 +111,11 @@ jobs:
     - name: Copy files to remote host
       uses: ./actions/.github/actions/teleport
       with:
-        PROXY_URL: ${{ inputs.PROXY_URL }}
         FILES: ${{ inputs.FILES }}
-        USERNAME: ${{ inputs.USERNAME }}
-        HOSTNAME: ${{ inputs.HOSTNAME }}
         EXEC_COMMANDS: ${{ inputs.EXEC_COMMANDS }}
         FILES_FOLDER: ${{ inputs.FILES_FOLDER }}
       env: 
+        USERNAME: ${{ secrets.USERNAME }}
+        HOSTNAME: ${{ secrets.HOSTNAME }}
+        PROXY_URL: ${{ secrets.PROXY_URL }}
         TOKEN: ${{ secrets.TELEPORT_TOKEN }}
