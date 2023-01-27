@@ -134,6 +134,8 @@ jobs:
 
     - run: git submodule status > REVISION
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
+      
+    - run: git show -s --oneline --no-abbrev-commit >> REVISION
 
 
     - name: Checkout actions
