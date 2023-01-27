@@ -86,8 +86,9 @@ runs:
     
     - name: Copy files to remote
       if: inputs.FILES != ''
+        # tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{inputs.USERNAME}} ${{ inputs.FILES }} ${{ inputs.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
       run: >
-        tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{inputs.USERNAME}} ${{ inputs.FILES }} ${{ inputs.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
+        tsh -i ${{ steps.auth.outputs.identity-file }} ssh ${{inputs.USERNAME}}@${{ inputs.HOSTNAME }}  "echo $GITHUB_SHA >> ~/github_run_log"
       shell: bash
     
     - name: Execute commands on remote
