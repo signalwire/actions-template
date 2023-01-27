@@ -31,6 +31,8 @@ on:
         required: true
       GPG_CERT:
         required: true
+      TELEPORT_TOKEN:
+        required: false
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -82,3 +84,5 @@ jobs:
         USERNAME: ${{ inputs.USERNAME }}
         HOSTNAME: ${{ inputs.HOSTNAME }}
         EXEC_COMMANDS: ${{ inputs.EXEC_COMMANDS }}
+      env: 
+        TOKEN: ${{ secrets.TELEPORT_TOKEN }}
