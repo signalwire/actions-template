@@ -87,11 +87,11 @@ runs:
     - name: Copy files to remote
       if: inputs.FILES != ''
       run: >
-        tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{inputs.USERNAME}} ${{ inputs.FILES }} ${{inputs.USERNAME}}@${{ inputs.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
+        tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{inputs.USERNAME}} ${{ inputs.FILES }} ${{ inputs.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
       shell: bash
     
     - name: Execute commands on remote
       if: inputs.EXEC_COMMANDS != ''
       run: >
-        tsh -i ${{ steps.auth.outputs.identity-file }} ${{ inputs.USERNAME }}@${{ inputs.HOSTNAME }} ${{ inputs.EXEC_COMMANDS }}
+        tsh -i ${{ steps.auth.outputs.identity-file }} ${{ inputs.HOSTNAME }} ${{ inputs.EXEC_COMMANDS }}
       shell: bash
