@@ -26,6 +26,25 @@ on:
         required: true
         default: ''
         type: string
+      PROXY_URL:
+        required: true
+        type: string
+      EXEC_COMMANDS:
+        required: false
+        type: string
+        description: 'whenever you would like to execute commands on remote'
+      FILES:
+        type: string
+        required: false
+        description: 'Files to move to remote host'
+      FILES_FOLDER:
+        type: string
+        required: false
+        description: 'Files target folder'
+      HOSTNAME:
+        type: string
+        required: false
+        description: 'Hostname to connect to.'
     secrets:
       GPG_KEY:
         required: true
