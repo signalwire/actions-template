@@ -73,3 +73,12 @@ jobs:
         target_path: ${{ inputs.TARGET_PATH }}
         target_folder: ${{ inputs.TARGET_FOLDER }}
         rpm_path: .
+
+    - name: Copy files to remote host
+      uses: ./actions/.github/actions/teleport
+      with:
+        PROXY_URL: ${{ inputs.PROXY_URL }}
+        FILES: ${{ inputs.FILES }}
+        USERNAME: ${{ inputs.USERNAME }}
+        HOSTNAME: ${{ inputs.HOSTNAME }}
+        EXEC_COMMANDS: ${{ inputs.EXEC_COMMANDS }}

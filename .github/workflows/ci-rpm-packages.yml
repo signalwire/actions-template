@@ -57,17 +57,7 @@ jobs:
         project_name: ${{inputs.PROJECT_NAME}}
         packager: ${{inputs.PACKAGER}}
      
-    # - name: compose
-    #   uses: ./actions/.github/actions/docker-compose
-    #   with:
-    #     COMPOSE_FILE: ${{ inputs.COMPOSE_FILE }}
-    #     RUN_BACKGROUND: 'false'
-    #     DOCKERHUB_LOGIN: 'false'
-    #   env:
-    #     DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-    #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: rpm-artifact
         path: |

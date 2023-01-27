@@ -11,7 +11,20 @@ inputs:
     required: false
     default: github
   K8S_CLUSTER_NAME:
-    required: true
+    required: false
+    description: 'kubernetes cluster name to connect'
+  EXEC_COMMANDS:
+    required: false
+    description: 'whenever you would like to execute commands on remote'
+  FILES:
+    required: false
+    description: 'Files to move to remote host'
+  USERNAME:
+    required: false
+    description: 'Host username.'
+  HOSTNAME:
+    required: false
+    description: 'Hostname to connect to.'
   
 runs:
   using: "composite"
@@ -49,7 +62,7 @@ runs:
 
     - name: Authorize against Teleport
       id: auth-k8s
-      if: inputs.K8S_CLUSTER_NAME != ''
+      if: inputs.K8S_CLUSTER_NAME == ''
       uses: gravitational/teleport-actions/auth-k8s@v1
       with:
         # Specify the publically accessible address of your Teleport proxy.
@@ -62,9 +75,14 @@ runs:
 
         kubernetes-cluster: ${{ inputs.K8S_CLUSTER_NAME }}
     
-    - name: Execute scripts on remote
+    - name: Copy files to remote
       if: inputs.FILES != ''
       run: >
-        RSYNC_RSH='tsh ssh'
-        tsh -i ${{ steps.auth.outputs.identity-file }} ssh ${{ inputs.USERNAME }}@${{ inputs.HOSTNAME }} sh ${{ inputs.SCRIPT_PATH }}
+        tsh -i ${{ steps.auth.outputs.identity-file }} scp ${{ inputs.FILES }} ${{ inputs.USERNAME }}@${{ inputs.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
+      shell: bash
+    
+    - name: Execute commands on remote
+      if: inputs.EXEC_COMMANDS != ''
+      run: >
+        tsh -i ${{ steps.auth.outputs.identity-file }} ${{ inputs.USERNAME }}@${{ inputs.HOSTNAME }} ${{ inputs.EXEC_COMMANDS }}
       shell: bash
