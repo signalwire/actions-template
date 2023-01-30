@@ -15,7 +15,7 @@ runs:
         java-version: 1.11
 
     - name: Cache SonarQube packages
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       if: ${{ inputs.LANGUAGE == 'dot-net'}}
       with:
         path: ~/.sonar/cache
