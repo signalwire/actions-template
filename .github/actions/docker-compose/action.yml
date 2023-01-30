@@ -5,12 +5,19 @@ inputs:
   COMPOSE_FILE:
     required: false
     default: provisioning/docker-compose.yml
+  RUN_BACKGROUND:
+    required: false
+    default: 'false'
+  DOCKERHUB_LOGIN:
+    required: false
+    default: 'false'
     
 runs:
   using: "composite"
   steps:
   - name: Login to DockerHub
     uses: docker/login-action@v2
+    if: inputs.DOCKERHUB_LOGIN == 'true'
     with:
       username: ${{ env.DOCKERHUB_USERNAME }}
       password: ${{ env.DOCKERHUB_TOKEN }}
@@ -24,5 +31,26 @@ runs:
     shell: bash
 
   - name: Run docker-compose
-    run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up -d
+    if: inputs.RUN_BACKGROUND == 'false'
+    run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up 
     shell: bash
+  
+  # - name: Run docker-compose in background
+    # run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up -d
+    # shell: bash
+  # - uses: isbang/compose-action@v1.4.1
+  #   if: inputs.RUN_BACKGROUND == 'true'
+  #   with:
+  #     compose-file: ${{inputs.COMPOSE_FILE}}
+  #     down-flags: "--detach"
+  #   env:
+  #     BUILD_NUMBER: ${{ env.GITHUB_RUN_NUMBER }}
+  #     HASH: ${{ env.GITHUB_SHA }}
+  
+  # - uses: isbang/compose-action@v1.4.1
+  #   if: inputs.RUN_BACKGROUND == 'false'
+  #   with:
+  #     compose-file: ${{inputs.COMPOSE_FILE}}
+  #   env:
+  #     GITHUB_RUN_ID: ${{ env.GITHUB_RUN_NUMBER }}
+  #     GITHUB_SHA: ${{ env.GITHUB_SHA }}

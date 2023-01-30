@@ -2,9 +2,9 @@ name: .NET Unit Test
 description: .NET Test report
 
 inputs:
-  DOTNET_VERSION:
+  DOTNET-VERSION:
     required: false
-    default: "6.0.403"
+    default: "3.1.402"
 
 runs:
   using: "composite"
@@ -12,18 +12,14 @@ runs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: ${{ inputs.DOTNET_VERSION }}
+        dotnet-version: ${{ inputs.DOTNET-VERSION }}
 
-    - name: test docker-compose
-      run: docker ps
-      shell: bash
-      
     - name: Build
       run: dotnet build --configuration Release
       shell: bash
 
     - name: Test
-      run: dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=TESTING || true
+      run: dotnet test --logger "trx;LogFileName=test-results.trx" || true
       shell: bash
 
     - name: Test Report
@@ -33,4 +29,4 @@ runs:
         name: DotNET Tests
         path: "**/test-results.trx"                            
         reporter: dotnet-trx
-        fail-on-error: false #TODO: fix me
+        fail-on-error: true

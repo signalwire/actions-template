@@ -9,7 +9,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: steebchen/kubectl@v2.0.0
+    - uses: steebchen/kubectl@v2.1.1
       with:
         command: apply -f ${{ inputs.statics_path }}
         config: '${{ secrets.KUBECONFIG_STAGING_DO_NYC1_COCRE_SUP }}'

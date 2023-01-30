@@ -1,0 +1,64 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build RPM Packages
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: self-hosted
+        type: string
+      PROJECT_NAME:
+        required: true
+        type: string
+      RUN_BACKGROUND:
+        required: false
+        type: string
+        default: 'false'
+      PACKAGER:
+        required: false
+        type: string
+        default: 'false'
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  deploy:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Build
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+
+    - name: Build RPM Packages
+      uses: signalwire/build-rpm-packages-action@dev
+      with:
+        project_name: ${{inputs.PROJECT_NAME}}
+        packager: ${{inputs.PACKAGER}}
+     
+    - uses: actions/upload-artifact@v3
+      with:
+        name: rpm-artifact
+        path: |
+          *.rpm

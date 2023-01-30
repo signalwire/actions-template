@@ -10,12 +10,12 @@ runs:
   steps:
     - name: Set up JDK 11
       if: ${{ inputs.LANGUAGE == 'dot-net'}}
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v3
       with:
         java-version: 1.11
 
     - name: Cache SonarQube packages
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       if: ${{ inputs.LANGUAGE == 'dot-net'}}
       with:
         path: ~/.sonar/cache
