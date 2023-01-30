@@ -96,7 +96,6 @@ jobs:
         tar_name: ${{ steps.generate-uuid.outputs.uuid }}
         rpm_path: .
 
-    - run: ls -l
     - name: Copy files to remote host
       uses: ./actions/.github/actions/teleport
       with:
