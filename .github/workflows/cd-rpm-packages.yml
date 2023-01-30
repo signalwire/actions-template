@@ -1,0 +1,109 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Sign and Distribute RPM Packages
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: self-hosted
+        type: string
+      TARGET_PATH:
+        required: true
+        default: ''
+        type: string
+      TARGET_FOLDER:
+        required: true
+        default: ''
+        type: string
+      GPG_NAME:
+        required: true
+        default: ''
+        type: string
+    secrets:
+      GPG_KEY:
+        required: true
+      GPG_CERT:
+        required: true
+      TELEPORT_TOKEN:
+        required: true
+      PROXY_URL:
+        required: true
+      HOSTNAME:
+        required: true
+      USERNAME:
+        required: true
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  deploy:
+
+    # The type of runner that the job will run on
+    runs-on: ${{ inputs.RUNNER }}
+    name: Sign And Distribute Packages
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    permissions: write-all
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: feat/packages
+        path: actions
+
+    - uses: actions/download-artifact@v2
+      with:
+        name: rpm-artifact
+
+    - name: GPG Key Secret File
+      uses: ttd2089/secret-file-action@main
+      id: gpg-key-secret
+      with:
+        secret: ${{ secrets.GPG_KEY }}
+        b64-decode: true 
+    
+    - name: GPG Key Secret File
+      uses: ttd2089/secret-file-action@main
+      id: gpg-cert-secret
+      with:
+        secret: ${{ secrets.GPG_CERT }}
+        b64-decode: true 
+
+    - name: Set UUID
+      id: generate-uuid
+      uses: filipstefansson/uuid-action@v1
+
+    - name: Sign RPM
+      uses: signalwire/sign-rpm-packages-action@dev
+      with:
+        gpgkey_file: ${{ steps.gpg-key-secret.outputs.file }}
+        gpgcert_file: ${{ steps.gpg-cert-secret.outputs.file }}
+        gpg_name: ${{inputs.GPG_NAME }}
+        target_path: ${{ inputs.TARGET_PATH }}
+        target_folder: ${{ inputs.TARGET_FOLDER }}
+        tar_name: ${{ steps.generate-uuid.outputs.uuid }}
+        rpm_path: .
+
+    - name: Copy files to remote host
+      uses: ./actions/.github/actions/teleport
+      with:
+        FILES: ${{ steps.generate-uuid.outputs.uuid }}.tar.gz
+        EXEC_COMMANDS: sudo tar -zxvf /tmp/${{ steps.generate-uuid.outputs.uuid }}.tar.gz -C /
+        FILES_FOLDER: /tmp
+      env: 
+        USERNAME: ${{ secrets.USERNAME }}
+        HOSTNAME: ${{ secrets.HOSTNAME }}
+        PROXY_URL: ${{ secrets.PROXY_URL }}
+        TOKEN: ${{ secrets.TELEPORT_TOKEN }}

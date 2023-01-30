@@ -1,33 +1,41 @@
-name: Build and pushing docker
-description: Buld and push image to SignalWire registry
+name: Teleport
+description: Proxy requests using Teleport
 
 inputs:
   TELEPORT_VERSION:
     required: false
     default: 11.1.0
-  PROXY_URL:
-    required: true
   JOIN_METHOD:
     required: false
     default: github
   K8S_CLUSTER_NAME:
-    required: true
+    required: false
+    description: 'kubernetes cluster name to connect'
+  EXEC_COMMANDS:
+    required: false
+    description: 'whenever you would like to execute commands on remote'
+  FILES:
+    required: false
+    description: 'Files to move to remote host'
+  FILES_FOLDER:
+    required: false
+    description: 'Files target folder'
   
 runs:
   using: "composite"
   steps:
     - name: Fetch Teleport binaries
-      uses: gravitational/teleport-actions/setup@v1
+      uses: teleport-actions/setup@v1
       with:
         version: ${{ inputs.TELEPORT_VERSION }}
 
     - name: Fetch credentials using Machine ID
       id: auth
       uses: teleport-actions/auth@v1
-      if: inputs.K8S_CLUSTER_NAME != ''
+      if: env.HOSTNAME != ''
       with:
         # Use the address of the auth/proxy server for your own cluster.
-        proxy: ${{ inputs.PROXY_URL }}
+        proxy: ${{ env.PROXY_URL }}
         # Use the name of the join token resource you created in step 1.
         token: ${{ env.TOKEN }}
         # Specify the length of time that the generated credentials should be
@@ -53,7 +61,7 @@ runs:
       uses: gravitational/teleport-actions/auth-k8s@v1
       with:
         # Specify the publically accessible address of your Teleport proxy.
-        proxy: ${{ inputs.PROXY_URL }}
+        proxy: ${{ env.PROXY_URL }}
         # Specify the name of the join token for your bot.
         token: ${{ env.TOKEN }}
         # Specify the length of time that the generated credentials should be
@@ -62,9 +70,14 @@ runs:
 
         kubernetes-cluster: ${{ inputs.K8S_CLUSTER_NAME }}
     
-    - name: Execute scripts on remote
+    - name: Copy files to remote
       if: inputs.FILES != ''
       run: >
-        RSYNC_RSH='tsh ssh'
-        tsh -i ${{ steps.auth.outputs.identity-file }} ssh ${{ inputs.USERNAME }}@${{ inputs.HOSTNAME }} sh ${{ inputs.SCRIPT_PATH }}
+        tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{env.USERNAME}} ${{ inputs.FILES }} ${{ env.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
+      shell: bash
+    
+    - name: Execute commands on remote
+      if: inputs.EXEC_COMMANDS != ''
+      run: >
+        tsh -i ${{ steps.auth.outputs.identity-file }} --login=${{env.USERNAME}} ssh ${{ env.HOSTNAME }} ${{ inputs.EXEC_COMMANDS }}
       shell: bash
