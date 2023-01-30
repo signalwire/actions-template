@@ -53,13 +53,6 @@ on:
         required: false
         type: boolean
         default: false
-      STACK_NAME:
-        required: false
-        type: string
-      DEPLOY:
-        required: false
-        type: boolean
-        default: true
       TEST_DEPENDENCIES:
         required: false
         type: boolean
@@ -72,6 +65,16 @@ on:
         required: false
         type: string
         default: "6.0.403"
+      TAG:
+        required: false
+        type: string
+        default: |
+          type=schedule
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=sha
       SUBMODULES_PRIVATE: 
         required: false
         type: boolean
