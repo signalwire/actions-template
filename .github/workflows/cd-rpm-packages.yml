@@ -93,7 +93,7 @@ jobs:
         gpg_name: ${{inputs.GPG_NAME }}
         target_path: ${{ inputs.TARGET_PATH }}
         target_folder: ${{ inputs.TARGET_FOLDER }}
-        tar_file: ${{ steps.generate-uuid.outputs.uuid }}
+        tar_name: ${{ steps.generate-uuid.outputs.uuid }}
         rpm_path: .
 
     - run: ls -l
