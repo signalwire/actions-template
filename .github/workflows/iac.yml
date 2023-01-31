@@ -24,6 +24,11 @@ on:
         required: false
         type: boolean
         default: true
+      TELEPORT_PROXY_URL:
+        required: false
+        type: string
+        default: ''
+        description: Default Teleport URL
       TELEPORT_APP:
         required: false
         type: string
