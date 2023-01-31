@@ -131,9 +131,9 @@ jobs:
       - name: Configure Vault
         if: inputs.TELEPORT_APP != ''
         run: >
-          export VAULT_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }}
-          export VAULT_CLIENT_CERT=${{ steps.teleportapp.outputs.certificate-file }}
-          export VAULT_CLIENT_KEY=${{ steps.teleportapp.outputs.key-file }}
+          echo VAULT_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
+          echo VAULT_CLIENT_CERT=${{ steps.teleportapp.outputs.certificate-file }} >> $GITHUB_ENV
+          echo VAULT_CLIENT_KEY=${{ steps.teleportapp.outputs.key-file }} >> $GITHUB_ENV
       
       - name: Terragrunt validate
         id: validate
