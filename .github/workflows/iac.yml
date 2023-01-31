@@ -24,6 +24,11 @@ on:
         required: false
         type: boolean
         default: true
+      TELEPORT_APP:
+        required: false
+        type: string
+        default: ''
+        description: An app registered on teleport to authenticate using proxy
     secrets:
       PRIVATE_SSH_KEY_TFMODULES:
         required: true
@@ -55,6 +60,9 @@ on:
         required: false
       OVH_CONSUMER_KEY:
         required: false
+      TELEPORT_TOKEN:
+        required: true
+        description: Teleport Token name
 
 jobs:
   terragrunt:
@@ -103,6 +111,24 @@ jobs:
         run: terragrunt run-all validate
         working-directory: ${{ inputs.WORKING_DIR }}
 
+      - name: Authenticate against Teleport to use Vault
+        if: inputs.TELEPORT_APP != ''
+        id: teleportapp
+        uses: ./actions/.github/actions/teleport
+        env:
+          TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+          CA_PIN: ${{ secrets.TELEPORT_CA_PIN }}
+          PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+        with:
+          TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+      
+      - name: Configure Vault
+        if: inputs.TELEPORT_APP != ''
+        run: >
+          export VAULT_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }}
+          export VAULT_CLIENT_CERT=${{ steps.teleportapp.outputs.certificate-file }}
+          export VAULT_CLIENT_KEY=${{ steps.teleportapp.outputs.key-file }}
+      
       - name: Terragrunt plan
         id: plan
         run: terragrunt run-all plan -no-color > plan.txt
