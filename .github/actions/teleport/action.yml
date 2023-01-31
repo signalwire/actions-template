@@ -97,7 +97,7 @@ runs:
     - name: Fetch application credentials
       id: auth-app
       if: inputs.TELEPORT_APP != ''
-      uses: teleport-actions/auth-application@v1
+      uses: teleport-actions/auth-application@main
       with:
         # Specify the publically accessible address of your Teleport proxy.
         proxy: ${{ env.PROXY_URL }}
