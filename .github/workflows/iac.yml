@@ -24,6 +24,16 @@ on:
         required: false
         type: boolean
         default: true
+      TELEPORT_PROXY_URL:
+        required: false
+        type: string
+        default: ''
+        description: Default Teleport URL
+      TELEPORT_APP:
+        required: false
+        type: string
+        default: ''
+        description: An app registered on teleport to authenticate using proxy
     secrets:
       PRIVATE_SSH_KEY_TFMODULES:
         required: true
@@ -55,6 +65,12 @@ on:
         required: false
       OVH_CONSUMER_KEY:
         required: false
+      TELEPORT_TOKEN:
+        required: false
+        description: Teleport Token name
+      VAULT_TOKEN:
+        required: false
+        description: A Vault token in case vault is required
 
 jobs:
   terragrunt:
@@ -68,6 +84,13 @@ jobs:
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v3
+
+      - name: Checkout actions
+        uses: actions/checkout@v3
+        with:
+          repository: signalwire/actions-template
+          ref: main
+          path: actions
 
       - uses: webfactory/ssh-agent@v0.7.0
         with:
@@ -97,6 +120,26 @@ jobs:
         id: init
         working-directory: ${{ inputs.WORKING_DIR }}
         run: terragrunt run-all init
+      
+      - name: Authenticate against Teleport to use Vault
+        if: inputs.TELEPORT_APP != ''
+        id: teleportapp
+        uses: ./actions/.github/actions/teleport
+        env:
+          TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+          PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+        with:
+          TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+      
+      - name: Configure Vault
+        if: inputs.TELEPORT_APP != ''
+        run: |
+          echo VAULT_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
+          echo VAULT_CLIENT_CERT=${{ steps.teleportapp.outputs.certificate-file }} >> $GITHUB_ENV
+          echo VAULT_CLIENT_KEY=${{ steps.teleportapp.outputs.key-file }} >> $GITHUB_ENV
+          echo VAULT_TOKEN=$VAULT_TOKEN >> $GITHUB_ENV
+        env:
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
       
       - name: Terragrunt validate
         id: validate

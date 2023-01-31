@@ -20,6 +20,18 @@ inputs:
   FILES_FOLDER:
     required: false
     description: 'Files target folder'
+  TELEPORT_APP:
+    required: false
+    default: ''
+    description: Teleport app to authenticate against
+  
+outputs:
+  certificate-file:
+    value: ${{ steps.auth-app.outputs.certificate-file }}
+    description: Teleport app certificate file
+  key-file:
+    value: ${{ steps.auth-app.outputs.key-file }}
+    description: Teleport app key file
   
 runs:
   using: "composite"
@@ -81,3 +93,18 @@ runs:
       run: >
         tsh -i ${{ steps.auth.outputs.identity-file }} --login=${{env.USERNAME}} ssh ${{ env.HOSTNAME }} ${{ inputs.EXEC_COMMANDS }}
       shell: bash
+
+    - name: Fetch application credentials
+      id: auth-app
+      if: inputs.TELEPORT_APP != ''
+      uses: teleport-actions/auth-application@main
+      with:
+        # Specify the publically accessible address of your Teleport proxy.
+        proxy: ${{ env.PROXY_URL }}
+        # Specify the name of the join token for your bot.
+        token: ${{ env.TOKEN }}
+        # Specify the length of time that the generated credentials should be
+        # valid for. This is optional and defaults to "1h"
+        certificate-ttl: 1h
+        # Specify the name of the application you wish to access.
+        app: ${{ inputs.TELEPORT_APP }}
