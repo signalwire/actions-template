@@ -137,7 +137,9 @@ jobs:
           echo VAULT_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
           echo VAULT_CLIENT_CERT=${{ steps.teleportapp.outputs.certificate-file }} >> $GITHUB_ENV
           echo VAULT_CLIENT_KEY=${{ steps.teleportapp.outputs.key-file }} >> $GITHUB_ENV
-          echo VAULT_TOKEN=${{ secrets.VAULT_TOKEN }} >> $GITHUB_ENV
+          echo VAULT_TOKEN=$VAULT_TOKEN >> $GITHUB_ENV
+        env:
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
       
       - name: Terragrunt validate
         id: validate
