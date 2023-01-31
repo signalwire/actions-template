@@ -117,7 +117,6 @@ jobs:
         uses: ./actions/.github/actions/teleport
         env:
           TOKEN: ${{ secrets.TELEPORT_TOKEN }}
-          CA_PIN: ${{ secrets.TELEPORT_CA_PIN }}
           PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
         with:
           TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
