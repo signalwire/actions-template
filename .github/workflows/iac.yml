@@ -222,7 +222,7 @@ jobs:
           secret: ${{ steps.generate_token.outputs.token }}
           approvers: ${{ inputs.APPROVERS }}
           minimum-approvals: 1
-          issue-title: "Terragrunt approval pending for ${{ github.job }}"
+          issue-title: "Terragrunt approval pending for ${{ inputs.WORKING_DIR }}"
 
       - name: Terragrunt apply-all
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
