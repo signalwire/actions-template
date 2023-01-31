@@ -16,7 +16,7 @@ on:
         default: self-hosted
         type: string
         description: A GitHub runner type
-      ARITIFACT_NAME:
+      ARTIFACT_NAME:
         required: false
         default: ''
         description: The artifact name to pull from a previous step
