@@ -118,11 +118,6 @@ jobs:
         working-directory: ${{ inputs.WORKING_DIR }}
         run: terragrunt run-all init
       
-      - name: Terragrunt validate
-        id: validate
-        run: terragrunt run-all validate
-        working-directory: ${{ inputs.WORKING_DIR }}
-
       - name: Authenticate against Teleport to use Vault
         if: inputs.TELEPORT_APP != ''
         id: teleportapp
@@ -140,6 +135,11 @@ jobs:
           export VAULT_CLIENT_CERT=${{ steps.teleportapp.outputs.certificate-file }}
           export VAULT_CLIENT_KEY=${{ steps.teleportapp.outputs.key-file }}
       
+      - name: Terragrunt validate
+        id: validate
+        run: terragrunt run-all validate
+        working-directory: ${{ inputs.WORKING_DIR }}
+
       - name: Terragrunt plan
         id: plan
         run: terragrunt run-all plan -no-color > plan.txt
