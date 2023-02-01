@@ -61,11 +61,6 @@ jobs:
         ref: main
         path: actions
 
-    - uses: actions/download-artifact@v3
-      if: inputs.ARTIFACT_NAME != ''
-      with:
-        name: ${{ inputs.ARTIFACT_NAME }}
-    
     - name: Copy files to remote host
       uses: ./actions/.github/actions/teleport
       with:
