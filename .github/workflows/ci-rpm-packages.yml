@@ -31,7 +31,6 @@ on:
       DOCKERHUB_TOKEN:
         required: false
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   deploy:
 
@@ -56,9 +55,14 @@ jobs:
       with:
         project_name: ${{inputs.PROJECT_NAME}}
         packager: ${{inputs.PACKAGER}}
+    
+    - name: Compress files
+      run: |
+        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
+        tar -czvf $current_time.tar.gz --include='*.rpm' *
      
     - uses: actions/upload-artifact@v3
       with:
         name: rpm-artifact
         path: |
-          *.rpm
+          *.tar.gz

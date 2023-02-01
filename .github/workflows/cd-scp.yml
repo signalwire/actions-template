@@ -65,7 +65,7 @@ jobs:
       if: inputs.ARTIFACT_NAME != ''
       with:
         name: ${{ inputs.ARTIFACT_NAME }}
-    - run: ls -l
+    
     - name: Copy files to remote host
       uses: ./actions/.github/actions/teleport
       with:
