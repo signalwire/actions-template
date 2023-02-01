@@ -5,9 +5,11 @@ inputs:
   TELEPORT_VERSION:
     required: false
     default: 11.1.0
+    description: The teleport binary client version
   JOIN_METHOD:
     required: false
     default: github
+    description: Default join method for teleport
   K8S_CLUSTER_NAME:
     required: false
     description: 'kubernetes cluster name to connect'
@@ -85,7 +87,7 @@ runs:
     - name: Copy files to remote
       if: inputs.FILES != ''
       run: >
-        tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{env.USERNAME}} -prq ${{ inputs.FILES }} ${{ env.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
+        tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{env.USERNAME}} ${{ inputs.FILES }} ${{ env.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
       shell: bash
     
     - name: Execute commands on remote
