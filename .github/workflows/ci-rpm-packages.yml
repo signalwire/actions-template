@@ -59,7 +59,7 @@ jobs:
     - name: Compress files
       run: |
         echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
-        tar -czvf $current_time.tar.gz --include='*.rpm' *
+        tar -czvf $current_time.tar.gz $(ls | grep *.rpm)
      
     - uses: actions/upload-artifact@v3
       with:

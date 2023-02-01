@@ -61,7 +61,8 @@ jobs:
         ref: main
         path: actions
 
-    - uses: actions/download-artifact@v3
+    - name: Download Artifacts
+      uses: actions/download-artifact@v3
       with:
         name: ${{ inputs.ARTIFACT_NAME }}
     
