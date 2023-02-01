@@ -56,11 +56,14 @@ jobs:
         project_name: ${{inputs.PROJECT_NAME}}
         packager: ${{inputs.PACKAGER}}
     
-    - name: Compress files
+    - name: Set default time
       run: |
         echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
+    
+    - name: Compress files
+      run: |
         tar -czvf $current_time.tar.gz $(ls | grep .rpm)
-     
+      
     - uses: actions/upload-artifact@v3
       with:
         name: rpm-artifact
