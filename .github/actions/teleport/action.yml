@@ -85,7 +85,7 @@ runs:
     - name: Copy files to remote
       if: inputs.FILES != ''
       run: >
-        tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{env.USERNAME}} ${{ inputs.FILES }} ${{ env.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
+        tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{env.USERNAME}} -prq ${{ inputs.FILES }} ${{ env.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
       shell: bash
     
     - name: Execute commands on remote
