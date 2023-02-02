@@ -83,20 +83,3 @@ jobs:
         PROXY_URL: ${{ secrets.PROXY_URL }}
         TOKEN: ${{ secrets.TELEPORT_TOKEN }}
     
-    - name: Create dummy file to ilustrate that the copy has finished
-      run: echo $GITHUB_SHA > ready.txt
-      if: inputs.TRANSFER_CONFIRMATION == true
-      env:
-        GITHUB_SHA: ${{ github.sha }}
-
-    - name: Copy confirmation file to remote host
-      uses: ./actions/.github/actions/teleport
-      if: inputs.TRANSFER_CONFIRMATION == true
-      with:
-        FILES: ready.txt
-        FILES_FOLDER: ${{ inputs.TARGET_FOLDER }}
-      env: 
-        USERNAME: ${{ secrets.USERNAME }}
-        HOSTNAME: ${{ secrets.HOSTNAME }}
-        PROXY_URL: ${{ secrets.PROXY_URL }}
-        TOKEN: ${{ secrets.TELEPORT_TOKEN }}

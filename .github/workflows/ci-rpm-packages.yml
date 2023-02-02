@@ -59,13 +59,25 @@ jobs:
     - name: Set default time
       run: |
         echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
-    
+        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
+
+    - name: Create dummy file to ilustrate that the copy has finished
+      run: echo $GITHUB_SHA > ready.txt
+      if: inputs.TRANSFER_CONFIRMATION == true
+      env:
+         GITHUB_SHA: ${{ github.sha }}
+ 
     - name: Compress files
       run: |
-        tar -czvf $current_time.tar.gz $(ls | grep .rpm)
+        tar -czvf $current_time.tar.gz $(ls | grep '.rpm\|ready.txt')
+
+    - name: Generate SHA checksum
+      run: |
+        sha512sum $current_time.tar.gz > $current_time.sha1
       
     - uses: actions/upload-artifact@v3
       with:
         name: rpm-artifact
         path: |
           *.tar.gz
+          *.sha1
