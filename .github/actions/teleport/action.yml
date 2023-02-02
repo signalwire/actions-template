@@ -5,9 +5,11 @@ inputs:
   TELEPORT_VERSION:
     required: false
     default: 11.1.0
+    description: The teleport binary client version
   JOIN_METHOD:
     required: false
     default: github
+    description: Default join method for teleport
   K8S_CLUSTER_NAME:
     required: false
     description: 'kubernetes cluster name to connect'

@@ -1,0 +1,79 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Sign and Distribute RPM Packages
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: Environment where the variables and secrets are scoped to
+      RUNNER:
+        required: false
+        default: self-hosted
+        type: string
+        description: A GitHub runner type
+      ARTIFACT_NAME:
+        required: false
+        default: ''
+        description: The artifact name to pull from a previous step
+        type: string
+      FILES:
+        required: false
+        default: ''
+        description: The files that will be copied to a remote server
+        type: string
+      EXEC_COMMANDS:
+        required: false
+        default: ''
+        description: Commands to execute on remote host
+        type: string
+      TARGET_FOLDER:
+        required: true
+        default: ''
+        type: string
+        description: Target folder where the files should be sent on remote
+    secrets:
+      TELEPORT_TOKEN:
+        required: true
+      PROXY_URL:
+        required: true
+      HOSTNAME:
+        required: true
+      USERNAME:
+        required: true
+
+jobs:
+  transfer:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Copy files using tsh scp
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+
+    - name: Download Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ inputs.ARTIFACT_NAME }}
+    
+    - name: Copy files to remote host
+      uses: ./actions/.github/actions/teleport
+      with:
+        FILES: ${{ inputs.FILES }}
+        EXEC_COMMANDS: ${{ inputs.EXEC_COMMANDS }}
+        FILES_FOLDER: ${{ inputs.TARGET_FOLDER }}
+      env: 
+        USERNAME: ${{ secrets.USERNAME }}
+        HOSTNAME: ${{ secrets.HOSTNAME }}
+        PROXY_URL: ${{ secrets.PROXY_URL }}
+        TOKEN: ${{ secrets.TELEPORT_TOKEN }}
