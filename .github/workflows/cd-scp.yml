@@ -36,6 +36,11 @@ on:
         default: ''
         type: string
         description: Target folder where the files should be sent on remote
+      TRANSFER_CONFIRMATION:
+        required: false
+        type: boolean
+        default: true
+        description: Uploads a confirmation file named ready.txt to ilustrate that the transfer has ended
     secrets:
       TELEPORT_TOKEN:
         required: true
@@ -77,3 +82,4 @@ jobs:
         HOSTNAME: ${{ secrets.HOSTNAME }}
         PROXY_URL: ${{ secrets.PROXY_URL }}
         TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+    
