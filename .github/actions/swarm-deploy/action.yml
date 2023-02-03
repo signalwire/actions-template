@@ -4,26 +4,32 @@ description: Deploy/update an image on a Swarm Cluster using Portainer
 inputs:
   STACK_NAME:
     required: true
+    description: stack name to deploy image to
   IMAGE_TAG:
     required: true
-
+    description: image tag to deploy to
+outputs:
+  DEPLOYED_DATE:
+    description: 'date and time that image was deployed'
+    value: ${{ steps.deploy.outputs.DEPLOYED_DATE }}
+  PREVIOUS_IMAGE:
+    description: 'previous image deployed'
+    value: ${{ steps.deploy.outputs.PREVIOUS_IMAGE }}
 runs:
   using: "composite"
   steps:
-    name: "Deploy to a Swarm cluster"
-    steps:
-      - name: Deploy to Swarm
-        run: |
-          # Retrieve service spec
+    - name: Deploy to Swarm
+      id: deploy
+      shell: bash
+      run: |
           curl -s -H "X-API-Key: ${{env.PORTAINER_API_KEY}}" https://deploy.signalwire.cloud/api/endpoints/${{env.ENDPOINT_ID}}/docker/services/${{ inputs.STACK_NAME }} > service.spec.json
-
-          # Pull service version from spec (required for update)
+          
           version=$(jq '.Version.Index' service.spec.json)
-
-          # Create request body for service update; Set image tag to tag of newly built image
+          previousimg=$(jq '.Spec.TaskTemplate.ContainerSpec.Image' service.spec.json)
+          
           jq '.Spec.TaskTemplate.ContainerSpec.Image="${{ inputs.IMAGE_TAG}}" | .Spec' service.spec.json > update.spec.json
-          # Update the service
+          
           curl -s -X POST -H "X-API-Key: ${{env.PORTAINER_API_KEY}}" https://deploy.signalwire.cloud/api/endpoints/${{env.ENDPOINT_ID}}/docker/services/${{ inputs.STACK_NAME }}/update?version=$version -d @update.spec.json
-        env:
-          PORTAINER_API_KEY: ${{ env.PORTAINER_API_KEY }}
-          ENDPOINT_ID: ${{ env.ENDPOINT_ID }}
+          
+          echo PREVIOUS_IMAGE=$previousimg >> $GITHUB_OUTPUT
+          echo DEPLOYED_DATE=$(date -u) >> $GITHUB_OUTPUT
