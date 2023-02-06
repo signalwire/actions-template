@@ -15,7 +15,7 @@ runs:
       uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
-        ruby_version: ${{ inputs.RUBY_VERSION }}
+        ruby-version: ${{ inputs.RUBY_VERSION }}
 
     - name: Run Tests
       run: |
