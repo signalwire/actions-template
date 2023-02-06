@@ -110,9 +110,13 @@ on:
         required: false
       GH_BOT_DEPLOY_KEY:
         required: false
+      CONTRIBSYS_CREDENTIALS:
+        required: false
+        description: Contribsys credentials used for ruby gems
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+
   CHECK:
     name: CI
     uses: signalwire/actions-template/.github/workflows/ci-check.yml@ruby
@@ -134,6 +138,7 @@ jobs:
       SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      CONTRIBSYS_CREDENTIALS: ${{ secrets.CONTRIBSYS_CREDENTIALS }}
 
   BUILD:
     name: BUILD

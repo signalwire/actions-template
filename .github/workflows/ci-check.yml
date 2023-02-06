@@ -62,14 +62,18 @@ on:
         required: false
       GH_BOT_DEPLOY_KEY:
         required: false
-      
+      CONTRIBSYS_CREDENTIALS:
+        required: false
+        description: Contribsys credentials used for ruby gems
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "deploy"
   ci:
     # The type of runner that the job will run on
     runs-on: ${{ inputs.RUNNER }}
     name: CI_CHECK
+    environment: ${{ inputs.ENVIRONMENT }}
+
     steps:
     - uses: actions/checkout@v3
       with:
@@ -118,6 +122,7 @@ jobs:
         RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CONTRIBSYS_CREDENTIALS: ${{ secrets.CONTRIBSYS_CREDENTIALS }}
     
     - name: SonarQube Coverage
       if: ${{ inputs.COVERAGE == true }}
