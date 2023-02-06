@@ -5,7 +5,8 @@ description: Ruby Unit Test report
 inputs:
   RUBY_VERSION:
     required: false
-    default: "2.7.4"
+    default: "2.7.6"
+    description: "Default Ruby version"
 
 runs:
   using: "composite"
@@ -14,15 +15,15 @@ runs:
       uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
-        version: ${{ inputs.RUBY_VERSION }}
+        ruby_version: ${{ inputs.RUBY_VERSION }}
 
     - name: Run Tests
       run: |
         cp .env.example .env
-        bundle install --path ./bundle --without production,development > /dev/null
-        bundle exec rake db:test:prepare > /dev/null
-        bundle exec rake core:db:test:prepare > /dev/null
-        bundle exec rake messaging:db:test:prepare > /dev/null
+        bundle install --path ./bundle --without production,development 
+        bundle exec rake db:test:prepare 
+        bundle exec rake core:db:test:prepare 
+        bundle exec rake messaging:db:test:prepare 
         bundle exec rspec -f j -o tmp/rspec_results.json -f p
       shell: bash
     
@@ -31,4 +32,3 @@ runs:
       with:
         token: ${{ env.GITHUB_TOKEN }}
         json-path: tmp/rspec_results.json
-      if: always()
