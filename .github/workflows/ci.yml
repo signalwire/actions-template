@@ -115,7 +115,7 @@ on:
 jobs:
   CHECK:
     name: CI
-    uses: signalwire/actions-template/.github/workflows/ci-check.yml@rails
+    uses: signalwire/actions-template/.github/workflows/ci-check.yml@ruby
     with:
       PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
       LANGUAGE: ${{ inputs.LANGUAGE }}
