@@ -35,9 +35,10 @@ runs:
     run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up 
     shell: bash
   
-  # - name: Run docker-compose in background
-    # run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up -d
-    # shell: bash
+  - name: Run docker-compose in background
+    if: inputs.RUN_BACKGROUND == 'true'
+    run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up -d
+    shell: bash
   # - uses: isbang/compose-action@v1.4.1
   #   if: inputs.RUN_BACKGROUND == 'true'
   #   with:
