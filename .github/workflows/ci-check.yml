@@ -93,7 +93,7 @@ jobs:
       uses: ./actions/.github/actions/docker-compose
       with:
         COMPOSE_FILE: ${{ inputs.DEPENDENCIES_FILE }}
-        DOCKERHUB_LOGIN: ${{ inputs.TEST_DEPENDENCIES_PRIVATE }}.toString()
+        DOCKERHUB_LOGIN: ${{ inputs.TEST_DEPENDENCIES_PRIVATE }}
       env:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
