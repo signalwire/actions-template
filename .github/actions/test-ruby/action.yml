@@ -14,7 +14,7 @@ runs:
     - name: Setup dependencies
       run: sudo apt update ; sudo apt install libpq-dev libv8-dev -y
       shell: bash
-      
+
     - uses: actions/setup-node@v3
       with:
         node-version: 16
@@ -22,7 +22,7 @@ runs:
     - name: Setup Ruby and install gems
       uses: ruby/setup-ruby@v1
       with:
-        # bundler-cache: true
+        bundler-cache: true
         ruby-version: ${{ inputs.RUBY_VERSION }}
 
     - uses: actions/cache@v2
