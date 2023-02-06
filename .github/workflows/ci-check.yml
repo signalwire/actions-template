@@ -49,6 +49,9 @@ on:
         type: string
         default: 'ubuntu'
         description: 'The default runner.'
+      ENVIRONMENT: 
+        type: string
+        description: 'The environment related to an WF execution'
     secrets:
       SONAR_HOST_URL:
         required: false
