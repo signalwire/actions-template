@@ -19,12 +19,22 @@ runs:
     - name: Run Tests
       run: |
         cp .env.example .env
+<<<<<<< Updated upstream
         bundle install --path ./bundle --without production,development > /dev/null
         bundle exec rake db:test:prepare > /dev/null
         bundle exec rake core:db:test:prepare > /dev/null
         bundle exec rake messaging:db:test:prepare > /dev/null
+=======
+        bundle config set gems.contribsys.com $CONTRIBSYS_CREDENTIALS
+        bundle install --path ./bundle --without production,development 
+        bundle exec rake db:test:prepare 
+        bundle exec rake core:db:test:prepare 
+        bundle exec rake messaging:db:test:prepare 
+>>>>>>> Stashed changes
         bundle exec rspec -f j -o tmp/rspec_results.json -f p
       shell: bash
+      env:
+        CONTRIBSYS_CREDENTIALS: ${{ env.CONTRIBSYS_CREDENTIALS }}
     
     - name: RSpec Report
       uses: SonicGarden/rspec-report-action@v2

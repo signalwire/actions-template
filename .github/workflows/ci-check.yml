@@ -24,7 +24,7 @@ on:
       RUBY_VERSION:
         required: false
         type: string
-        default: "2.7.4"
+        description: Default Ruby version
       TEST_DEPENDENCIES:
         required: false
         type: boolean
@@ -57,6 +57,8 @@ on:
       DOCKERHUB_TOKEN:
         required: false
       GH_BOT_DEPLOY_KEY:
+        required: false
+      CONTRIBSYS_CREDENTIALS:
         required: false
       
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -112,6 +114,7 @@ jobs:
         RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CONTRIBSYS_CREDENTIALS: ${{ secrets.CONTRIBSYS_CREDENTIALS }}
     
     - name: SonarQube Coverage
       if: ${{ inputs.COVERAGE == true }}
