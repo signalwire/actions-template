@@ -11,15 +11,15 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup Ruby and install gems
-      uses: ruby/setup-ruby@v1
-      with:
-        bundler-cache: true
-        ruby-version: ${{ inputs.RUBY_VERSION }}
-
     - name: Setup dependencies
       run: sudo apt install libpq-dev
       shell: bash
+
+    # - name: Setup Ruby and install gems
+    #   uses: ruby/setup-ruby@v1
+    #   with:
+    #     bundler-cache: true
+    #     ruby-version: ${{ inputs.RUBY_VERSION }}
 
     - uses: actions/cache@v2
       with:
