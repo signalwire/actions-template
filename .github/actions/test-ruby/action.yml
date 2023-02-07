@@ -37,6 +37,10 @@ runs:
         restore-keys: |
           ${{ runner.os }}-gems-
 
+    - name: debug
+      run: docker ps
+      shell: bash
+      
     - name: .env for ci
       if: inputs.ENV_PATH != null
       run: cp $ENV_PATH .env
