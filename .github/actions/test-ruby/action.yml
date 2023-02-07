@@ -19,11 +19,13 @@ runs:
       with:
         node-version: 16
 
-    # - name: Setup Ruby and install gems
-    #   uses: ruby/setup-ruby@v1
-    #   with:
-    #     bundler-cache: true
-    #     ruby-version: ${{ inputs.RUBY_VERSION }}
+    - name: Setup Ruby and install gems
+      uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+        ruby-version: ${{ inputs.RUBY_VERSION }}
+      env:
+        BUNDLE_GEMS__CONTRIBSYS__COM: ${{ env.CONTRIBSYS_CREDENTIALS }}
 
     - uses: actions/cache@v2
       with:
@@ -35,8 +37,8 @@ runs:
     - name: Run Tests
       run: |
         cp .env.example .env
-        bundle config set gems.contribsys.com $CONTRIBSYS_CREDENTIALS
-        bundle install --path ./bundle --without production,development 
+        # bundle config set gems.contribsys.com $CONTRIBSYS_CREDENTIALS
+        # bundle install --path ./bundle --without production,development 
         bundle exec rake db:test:prepare 
         bundle exec rake core:db:test:prepare 
         bundle exec rake messaging:db:test:prepare 
