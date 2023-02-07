@@ -16,19 +16,19 @@ runs:
 
     - name: Cache SonarQube packages
       uses: actions/cache@v3
-      if: ${{ inputs.LANGUAGE == 'dot-net'}}
+      if: inputs.LANGUAGE == 'dot-net'
       with:
         path: ~/.sonar/cache
         key: ${{ runner.os }}-sonar
         restore-keys: ${{ runner.os }}-sonar
 
     - name: Install .NET requirements
-      if: ${{ inputs.LANGUAGE == 'dot-net'}}
+      if: inputs.LANGUAGE == 'dot-net'
       run: dotnet tool install --global dotnet-coverage
       shell: bash
 
     - name: Install SonarQube scanner for .NET
-      if: ${{ inputs.LANGUAGE == 'dot-net'}}
+      if: inputs.LANGUAGE == 'dot-net'
       shell: bash
       run: |
         mkdir -p ~/.sonar/scanner 
@@ -39,6 +39,7 @@ runs:
       env:
         GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}  # Needed to get PR information, if any
       shell: bash
+      if: inputs.LANGUAGE == 'dot-net'
       run: |
         ~/.sonar/scanner/dotnet-sonarscanner begin /k:"${{ env.SONAR_PROJECT_KEY }}" /d:sonar.login="${{ env.SONAR_TOKEN }}" /d:sonar.host.url="${{ env.SONAR_HOST_URL }}" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
         dotnet build --no-incremental

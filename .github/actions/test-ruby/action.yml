@@ -15,7 +15,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup dependencies
-      run: sudo apt update ; sudo apt install libpq-dev libv8-dev -y
+      run: sudo apt update ; sudo apt install libpq-dev -y
       shell: bash
 
     - uses: actions/setup-node@v3
