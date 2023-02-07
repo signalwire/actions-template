@@ -37,10 +37,6 @@ runs:
         restore-keys: |
           ${{ runner.os }}-gems-
 
-    - name: debug
-      run: docker ps
-      shell: bash
-
     - name: .env for ci
       if: inputs.ENV_PATH != null
       run: cp $ENV_PATH .env
@@ -55,7 +51,6 @@ runs:
         bundle exec rake messaging:db:test:prepare 
         bundle exec rspec -f j -o tmp/rspec_results.json -f p
       shell: bash
-      continue-on-error: true
       env:
         CONTRIBSYS_CREDENTIALS: ${{ env.CONTRIBSYS_CREDENTIALS }}
     
@@ -64,3 +59,4 @@ runs:
       with:
         token: ${{ env.GITHUB_TOKEN }}
         json-path: tmp/rspec_results.json
+      if: success() || failure() 
