@@ -52,6 +52,9 @@ on:
       ENVIRONMENT: 
         type: string
         description: 'The environment related to an WF execution'
+      ENV_PATH: 
+        type: string
+        description: 'The .env file for CI.'
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -123,6 +126,7 @@ jobs:
       uses: ./actions/.github/actions/test-ruby
       with:
         RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
+        ENV_PATH: ${{ inputs.ENV_PATH }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         CONTRIBSYS_CREDENTIALS: ${{ secrets.CONTRIBSYS_CREDENTIALS }}

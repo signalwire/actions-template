@@ -7,6 +7,9 @@ inputs:
     required: false
     default: "2.7.6"
     description: "Default Ruby version"
+  ENV_PATH: 
+    description: 'The .env file for CI.'
+    required: false
 
 runs:
   using: "composite"
@@ -34,15 +37,15 @@ runs:
         restore-keys: |
           ${{ runner.os }}-gems-
 
-    - name: docker ps test
-      run: docker ps
+    - name: .env for ci
+      if: inputs.ENV_PATH != null
+      run: cp $ENV_PATH .env
       shell: bash
-      
+      env:
+        ENV_PATH: ${{ inputs.ENV_PATH }}
+
     - name: Run Tests
       run: |
-        cp .env.example .env
-        # bundle config set gems.contribsys.com $CONTRIBSYS_CREDENTIALS
-        # bundle install --path ./bundle --without production,development 
         bundle exec rake db:test:prepare 
         bundle exec rake core:db:test:prepare 
         bundle exec rake messaging:db:test:prepare 

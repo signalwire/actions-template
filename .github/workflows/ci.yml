@@ -97,6 +97,9 @@ on:
       ENVIRONMENT: 
         type: string
         description: 'The environment related to an WF execution'
+      ENV_PATH: 
+        type: string
+        description: 'The .env file for CI.'
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -135,6 +138,7 @@ jobs:
       DEPENDENCIES_FILE: ${{ inputs.DEPENDENCIES_FILE }}
       SUBMODULES_RECURSIVE: ${{ inputs.SUBMODULES_RECURSIVE }}
       RUNNER: ${{ inputs.RUNNER }}
+      ENV_PATH: ${{ inputs.ENV_PATH }}
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
