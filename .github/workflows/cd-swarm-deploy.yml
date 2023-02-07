@@ -31,16 +31,23 @@ jobs:
   deploy:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest 
-    name: Build
+    name: Deploy to Swarm
 
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+
     - uses: ./actions/.github/actions/approval
       name: Request approval
-      if: ${{ inputs.APPROVERS != null }}
+      if: inputs.APPROVERS != null
       env:
         GH_APPROVAL_APP_ID: ${{ secrets.GH_APPROVAL_APP_ID }}
         GH_APPROVAL_APP_PKEY: ${{ secrets.GH_APPROVAL_APP_PKEY }}
