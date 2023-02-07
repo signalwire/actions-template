@@ -121,8 +121,8 @@ on:
       CONTRIBSYS_CREDENTIALS:
         required: false
         description: Contribsys credentials used for ruby gems
-    outputs:
-      IMAGE_TAG: ${{ jobs.BUILD.outputs.IMAGE_TAG }}
+    # outputs:
+    #   IMAGE_TAG: ${{ jobs.BUILD.outputs.IMAGE_TAG }}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
