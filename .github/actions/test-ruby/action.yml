@@ -55,8 +55,8 @@ runs:
         CONTRIBSYS_CREDENTIALS: ${{ env.CONTRIBSYS_CREDENTIALS }}
     
     - name: RSpec Report
+      if: always()
       uses: SonicGarden/rspec-report-action@v2
       with:
         token: ${{ env.GITHUB_TOKEN }}
         json-path: tmp/rspec_results.json
-      if: success() || failure() 
