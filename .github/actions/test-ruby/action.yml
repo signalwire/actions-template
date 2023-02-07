@@ -34,6 +34,10 @@ runs:
         restore-keys: |
           ${{ runner.os }}-gems-
 
+    - name: docker ps test
+      run: docker ps
+      shell: bash
+      
     - name: Run Tests
       run: |
         cp .env.example .env
