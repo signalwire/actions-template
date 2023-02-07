@@ -103,7 +103,9 @@ on:
         required: false
 
     outputs:
-      IMAGE_TAG: ${{ jobs.build.outputs.IMAGE_TAG }}
+      IMAGE_TAG: 
+        value: ${{ jobs.build.outputs.IMAGE_TAG }}
+        description: Container image tag from docker build
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
