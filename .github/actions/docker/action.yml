@@ -100,6 +100,7 @@ runs:
 
     - name: Build and export to Docker
       uses: docker/build-push-action@v4
+      if: inputs.PLATFORMS == 'linux/amd64'
       with:
         load: true
         tags: |

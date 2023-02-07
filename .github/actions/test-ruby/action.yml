@@ -25,6 +25,8 @@ runs:
         bundle exec rake messaging:db:test:prepare > /dev/null
         bundle exec rspec -f j -o tmp/rspec_results.json -f p
       shell: bash
+      env:
+        CONTRIBSYS_CREDENTIALS: ${{ env.CONTRIBSYS_CREDENTIALS }}
     
     - name: RSpec Report
       uses: SonicGarden/rspec-report-action@v2
