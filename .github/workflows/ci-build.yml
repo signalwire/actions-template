@@ -85,6 +85,9 @@ on:
         type: string
         default: 'ubuntu'
         description: 'The default runner.'
+      ENVIRONMENT: 
+        type: string
+        description: 'The environment related to an WF execution'
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -99,6 +102,10 @@ on:
       GCP_WIP:
         required: false
 
+    outputs:
+      IMAGE_TAG: 
+        value: ${{ jobs.build.outputs.IMAGE_TAG }}
+        description: Container image tag from docker build
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -106,6 +113,7 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ${{ inputs.RUNNER }}
+    environment: ${{ inputs.ENVIRONMENT }}
     name: BUILD
     permissions:
       id-token: write

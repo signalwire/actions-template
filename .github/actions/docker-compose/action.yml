@@ -11,6 +11,10 @@ inputs:
   DOCKERHUB_LOGIN:
     required: false
     default: 'false'
+  CREATE_NETWORK:
+    required: false
+    default: 'true'
+    description: Whenever you want to create a docker network
     
 runs:
   using: "composite"
@@ -27,6 +31,7 @@ runs:
       version: '2.12.1'
 
   - name: Create default network  
+    if: inputs.CREATE_NETWORK == 'true'
     run: docker network create signalwire_freeswitch
     shell: bash
 
@@ -35,9 +40,10 @@ runs:
     run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up 
     shell: bash
   
-  # - name: Run docker-compose in background
-    # run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up -d
-    # shell: bash
+  - name: Run docker-compose in background
+    if: inputs.RUN_BACKGROUND == 'true'
+    run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up -d
+    shell: bash
   # - uses: isbang/compose-action@v1.4.1
   #   if: inputs.RUN_BACKGROUND == 'true'
   #   with:

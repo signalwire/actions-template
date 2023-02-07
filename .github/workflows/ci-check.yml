@@ -29,6 +29,10 @@ on:
         required: false
         type: boolean
         default: false
+      TEST_DEPENDENCIES_PRIVATE:
+        required: false
+        type: boolean
+        default: false
       DEPENDENCIES_FILE:
         required: false
         type: string
@@ -45,6 +49,15 @@ on:
         type: string
         default: 'ubuntu'
         description: 'The default runner.'
+      ENVIRONMENT: 
+        type: string
+        description: 'The environment related to an WF execution'
+      ENV_PATH: 
+        type: string
+        description: 'The .env file for CI.'
+      TEST_CREATE_NETWORK: 
+        type: boolean
+        description: 'Whenever you want to create a docker network for test dependencies.'
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -60,14 +73,16 @@ on:
         required: false
       CONTRIBSYS_CREDENTIALS:
         required: false
-      
+        description: Contribsys credentials used for ruby gems
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "deploy"
   ci:
     # The type of runner that the job will run on
     runs-on: ${{ inputs.RUNNER }}
     name: CI_CHECK
+    environment: ${{ inputs.ENVIRONMENT }}
+
     steps:
     - uses: actions/checkout@v3
       with:
@@ -83,7 +98,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: signalwire/actions-template
-        ref: main 
+        ref: main
         path: actions
 
     - name: Up Test dependencies
@@ -91,6 +106,9 @@ jobs:
       uses: ./actions/.github/actions/docker-compose
       with:
         COMPOSE_FILE: ${{ inputs.DEPENDENCIES_FILE }}
+        DOCKERHUB_LOGIN: ${{ inputs.TEST_DEPENDENCIES_PRIVATE }}
+        RUN_BACKGROUND: true
+        CREATE_NETWORK: ${{ inputs.TEST_CREATE_NETWORK }}
       env:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -112,6 +130,7 @@ jobs:
       uses: ./actions/.github/actions/test-ruby
       with:
         RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
+        ENV_PATH: ${{ inputs.ENV_PATH }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         CONTRIBSYS_CREDENTIALS: ${{ secrets.CONTRIBSYS_CREDENTIALS }}

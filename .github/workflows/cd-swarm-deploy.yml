@@ -10,37 +10,61 @@ on:
       STACK_NAME:
         required: true
         type: string
+        description: Stack name on Portainer.
       APPROVERS:
         required: false
         type: string
+        description: A list of approvers comma separated.
       IMAGE_TAG:
         required: true
         type: string
+        description: The image tag to be updated.
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: The environment which this deploy refers to.
+      RUNNER: 
+        required: false
+        type: string
+        default: ubuntu-latest
+        description: The default runner.
     secrets:
       ENDPOINT_ID:
         required: true
+        description: Portainer Endpoint ID.
       PORTAINER_API_KEY:
         required: true
+        description: Portainer API KEY.
       GH_APPROVAL_APP_ID:
         required: false
+        description: App ID for Approval
       GH_APPROVAL_APP_PKEY:
         required: false
+        description: App Key for Approval
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   deploy:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest 
-    name: Build
+    runs-on: ${{ inputs.RUNNER }}
+    name: Deploy to Swarm
+    environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+
     - uses: ./actions/.github/actions/approval
       name: Request approval
-      if: ${{ inputs.APPROVERS != null }}
+      if: inputs.APPROVERS != null
       env:
         GH_APPROVAL_APP_ID: ${{ secrets.GH_APPROVAL_APP_ID }}
         GH_APPROVAL_APP_PKEY: ${{ secrets.GH_APPROVAL_APP_PKEY }}
