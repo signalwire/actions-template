@@ -51,7 +51,6 @@ runs:
         bundle exec rake messaging:db:test:prepare 
         bundle exec rspec -f j -o tmp/rspec_results.json -f p
       shell: bash
-      continue-on-error: true #TODO: remove me 
       env:
         CONTRIBSYS_CREDENTIALS: ${{ env.CONTRIBSYS_CREDENTIALS }}
     
