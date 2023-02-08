@@ -54,7 +54,7 @@ runs:
       run: |
         IFS=',' read -ra arr <<< "$arr"
         for i in "${arr[@]}"; do
-          echo $i
+          $i
         done
       shell: bash
 
