@@ -59,7 +59,7 @@ runs:
       if: inputs.RUBY_RAKE_COMMANDS != null
       run: |
         for i in "${arr[@]}"; do
-          $i
+          echo $i
         done
       shell: bash
 
