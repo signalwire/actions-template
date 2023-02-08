@@ -10,6 +10,9 @@ inputs:
   ENV_PATH: 
     description: 'The .env file for CI.'
     required: false
+  RUBY_RAKE_COMMANDS:
+    required: false
+    description: A comma-separated list of rake commands.
 
 runs:
   using: "composite"
@@ -44,11 +47,21 @@ runs:
       env:
         ENV_PATH: ${{ inputs.ENV_PATH }}
 
+    - name: Split the input variable into an array
+      if: inputs.RUBY_RAKE_COMMANDS != null
+      env:
+        arr: ${{ inputs.RUBY_RAKE_COMMANDS }}
+      run: |
+        IFS=',' read -ra arr <<< "$arr"
+        for i in "${arr[@]}"; do
+          if [[ $i == bundle* ]]; then
+            $i
+          fi
+        done
+      shell: bash
+
     - name: Run Tests
       run: |
-        bundle exec rake db:test:prepare 
-        bundle exec rake core:db:test:prepare 
-        bundle exec rake messaging:db:test:prepare 
         bundle exec rspec -f j -o tmp/rspec_results.json -f p
       shell: bash
       env:
