@@ -53,11 +53,6 @@ runs:
         arr: ${{ inputs.RUBY_RAKE_COMMANDS }}
       run: |
         IFS=',' read -ra arr <<< "$arr"
-      shell: bash
-
-    - name: Loop through the list
-      if: inputs.RUBY_RAKE_COMMANDS != null
-      run: |
         for i in "${arr[@]}"; do
           echo $i
         done
