@@ -58,6 +58,9 @@ on:
       TEST_CREATE_NETWORK: 
         type: boolean
         description: 'Whenever you want to create a docker network for test dependencies.'
+      RUBY_RAKE_COMMANDS:
+        type: string
+        description: A comma-separed list of rake commands.
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -131,6 +134,7 @@ jobs:
       with:
         RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
         ENV_PATH: ${{ inputs.ENV_PATH }}
+        RUBY_RAKE_COMMANDS: ${{ inputs.RUBY_RAKE_COMMANDS }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         CONTRIBSYS_CREDENTIALS: ${{ secrets.CONTRIBSYS_CREDENTIALS }}
