@@ -13,6 +13,15 @@ inputs:
   RUBY_RAKE_COMMANDS:
     required: false
     description: A comma-separated list of rake commands.
+  ZEITWERK:
+    required: false
+    description: Zeitwerk run.
+  BRAKEMAN:
+    required: false
+    description: Brakeman run.
+  RUBOCOP:
+    required: false
+    description: Rubocop run.
 
 runs:
   using: "composite"
@@ -40,23 +49,30 @@ runs:
         restore-keys: |
           ${{ runner.os }}-gems-
 
-    - name: Linting
+    - name: Run zeitwerk chek
+      if: inputs.ZEITWERK == 'true'
       run: |
         bin/rails zeitwerk:check
-        bundle exec brakeman --skip-files bundle/ -q -w2
-        gem install rubocop
-        git fetch --all
-        git diff --name-only origin/master --diff-filter=d -- '*.rb'  | xargs -r rubocop -c .rubocop.yml
       shell: bash
 
-    - name: .env for ci
+    - name: Run brakeman
+      if: inputs.BRAKEMAN == 'true'
+      uses: devmasx/brakeman-linter-action@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{github.token}}
+
+    - name: Run rubocop
+      if: inputs.RUBOCOP == 'true'
+      uses: gimenete/rubocop-action@1.0
+
+    - name: .env for CI
       if: inputs.ENV_PATH != null
       run: cp $ENV_PATH .env
       shell: bash
       env:
         ENV_PATH: ${{ inputs.ENV_PATH }}
 
-    - name: Split the input variable into an array
+    - name: Split the input variable RUBY_RAKE_COMMANDS into an array and execute
       if: inputs.RUBY_RAKE_COMMANDS != null
       env:
         arr: ${{ inputs.RUBY_RAKE_COMMANDS }}

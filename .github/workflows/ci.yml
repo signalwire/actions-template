@@ -106,6 +106,18 @@ on:
       RUBY_RAKE_COMMANDS:
         type: string
         description: A comma-separated list of rake commands.
+      ZEITWERK:
+        type: boolean
+        description: Zeitwerk run.
+        default: true
+      BRAKEMAN:
+        type: boolean
+        default: true
+        description: Brakeman run.
+      RUBOCOP:
+        type: boolean
+        description: Rubocop run.
+        default: true
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -129,7 +141,6 @@ on:
         value: ${{ jobs.BUILD.outputs.IMAGE_TAG }}
         description: Container image tag from docker build
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
 
   CHECK:
@@ -151,6 +162,9 @@ jobs:
       ENV_PATH: ${{ inputs.ENV_PATH }}
       TEST_CREATE_NETWORK: ${{ inputs.TEST_CREATE_NETWORK }}
       RUBY_RAKE_COMMANDS: ${{ inputs.RUBY_RAKE_COMMANDS }}
+      ZEITWERK: ${{ inputs.ZEITWERK }}
+      BRAKEMAN: ${{ inputs.BRAKEMAN }}
+      RUBOCOP: ${{ inputs.RUBOCOP }}
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
