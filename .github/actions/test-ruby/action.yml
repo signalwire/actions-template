@@ -12,7 +12,7 @@ inputs:
     required: false
   RUBY_RAKE_COMMANDS:
     required: false
-    description: A comma-separed list of rake commands.
+    description: A comma-separated list of rake commands.
 
 runs:
   using: "composite"
