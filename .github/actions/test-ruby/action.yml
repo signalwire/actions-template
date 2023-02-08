@@ -54,7 +54,9 @@ runs:
       run: |
         IFS=',' read -ra arr <<< "$arr"
         for i in "${arr[@]}"; do
-          $i
+          if [[ $i == bundle* ]]; then
+            $i
+          fi
         done
       shell: bash
 
