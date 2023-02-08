@@ -40,6 +40,15 @@ runs:
         restore-keys: |
           ${{ runner.os }}-gems-
 
+    - name: Linting
+      run: |
+        bin/rails zeitwerk:check
+        bundle exec brakeman --skip-files bundle/ -q -w2
+        gem install rubocop
+        git fetch --all
+        git diff --name-only origin/master --diff-filter=d -- '*.rb'  | xargs -r rubocop -c .rubocop.yml
+      shell: bash
+
     - name: .env for ci
       if: inputs.ENV_PATH != null
       run: cp $ENV_PATH .env
