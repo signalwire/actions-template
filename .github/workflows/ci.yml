@@ -105,7 +105,7 @@ on:
         description: 'Whenever you want to create a docker network for test dependencies.'
       RUBY_RAKE_COMMANDS:
         type: string
-        description: A comma-separed list of rake commands.
+        description: A comma-separated list of rake commands.
     secrets:
       SONAR_HOST_URL:
         required: false
