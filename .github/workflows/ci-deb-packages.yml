@@ -25,6 +25,14 @@ on:
         required: false
         type: string
         default: 'false'
+      AUTHOR_EMAIL:
+        required: true
+        type: string
+        description: Author email used to send files to GitHub.
+      TARGET_BRANCH:
+        required: true
+        type: string
+        description: Target branch to make a PR.
     secrets:
       DOCKERHUB_USERNAME:
         required: false
