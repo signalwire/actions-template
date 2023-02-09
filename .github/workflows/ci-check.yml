@@ -61,6 +61,18 @@ on:
       RUBY_RAKE_COMMANDS:
         type: string
         description: A comma-separated list of rake commands.
+      ZEITWERK:
+        type: boolean
+        description: Zeitwerk run.
+        default: true
+      BRAKEMAN:
+        type: boolean
+        default: true
+        description: Brakeman run.
+      RUBOCOP:
+        type: boolean
+        description: Rubocop run.
+        default: true
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -135,6 +147,9 @@ jobs:
         RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
         ENV_PATH: ${{ inputs.ENV_PATH }}
         RUBY_RAKE_COMMANDS: ${{ inputs.RUBY_RAKE_COMMANDS }}
+        ZEITWERK: ${{ inputs.ZEITWERK }}
+        BRAKEMAN: ${{ inputs.BRAKEMAN }}
+        RUBOCOP: ${{ inputs.RUBOCOP }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         CONTRIBSYS_CREDENTIALS: ${{ secrets.CONTRIBSYS_CREDENTIALS }}
