@@ -1,0 +1,80 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build RPM Packages
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: self-hosted
+        type: string
+      PROJECT_NAME:
+        required: true
+        type: string
+      RUN_BACKGROUND:
+        required: false
+        type: string
+        default: 'false'
+      PACKAGER:
+        required: false
+        type: string
+        default: 'false'
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+
+jobs:
+  deploy:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Build
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+
+    - name: Build Deb Packages
+      uses: signalwire/build-deb-packages-action@dev
+    
+    - name: Set default time
+      run: |
+        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
+        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
+
+    - name: Create dummy file to ilustrate that the copy has finished
+      run: echo $GITHUB_SHA > ready.txt
+      if: inputs.TRANSFER_CONFIRMATION == true
+      env:
+         GITHUB_SHA: ${{ github.sha }}
+ 
+    - name: Compress files
+      run: |
+        tar -czvf $current_time.tar.gz $(ls | grep '.deb\|ready.txt')
+
+    - name: Generate SHA checksum
+      run: |
+        sha512sum $current_time.tar.gz > $current_time.sha1
+      
+    - uses: actions/upload-artifact@v3
+      with:
+        name: rpm-artifact
+        path: |
+          *.tar.gz
+          *.sha1
