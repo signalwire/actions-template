@@ -85,7 +85,7 @@ jobs:
       
     - uses: actions/upload-artifact@v3
       with:
-        name: rpm-artifact
+        name: deb-artifact
         path: |
           *.tar.gz
           *.sha1
