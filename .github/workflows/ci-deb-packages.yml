@@ -60,6 +60,7 @@ jobs:
         repository: signalwire/actions-template
         ref: feat/deb #TODO: fix it before merge
         path: actions
+        token: ${{ secrets.PAT }}
 
     - name: Build Deb Packages
       uses: signalwire/build-deb-packages-action@dev
