@@ -24,7 +24,7 @@ runs:
     - name: Commit changes
       uses: EndBug/add-and-commit@v9
       with:
-        author_name: GitHub Actions
+        author_name: github_actions
         author_email: ${{ inputs.AUTHOR_EMAIL }}
         message: ${{ inputs.MESSAGE }}
         add: ${{ inputs.FILES }}
