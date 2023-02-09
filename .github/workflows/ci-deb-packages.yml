@@ -39,7 +39,7 @@ on:
       DOCKERHUB_TOKEN:
         required: false
       PAT:
-        required: true
+        required: false
 
 jobs:
   deploy:
