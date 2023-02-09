@@ -46,6 +46,7 @@ jobs:
 
     runs-on: ${{ inputs.RUNNER }}
     name: Build
+    permissions: write-all
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
