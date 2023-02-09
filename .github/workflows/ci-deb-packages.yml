@@ -38,6 +38,8 @@ on:
         required: false
       DOCKERHUB_TOKEN:
         required: false
+      PAT:
+        required: true
 
 jobs:
   deploy:
@@ -51,7 +53,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        fetch-depth: 0
+          fetch-depth: 0
+          token: ${{ secrets.PAT }}
 
     - name: Checkout actions
       uses: actions/checkout@v3
