@@ -70,12 +70,18 @@ jobs:
         GH_APPROVAL_APP_PKEY: ${{ secrets.GH_APPROVAL_APP_PKEY }}
       with:
         APPROVERS: ${{ inputs.APPROVERS }}
+
+    - name: Parse ENDPOINT_ID if it's store as a secret
+      run: echo ENDPOINT_ID=$ID >> $GITHUB_ENV 
+      env:
+        ID: ${{ secrets.ENDPOINT_ID }} 
+      if: ${{ env.ENDPOINT_ID == '' }} 
     
     - uses: ./actions/.github/actions/swarm-deploy
       name: Deploy to a Swarm Cluster
       env:
         PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
-        ENDPOINT_ID: ${{ secrets.ENDPOINT_ID }}
+        ENDPOINT_ID: ${{ env.ENDPOINT_ID }}
       with:
         STACK_NAME: ${{ inputs.STACK_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
