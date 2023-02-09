@@ -33,6 +33,10 @@ on:
         required: true
         type: string
         description: Target branch to make a PR.
+      OS_FAMILIES:
+        required: true
+        type: string
+        description: Comma-separated list to inlcude all Debian families.
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -78,12 +82,15 @@ jobs:
          GITHUB_SHA: ${{ github.sha }}
  
     - name: Compress files
+      env:
+        arr: ${{ inputs.OS_FAMILIES }}
       run: |
-        tar -czvf $current_time.tar.gz $(ls | grep '.deb\|ready.txt')
-
-    - name: Generate SHA checksum
-      run: |
-        sha512sum $current_time.tar.gz > $current_time.sha1
+        IFS=',' read -ra arr <<< "$arr"
+        for i in "${arr[@]}"; do
+          tar -czvf $current_time-$i.tar.gz ready.txt ./$i/*
+          sha512sum $current_time-$i.tar.gz > $current_time.sha1
+          fi
+        done
       
     - uses: actions/upload-artifact@v3
       with:
