@@ -91,7 +91,7 @@ jobs:
       name: Sync changelog
       with:
         AUTHOR_EMAIL: ${{ inputs.AUTHOR_EMAIL }}
-        MESSAGE: Sync changelog $GITHUB_SHA
+        MESSAGE: Sync changelog ${{ github.sha }}
         FILES: ./debian/changelog
-        SOURCE_BRANCH: feat/$GITHUB_SHA
+        SOURCE_BRANCH: feat/${{ github.sha }}
         TARGET_BRANCH: ${{ inputs.TARGET_BRANCH }}
