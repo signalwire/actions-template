@@ -88,8 +88,7 @@ jobs:
         IFS=',' read -ra arr <<< "$arr"
         for i in "${arr[@]}"; do
           tar -czvf $current_time-$i.tar.gz ready.txt ./$i/*
-          sha512sum $current_time-$i.tar.gz > $current_time.sha1
-          fi
+          sha512sum $current_time-$i.tar.gz > $current_time-$i.sha1
         done
       
     - uses: actions/upload-artifact@v3
