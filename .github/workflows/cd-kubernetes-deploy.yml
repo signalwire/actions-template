@@ -46,6 +46,11 @@ on:
       VALUES_FILE_PATH:  
         required: true
         type: string
+      INLINE_VALUES:
+        required: false
+        type: string
+        default: ''
+        description: Inline values, commonly used to hide secrets. Key-Value comma-separated e.g. key1=val1,key2=val2
     secrets:
       TELEPORT_CA_PIN:
         required: false
@@ -107,5 +112,6 @@ jobs:
         CHART_PATH: ${{ inputs.CHART_PATH }}
         NAMESPACE: ${{ inputs.NAMESPACE }}
         VALUES_FILE: ${{ inputs.VALUES_FILE_PATH }}
+        INLINE_VALUES: ${{ inputs.INLINE_VALUES }}
 
 

@@ -4,12 +4,20 @@ description: Deploy a local Helm Chart to a Kubernetes Cluster
 inputs:
   APP_NAME:
     required: true
+    description: Kubernetes app name.
   CHART_PATH:
     required: true
+    description: Chart path as context
   NAMESPACE:
     required: true
+    description: Namespace where the app will be deployed
   VALUES_FILE:  
     required: true
+    description: Default values file
+  INLINE_VALUES:
+    required: false
+    description: Inline values, commonly used to hide secrets
+
         
 runs:
   using: "composite"
@@ -24,5 +32,5 @@ runs:
       shell: bash
 
     - name: Helm upgrade --install
-      run: helm upgrade ${{ inputs.APP_NAME }} ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.VALUES_FILE }}
+      run: helm upgrade ${{ inputs.APP_NAME }} ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.VALUES_FILE }} --set ${{ inputs.INLINE_VALUES }}
       shell: bash
