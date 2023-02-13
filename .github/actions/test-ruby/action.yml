@@ -46,7 +46,7 @@ runs:
       env:
         BUNDLE_GEMS__CONTRIBSYS__COM: ${{ env.CONTRIBSYS_CREDENTIALS }}
 
-    - uses: actions/cache@v2
+    - uses: actions/cache@v3
       with:
         path: vendor/bundle
         key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
