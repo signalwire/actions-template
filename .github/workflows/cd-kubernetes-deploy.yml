@@ -84,10 +84,18 @@ jobs:
         repository: signalwire/actions-template
         ref: main
         path: actions
+
+    - uses: ./actions/.github/actions/helm-test
+      if: github.event_name == 'pull_request'
+      name: Lint helm Chart
+      with:
+        CHART_PATH: ${{ inputs.CHART_PATH }}
+        VALUES_FILE: ${{ inputs.VALUES_FILE_PATH }}
+        INLINE_VALUES: ${{ inputs.INLINE_VALUES }}
         
     - uses: ./actions/.github/actions/approval
       name: Request approval
-      if: ${{ inputs.APPROVERS != null }}
+      if: inputs.APPROVERS != null && github.event_name == 'push'
       env:
         GH_APPROVAL_APP_ID: ${{ secrets.GH_APPROVAL_APP_ID }}
         GH_APPROVAL_APP_PKEY: ${{ secrets.GH_APPROVAL_APP_PKEY }}
@@ -96,6 +104,7 @@ jobs:
     
     - uses: ./actions/.github/actions/teleport
       name: Connecting to ${{ inputs.K8S_CLUSTER_NAME }} using Teleport
+      if: github.event_name == 'push'
       env:
         TOKEN: ${{ secrets.TELEPORT_TOKEN }}
         CA_PIN: ${{ secrets.TELEPORT_CA_PIN }}
@@ -107,6 +116,7 @@ jobs:
 
     - uses: ./actions/.github/actions/helm-local
       name: Rollout helm Chart to ${{ inputs.K8S_CLUSTER_NAME }} on ${{ inputs.NAMESPACE }} namespace
+      if: github.event_name == 'push'
       with:
         APP_NAME: ${{ inputs.PROJECT_NAME }}
         CHART_PATH: ${{ inputs.CHART_PATH }}

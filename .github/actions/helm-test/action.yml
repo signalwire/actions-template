@@ -1,16 +1,10 @@
-name: Helm local deploy
-description: Deploy a local Helm Chart to a Kubernetes Cluster
+name: Helm local tests
+description: Test a helm chart prior to deployment
 
 inputs:
-  APP_NAME:
-    required: false
-    description: Kubernetes app name.
   CHART_PATH:
     required: true
     description: Chart path as context
-  NAMESPACE:
-    required: false
-    description: Namespace where the app will be deployed
   VALUES_FILE:  
     required: true
     description: Default values file
@@ -26,23 +20,25 @@ runs:
       uses: azure/setup-helm@v3
       with:
         version: 3.9.0
-        
+
     - name: Cache dependencies
       uses: actions/cache@v3
       with:
         path: ${{ inputs.CHART_PATH }}/charts
         key: ${{ runner.os }}-${{ inputs.CHART_PATH }}
-
+        
     - name: Fetch dependencies
       run: helm dep update ${{ inputs.CHART_PATH }}
       shell: bash
 
-    - name: Helm upgrade --install with --set
+    - name: Helm validate
       if: inputs.INLINE_VALUES != ''
-      run: helm upgrade ${{ inputs.APP_NAME }} ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.VALUES_FILE }} --set ${{ inputs.INLINE_VALUES }}
+      run: helm lint ${{ inputs.CHART_PATH }} -f=${{ inputs.VALUES_FILE }} --set ${{ inputs.INLINE_VALUES }}
       shell: bash
     
-    - name: Helm upgrade --install
+    - name: Helm validate
       if: inputs.INLINE_VALUES == ''
-      run: helm upgrade ${{ inputs.APP_NAME }} ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.VALUES_FILE }}
+      run: helm lint ${{ inputs.CHART_PATH }}
       shell: bash
+
+    
