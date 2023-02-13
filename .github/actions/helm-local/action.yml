@@ -18,7 +18,6 @@ inputs:
     required: false
     description: Inline values, commonly used to hide secrets
 
-        
 runs:
   using: "composite"
   steps:
