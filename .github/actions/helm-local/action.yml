@@ -3,13 +3,13 @@ description: Deploy a local Helm Chart to a Kubernetes Cluster
 
 inputs:
   APP_NAME:
-    required: false
+    required: true
     description: Kubernetes app name.
   CHART_PATH:
     required: true
     description: Chart path as context
   NAMESPACE:
-    required: false
+    required: true
     description: Namespace where the app will be deployed
   VALUES_FILE:  
     required: true
