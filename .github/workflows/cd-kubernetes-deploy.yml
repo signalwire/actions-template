@@ -91,8 +91,7 @@ jobs:
       with:
         CHART_PATH: ${{ inputs.CHART_PATH }}
         VALUES_FILE: ${{ inputs.VALUES_FILE_PATH }}
-      env:
-        INLINE_VALUES: ${{ env.INLINE_VALUES }}
+        INLINE_VALUES: ${{ inputs.INLINE_VALUES }}
         
     - uses: ./actions/.github/actions/approval
       name: Request approval
