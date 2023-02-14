@@ -126,6 +126,6 @@ jobs:
         NAMESPACE: ${{ inputs.NAMESPACE }}
         VALUES_FILE: ${{ inputs.VALUES_FILE_PATH }}
       env:
-        INLINE_VALUES: ${{ env.INLINE_VALUES }}
+        INLINE_VALUES: ${{ secrets.INLINE_VALUES }}
 
 
