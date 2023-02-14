@@ -60,6 +60,8 @@ on:
         required: false
       GH_APPROVAL_APP_PKEY:
         required: false
+      INLINE_VALUES:  
+        required: false
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -92,7 +94,7 @@ jobs:
         CHART_PATH: ${{ inputs.CHART_PATH }}
         VALUES_FILE: ${{ inputs.VALUES_FILE_PATH }}
       env:
-        INLINE_VALUES: ${{ env.INLINE_VALUES }}
+        INLINE_VALUES: ${{ secrets.INLINE_VALUES }}
         
     - uses: ./actions/.github/actions/approval
       name: Request approval
