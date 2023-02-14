@@ -32,12 +32,12 @@ runs:
       shell: bash
 
     - name: Helm validate
-      if: inputs.INLINE_VALUES != ''
+      if: env.INLINE_VALUES != ''
       run: helm lint ${{ inputs.CHART_PATH }} -f=${{ inputs.VALUES_FILE }} --set ${{ inputs.INLINE_VALUES }}
       shell: bash
     
     - name: Helm validate
-      if: inputs.INLINE_VALUES == ''
+      if: env.INLINE_VALUES == ''
       run: helm lint ${{ inputs.CHART_PATH }}
       shell: bash
 
