@@ -125,6 +125,8 @@ jobs:
       with:
         fetch-depth: 0
 
+    - run: printenv
+
     - uses: actions/checkout@v3
       name: Checkout private submoules recursively
       id: private
