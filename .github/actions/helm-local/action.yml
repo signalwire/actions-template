@@ -14,9 +14,6 @@ inputs:
   VALUES_FILE:  
     required: true
     description: Default values file
-  INLINE_VALUES:
-    required: false
-    description: Inline values, commonly used to hide secrets
 
 runs:
   using: "composite"
@@ -37,11 +34,11 @@ runs:
       shell: bash
 
     - name: Helm upgrade --install with --set
-      if: inputs.INLINE_VALUES != ''
-      run: helm upgrade ${{ inputs.APP_NAME }} ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.VALUES_FILE }} --set ${{ inputs.INLINE_VALUES }}
+      if: env.INLINE_VALUES != ''
+      run: helm upgrade ${{ inputs.APP_NAME }} ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.VALUES_FILE }} --set ${{ env.INLINE_VALUES }}
       shell: bash
     
     - name: Helm upgrade --install
-      if: inputs.INLINE_VALUES == ''
+      if: env.INLINE_VALUES == ''
       run: helm upgrade ${{ inputs.APP_NAME }} ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.VALUES_FILE }}
       shell: bash
