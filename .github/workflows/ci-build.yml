@@ -130,7 +130,7 @@ jobs:
       id: private
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
       with:
-        ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+        token: ${{ secrets.RW_TEST_GITHUB_PAT }}
         submodules: 'recursive'
 
     - uses: actions/checkout@v3
