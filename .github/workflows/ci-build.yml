@@ -132,7 +132,7 @@ jobs:
       id: private
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
       with:
-        token: ${{ secrets.RW_TEST_GITHUB_PAT }}
+        token: ${{ secrets.CI_PAT }}
         submodules: 'recursive'
 
     - uses: actions/checkout@v3
