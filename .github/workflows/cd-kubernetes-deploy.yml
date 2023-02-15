@@ -94,7 +94,7 @@ jobs:
         
     - uses: ./actions/.github/actions/approval
       name: Request approval
-      if: inputs.APPROVERS != null && github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      if: inputs.APPROVERS != null && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       env:
         GH_APPROVAL_APP_ID: ${{ secrets.GH_APPROVAL_APP_ID }}
         GH_APPROVAL_APP_PKEY: ${{ secrets.GH_APPROVAL_APP_PKEY }}
