@@ -101,6 +101,8 @@ on:
         required: false
       GCP_WIP:
         required: false
+      CI_PAT:
+        required: false
 
     outputs:
       IMAGE_TAG: 
