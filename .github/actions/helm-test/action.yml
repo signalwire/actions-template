@@ -34,7 +34,7 @@ runs:
     
     - name: Helm validate
       if: env.INLINE_VALUES == ''
-      run: helm lint ${{ inputs.CHART_PATH }}
+      run: helm lint ${{ inputs.CHART_PATH }} -f=${{ inputs.VALUES_FILE }}
       shell: bash
 
     
