@@ -86,6 +86,8 @@ on:
         required: false
       GH_BOT_DEPLOY_KEY:
         required: false
+      CI_PAT:
+        required: false
       CONTRIBSYS_CREDENTIALS:
         required: false
         description: Contribsys credentials used for ruby gems
@@ -106,7 +108,7 @@ jobs:
     - uses: actions/checkout@v3
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
       with:
-        ssh-key: ${{ env.GH_BOT_DEPLOY_KEY }}
+        token: ${{ env.CI_PAT }}
         submodules: 'recursive'
 
     - name: Checkout actions

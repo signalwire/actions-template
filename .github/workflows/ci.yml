@@ -195,4 +195,5 @@ jobs:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      CI_PAT: ${{ secrets.CI_PAT }}
 
