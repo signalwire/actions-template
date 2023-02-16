@@ -133,6 +133,8 @@ on:
         required: false
       GH_BOT_DEPLOY_KEY:
         required: false
+      CI_PAT:
+        required: false
       CONTRIBSYS_CREDENTIALS:
         required: false
         description: Contribsys credentials used for ruby gems
