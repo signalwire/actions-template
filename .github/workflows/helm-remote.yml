@@ -55,11 +55,11 @@ jobs:
         with:
           version: v3.8.1
       - name: Add dependencies
-        uses: WyriHaximus/github-action-helm3@v2
+        uses: WyriHaximus/github-action-helm3@v3
         with:
           exec: helm repo add ${{ inputs.CHART_URL }}
       - name: Deploy
-        uses: WyriHaximus/github-action-helm3@v2
+        uses: WyriHaximus/github-action-helm3@v3
         with:
           exec: helm upgrade '${{ inputs.APP_NAME }}' ${{ inputs.CHART_NAME }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.APP_NAME }}/values/${{ inputs.ENVIRONMENT }}/${{ inputs.CLOUD_PROVIDER }}/values_${{ inputs.REGION }}_${{ inputs.CLUSTER_NAME }}.yaml
           kubeconfig: '${{ secrets.KUBECONFIG }}'
