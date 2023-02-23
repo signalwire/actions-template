@@ -28,6 +28,15 @@ on:
         type: string
         default: ubuntu-latest
         description: The default runner.
+      SLACK_MESSSAGE:
+        required: false
+        type: string
+        default: "GitHub Action result: ${{ job.status }} ${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+        description: A Slack message to post deploy result
+      SLACK_CHANNEL:
+        required: true
+        type: string
+        description: Default slack channel to post a message
     secrets:
       ENDPOINT_ID:
         required: true
@@ -41,6 +50,9 @@ on:
       GH_APPROVAL_APP_PKEY:
         required: false
         description: App Key for Approval
+      SLACK_WEBHOOK_URL:
+        required: true
+        description: Slack WebHook URL
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -86,4 +98,11 @@ jobs:
         STACK_NAME: ${{ inputs.STACK_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
 
-
+    - uses: ./actions/.github/actions/slack
+      if: always()
+      name: slack notification
+      with:
+        MESSAGE: ${{ inputs.SLACK_MESSAGE }}
+        CHANNEL: "${{ inputs.SLACK_CHANNEL }}"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
