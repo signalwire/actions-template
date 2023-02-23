@@ -41,6 +41,9 @@ on:
       GH_APPROVAL_APP_PKEY:
         required: false
         description: App Key for Approval
+      SLACK_WEBHOOK_URL:
+        required: true
+        description: Slack WebHook URL
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
