@@ -33,6 +33,10 @@ on:
         type: string
         default: "GitHub Action result: ${{ job.status }} ${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
         description: A Slack message to post deploy result
+      SLACK_CHANNEL:
+        required: true
+        type: string
+        description: Default slack channel to post a message
     secrets:
       ENDPOINT_ID:
         required: true
@@ -99,6 +103,6 @@ jobs:
       name: slack notification
       with:
         MESSAGE: ${{ inputs.SLACK_MESSAGE }}
-        CHANNEL: "${{ inputs.CHANNEL }}"
+        CHANNEL: "${{ inputs.SLACK_CHANNEL }}"
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
