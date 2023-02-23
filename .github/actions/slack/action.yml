@@ -19,8 +19,6 @@ runs:
         payload: |
           {
             "text": "${{ inputs.MESSAGE }}",
-            "channel": "${{ inputs.CHANNEL }}",
-            "icon_emoji": ":ghost:",
             "blocks": [
               {
                 "type": "section",
