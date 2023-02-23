@@ -21,7 +21,7 @@ runs:
             "text": "GitHub Action build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
             "channel": "${{ inputs.CHANNEL }}",
             "username": "webhookbot",
-            "icon_emoji": ":ghost:"
+            "icon_emoji": ":ghost:",
             "blocks": [
               {
                 "type": "section",
