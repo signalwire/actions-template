@@ -9,7 +9,7 @@ on:
       RUNNER:
         required: false
         type: string
-        default: self-hosted
+        default: ubuntu-latest
       APPROVERS:
         required: false
         type: string

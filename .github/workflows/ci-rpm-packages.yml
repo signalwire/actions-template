@@ -12,7 +12,7 @@ on:
         type: string
       RUNNER:
         required: false
-        default: self-hosted
+        default: ubuntu-latest
         type: string
       PROJECT_NAME:
         required: true
