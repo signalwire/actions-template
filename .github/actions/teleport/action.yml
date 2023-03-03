@@ -72,7 +72,7 @@ runs:
     - name: Authorize against Teleport
       id: auth-k8s
       if: inputs.K8S_CLUSTER_NAME != ''
-      uses: teleport-actions/auth-k8s@v1
+      uses: teleport-actions/auth-k8s@v1.0.0
       with:
         # Specify the publically accessible address of your Teleport proxy.
         proxy: ${{ env.PROXY_URL }}
