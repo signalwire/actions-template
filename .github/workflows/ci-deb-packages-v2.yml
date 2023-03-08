@@ -41,7 +41,7 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
     container:
       image: ${{ inputs.BASE_IMAGE }}
-      options: --platform ${{ inputs.PLATFORM }}
+      options: --platform linux/${{ inputs.PLATFORM }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -52,7 +52,7 @@ jobs:
         apt-get update && \
         DEBIAN_FRONTEND=noninteractive apt-get -yq install \
         dos2unix lsb-release build-essential devscripts  pkg-config \
-        debhelper dh-autoreconf libglib2.0-dev libssl1.1 doxygen graphviz
+        debhelper dh-autoreconf libglib2.0-dev libssl-dev doxygen graphviz
       shell: sh
 
     - name: General debs based on ${{ inputs.BASE_IMAGE }} for ${{ inputs.PLATFORM }}
