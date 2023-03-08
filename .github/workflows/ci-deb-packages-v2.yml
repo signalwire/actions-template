@@ -47,16 +47,24 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Install deps
+      run: |
+        apt-get update && \
+        DEBIAN_FRONTEND=noninteractive apt-get -yq install \
+        dos2unix lsb-release build-essential devscripts  pkg-config \
+        debhelper dh-autoreconf libglib2.0-dev libssl1.0-dev doxygen graphviz
+      shell: sh
+      
     - name: General debs based on ${{ inputs.BASE_IMAGE }} for ${{ inputs.PLATFORM }}
       run: |
         cat > run.sh <<EOF
-          #!/bin/bash
-          VERSION=`dpkg-parsechangelog --show-field Version | cut -f1 -d"-"`
-          HASH=`echo $REVISION | cut -c1-10`
-          dch -b -M -v "$VERSION-$GITHUB_RUN_ID~$GITHUB_SHA~`lsb_release -cs`" --force-distribution -D "`lsb_release -cs`" "Nightly build, $GITHUB_SHA" 
-          debuild -b -us -uc 
-          ls -la ..
-          EOF
+        #!/bin/bash
+        VERSION=`dpkg-parsechangelog --show-field Version | cut -f1 -d"-"`
+        HASH=`echo $REVISION | cut -c1-10`
+        dch -b -M -v "$VERSION-$GITHUB_RUN_ID~$GITHUB_SHA~`lsb_release -cs`" --force-distribution -D "`lsb_release -cs`" "Nightly build, $GITHUB_SHA" 
+        debuild -b -us -uc 
+        ls -la ..
+        EOF
         chmod +x run.sh
         ./run.sh
       shell: sh
