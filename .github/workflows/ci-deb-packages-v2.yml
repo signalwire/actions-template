@@ -63,7 +63,6 @@ jobs:
     - name: Set custom variables
       run: |
         echo image_tag=$(echo ${{inputs.BASE_IMAGE}} | awk -F ':' '{print $2}') >> $GITHUB_ENV
-        echo platform=$(echo ${{inputs.PLATFORM}} | awk -F '/' '{print $2}') >> $GITHUB_ENV
         echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
         echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
 
@@ -75,15 +74,15 @@ jobs:
 
     - name: Compress files
       run: |
-        tar -czvf $current_time-$image_tag-$platform.tar.gz $(ls | grep '.rpm\|ready.txt')
+        tar -czvf $current_time-$image_tag-${{inputs.PLATFORM}}.tar.gz $(ls | grep '.rpm\|ready.txt')
 
     - name: Generate SHA checksum
       run: |
-        sha512sum $current_time-$image_tag-$platform.tar.gz > $current_time-$image_tag-$platform.sha1
+        sha512sum $current_time-$image_tag-${{inputs.PLATFORM}}.tar.gz > $current_time-$image_tag-${{inputs.PLATFORM}}.sha1
       
     - uses: actions/upload-artifact@v3
       with:
-        name: deb-$image_tag-$platform-artifact
+        name: deb-$image_tag-${{inputs.PLATFORM}}-artifact
         path: |
           *.tar.gz
           *.sha1
