@@ -15,19 +15,11 @@ on:
       PROJECT_NAME:
         required: true
         type: string
-      RUN_BACKGROUND:
+      BASE_BRACNH:
         required: false
         type: string
-        default: 'false'
-      PACKAGER:
-        required: false
-        type: string
-        default: 'false'
-    secrets:
-      DOCKERHUB_USERNAME:
-        required: false
-      DOCKERHUB_TOKEN:
-        required: false
+        default: 'master'
+        description: Default base branch to create a PR.
 
 jobs:
   build:
@@ -81,3 +73,22 @@ jobs:
         path: |
           *.tar.gz
           *.sha1
+
+  commit:
+    runs-on: ${{ inputs.RUNNER }}
+    name: Commit Changes
+    environment: ${{ inputs.ENVIRONMENT }}
+    needs: build
+    steps:
+    - run: |
+        git config user.name 'GitHub <noreply@github.com>'
+        git config user.email '${{ github.actor }}@users.noreply.github.com'
+        git add debian/
+        git commit -m "Modify tracked file during workflow"
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v4
+      with:
+        title: 'Update changelog'
+        body: Update changelog to reflect release changes
+        branch: update-changelog
+        base: ${{ inputs.BASE_BRANCH }}
