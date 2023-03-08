@@ -84,7 +84,7 @@ jobs:
 
     - name: Compress files
       run: |
-        tar -czvf $current_time-$image_tag-${{inputs.PLATFORM}}.tar.gz $(ls | grep '.rpm\|ready.txt')
+        tar -czvf $current_time-$image_tag-${{inputs.PLATFORM}}.tar.gz $(ls | grep '.deb\|ready.txt')
 
     - name: Generate SHA checksum
       run: |
