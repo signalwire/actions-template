@@ -29,9 +29,9 @@ on:
         description: Default OS/Arch
         default: linux/amd64
         type: string
-    outputs:
-      ARTIFACT_NAME:
-        value: deb-${{env.IMAGE_TAG}}-${{env.PLATFORM}}-artifact
+    # outputs:
+    #   ARTIFACT_NAME:
+    #     value: deb-${{env.IMAGE_TAG}}-${{env.PLATFORM}}-artifact
 
 jobs:
   build:
