@@ -31,7 +31,7 @@ on:
       SLACK_MESSSAGE:
         required: false
         type: string
-        default: "GitHub Action result: ${{ job.status }} ${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+        default: "GitHub Action result: ${{ job.status }} ${{ github.event.pull_request.html_url || github.event.head_commit.url }} \n Previous image: ${{ steps.swarm-deploy.output.PREVIOUS_IMAGE}} \nNew image: ${{ inputs.IMAGE_TAG}}"
         description: A Slack message to post deploy result
       SLACK_CHANNEL:
         required: true
@@ -83,7 +83,7 @@ jobs:
       with:
         APPROVERS: ${{ inputs.APPROVERS }}
 
-    - name: Parse ENDPOINT_ID if it's store as a secret
+    - name: Parse ENDPOINT_ID if it's stored as a secret
       run: echo ENDPOINT_ID=$ID >> $GITHUB_ENV 
       env:
         ID: ${{ secrets.ENDPOINT_ID }} 
@@ -91,6 +91,7 @@ jobs:
     
     - uses: ./actions/.github/actions/swarm-deploy
       name: Deploy to a Swarm Cluster
+      id: swamr-deploy
       env:
         PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
         ENDPOINT_ID: ${{ env.ENDPOINT_ID }}
