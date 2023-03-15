@@ -73,6 +73,10 @@ on:
         type: boolean
         description: Rubocop run.
         default: true
+      RUN_TESTS:
+        type: boolean
+        description: Whenever you wanna run tests.
+        default: true
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -133,6 +137,7 @@ jobs:
       uses: ./actions/.github/actions/test-dotnet
       with:
         DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
+        RUN_TESTS: ${{ inputs.RUN_TESTS }}
     
     - name: Test JS
       if: ${{ inputs.LANGUAGE == 'JavaScript' }}

@@ -118,6 +118,9 @@ on:
         type: boolean
         description: Rubocop run.
         default: true
+      RUN_TESTS:
+        type: boolean
+        description: Whenever you wanna run tests.
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -165,6 +168,7 @@ jobs:
       ZEITWERK: ${{ inputs.ZEITWERK }}
       BRAKEMAN: ${{ inputs.BRAKEMAN }}
       RUBOCOP: ${{ inputs.RUBOCOP }}
+      RUN_TESTS: ${{ inputs.RUN_TESTS }}
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
