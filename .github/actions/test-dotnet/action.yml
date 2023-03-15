@@ -28,7 +28,7 @@ runs:
       shell: bash
 
     - name: Test
-      run: dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=TESTING || true
+      run: sudo dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=TESTING || true
       if: inputs.RUN_TESTS != 'false'
       shell: bash
 
