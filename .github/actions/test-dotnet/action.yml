@@ -24,11 +24,11 @@ runs:
       shell: bash
       
     - name: Build
-      run: dotnet build --configuration Release
+      run: sudo dotnet build --configuration Release
       shell: bash
 
     - name: Test
-      run: sudo dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=TESTING || true
+      run: dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=TESTING || true
       if: inputs.RUN_TESTS != 'false'
       shell: bash
 
