@@ -58,7 +58,8 @@ jobs:
         dpkg-parsechangelog --show-field Version | cut -f1 -d"-"
         dch -b -M -v "$VERSION-$GITHUB_RUN_ID~$GITHUB_SHA~`lsb_release -cs`" --force-distribution -D "`lsb_release -cs`" "Nightly build, $GITHUB_SHA" 
         debuild -b -us -uc 
-        ls -la
+        ls -la ..
+        mv ../*.deb .
         EOF
         chmod +x run.sh
     
@@ -76,7 +77,6 @@ jobs:
         echo image_tag=$(echo ${{inputs.BASE_IMAGE}} | awk -F ':' '{print $2}') >> $GITHUB_ENV
         echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
         echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
-      shell: sh
 
     - name: Create dummy file to ilustrate that the copy has finished
       run: echo $GITHUB_SHA > ready.txt
@@ -86,12 +86,10 @@ jobs:
          GITHUB_SHA: ${{ github.sha }}
 
     - name: Compress files
-      shell: sh
       run: |
         tar -czvf $current_time-$image_tag-${{inputs.PLATFORM}}.tar.gz $(ls | grep '.deb\|ready.txt')
 
     - name: Generate SHA checksum
-      shell: sh
       run: |
         sha512sum $current_time-$image_tag-${{inputs.PLATFORM}}.tar.gz > $current_time-$image_tag-${{inputs.PLATFORM}}.sha1
       
