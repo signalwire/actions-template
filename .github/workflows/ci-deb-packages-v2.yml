@@ -54,6 +54,7 @@ jobs:
         debhelper dh-autoreconf libglib2.0-dev libssl-dev doxygen graphviz
 
         VERSION=`dpkg-parsechangelog --show-field Version | cut -f1 -d"-"`
+        echo VERSION=$VERSION >> $GITHUB_ENV
         dpkg-parsechangelog --show-field Version | cut -f1 -d"-"
         dch -b -M -v "$VERSION-$GITHUB_RUN_ID~$GITHUB_SHA~`lsb_release -cs`" --force-distribution -D "`lsb_release -cs`" "Nightly build, $GITHUB_SHA" 
         debuild -b -us -uc 
