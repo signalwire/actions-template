@@ -68,12 +68,12 @@ jobs:
       uses: docker/setup-buildx-action@v2
 
     - name: build debs
-      run: |
+      run: >
         docker run \
         --platform linux/${{inputs.PLATFORM}} \
         --rm \
         --entrypoint="./run.sh" \
-        --volume=".:/"
+        --volume=".:/" \
         ${{inputs.BASE_IMAGE}}
 
 
