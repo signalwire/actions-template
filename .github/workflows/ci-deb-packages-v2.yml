@@ -78,15 +78,18 @@ jobs:
 
     - name: Create dummy file to ilustrate that the copy has finished
       run: echo $GITHUB_SHA > ready.txt
+      shell: sh
       if: inputs.TRANSFER_CONFIRMATION == true
       env:
          GITHUB_SHA: ${{ github.sha }}
 
     - name: Compress files
+      shell: sh
       run: |
         tar -czvf $current_time-$image_tag-${{inputs.PLATFORM}}.tar.gz $(ls | grep '.deb\|ready.txt')
 
     - name: Generate SHA checksum
+      shell: sh
       run: |
         sha512sum $current_time-$image_tag-${{inputs.PLATFORM}}.tar.gz > $current_time-$image_tag-${{inputs.PLATFORM}}.sha1
       
