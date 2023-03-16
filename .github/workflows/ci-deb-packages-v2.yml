@@ -54,7 +54,7 @@ jobs:
         debhelper dh-autoreconf libglib2.0-dev libssl-dev doxygen graphviz
 
         VERSION=`dpkg-parsechangelog --show-field Version | cut -f1 -d"-"`
-        HASH=`echo $REVISION | cut -c1-10`
+        dpkg-parsechangelog --show-field Version | cut -f1 -d"-"
         dch -b -M -v "$VERSION-$GITHUB_RUN_ID~$GITHUB_SHA~`lsb_release -cs`" --force-distribution -D "`lsb_release -cs`" "Nightly build, $GITHUB_SHA" 
         debuild -b -us -uc 
         ls -la
@@ -68,7 +68,7 @@ jobs:
       uses: docker/setup-buildx-action@v2
 
     - name: build debs
-      run: docker run --platform linux/${{inputs.PLATFORM}} --rm --entrypoint="/root/run.sh" --env REVISION=$GITHUB_SHA -w /root -v $(pwd):/root ${{inputs.BASE_IMAGE}}
+      run: docker run --platform linux/${{inputs.PLATFORM}} --rm --entrypoint="/root/run.sh" -w /root -v $(pwd):/root ${{inputs.BASE_IMAGE}}
 
     - name: Set custom variables
       run: |
