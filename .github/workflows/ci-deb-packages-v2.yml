@@ -53,9 +53,9 @@ jobs:
         dos2unix lsb-release build-essential devscripts  pkg-config \
         debhelper dh-autoreconf libglib2.0-dev libssl-dev doxygen graphviz
 
-        export VERSION=`dpkg-parsechangelog --show-field Version | cut -f1 -d"-"`
+        echo VERSION=`dpkg-parsechangelog --show-field Version | cut -f1 -d"-"` >> $GITHUB_ENV
         dpkg-parsechangelog --show-field Version | cut -f1 -d"-"
-        export HASH=`echo $GITHUB_SHA | cut -c1-10`
+        echo HASH=`echo $GITHUB_SHA | cut -c1-10` >> $GITHUB_ENV
         printenv
         dch -b -M -v "$VERSION-$GITHUB_RUN_ID~$HASH~`lsb_release -cs`" --force-distribution -D "`lsb_release -cs`" "Nightly build, $GITHUB_SHA" 
         debuild -b -us -uc 
@@ -66,9 +66,6 @@ jobs:
     
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
-
-    - name: "set up buildx"
-      uses: docker/setup-buildx-action@v2
 
     - name: build debs
       run: docker run --platform linux/${{inputs.PLATFORM}} --rm --entrypoint="/root/run.sh" -w /root -v $(pwd):/root ${{inputs.BASE_IMAGE}}
