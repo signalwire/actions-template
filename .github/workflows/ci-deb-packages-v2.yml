@@ -53,11 +53,7 @@ jobs:
         dos2unix lsb-release build-essential devscripts  pkg-config \
         debhelper dh-autoreconf libglib2.0-dev libssl-dev doxygen graphviz
 
-        echo VERSION=`dpkg-parsechangelog --show-field Version | cut -f1 -d"-"` >> $GITHUB_ENV
-        dpkg-parsechangelog --show-field Version | cut -f1 -d"-"
-        echo HASH=`echo $GITHUB_SHA | cut -c1-10` >> $GITHUB_ENV
-        printenv
-        dch -b -M -v "$VERSION-$GITHUB_RUN_ID~$HASH~`lsb_release -cs`" --force-distribution -D "`lsb_release -cs`" "Nightly build, $GITHUB_SHA" 
+        dch -b -M -v "`dpkg-parsechangelog --show-field Version | cut -f1 -d"-"`-$GITHUB_RUN_ID~`echo $GITHUB_SHA | cut -c1-10`~`lsb_release -cs`" --force-distribution -D "`lsb_release -cs`" "Nightly build, `echo $GITHUB_SHA | cut -c1-10`" 
         debuild -b -us -uc 
         ls -la ..
         mv ../*.deb .
