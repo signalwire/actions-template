@@ -89,7 +89,7 @@ jobs:
       
     - uses: actions/upload-artifact@v3
       with:
-        name: deb-$image_tag-${{inputs.PLATFORM}}-artifact
+        name: deb-artifact
         path: |
           *.tar.gz
           *.sha1
