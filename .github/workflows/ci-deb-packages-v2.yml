@@ -41,7 +41,7 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
     container:
       image: ${{ inputs.BASE_IMAGE }}
-      # options: --platform linux/${{ inputs.PLATFORM }}
+      options: --platform linux/${{ inputs.PLATFORM }}
     steps:
     - uses: actions/checkout@v3
       with:
