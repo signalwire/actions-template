@@ -1,0 +1,38 @@
+name: Git
+description: Execute git commands on Actions
+
+inputs:
+  AUTHOR_EMAIL:
+    required: true
+    description: Author email used to send files to GitHub.
+  MESSAGE:
+    required: true
+    description: Commit message.
+  FILES:
+    required: true
+    description: Files to move to remote host.
+  SOURCE_BRANCH:
+    required: false
+    description: New branch to send commit.
+  TARGET_BRANCH:
+    required: false
+    description: Target branch to make a PR.
+  
+runs:
+  using: "composite"
+  steps:
+    - name: Commit changes
+      uses: EndBug/add-and-commit@v9
+      with:
+        author_name: github_actions
+        author_email: ${{ inputs.AUTHOR_EMAIL }}
+        message: ${{ inputs.MESSAGE }}
+        add: ${{ inputs.FILES }}
+        new_branch: ${{ inputs.SOURCE_BRANCH }}
+    
+    - name: Create Sync PR
+      uses: devops-infra/action-pull-request@v0.5.3
+      with:
+        github_token: ${{ github.token }}
+        source_branch: ${{ inputs.SOURCE_BRANCH }}
+        target_branch: ${{ inputs.TARGET_BRANCH }}

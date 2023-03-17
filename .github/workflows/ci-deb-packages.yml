@@ -10,29 +10,47 @@ on:
         type: string
       RUNNER:
         required: false
-        default: ubuntu-latest
+        default: self-hosted
         type: string
       PROJECT_NAME:
         required: true
         type: string
-      BASE_BRACNH:
+      RUN_BACKGROUND:
         required: false
         type: string
-        default: 'master'
-        description: Default base branch to create a PR.
+        default: 'false'
+      PACKAGER:
+        required: false
+        type: string
+        default: 'false'
+      AUTHOR_EMAIL:
+        required: true
+        type: string
+        description: Author email used to send files to GitHub.
+      TARGET_BRANCH:
+        required: true
+        type: string
+        description: Target branch to make a PR.
+      OS_FAMILIES:
+        required: true
+        type: string
+        description: Comma-separated list to inlcude all Debian families.
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+      PAT:
+        required: false
 
 jobs:
-  build:
+  deploy:
 
     runs-on: ${{ inputs.RUNNER }}
     name: Build
+    permissions: write-all
     environment: ${{ inputs.ENVIRONMENT }}
-    strategy:
-      matrix:
-        os_name:
-          - stretch
-          - buster
-          - bullseye
+
     steps:
     - uses: actions/checkout@v3
       with:
@@ -74,21 +92,11 @@ jobs:
           *.tar.gz
           *.sha1
 
-  commit:
-    runs-on: ${{ inputs.RUNNER }}
-    name: Commit Changes
-    environment: ${{ inputs.ENVIRONMENT }}
-    needs: build
-    steps:
-    - run: |
-        git config user.name 'GitHub <noreply@github.com>'
-        git config user.email '${{ github.actor }}@users.noreply.github.com'
-        git add debian/
-        git commit -m "Modify tracked file during workflow"
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v4
+    - uses: ./actions/.github/actions/git_add_pr
+      name: Sync changelog
       with:
-        title: 'Update changelog'
-        body: Update changelog to reflect release changes
-        branch: update-changelog
-        base: ${{ inputs.BASE_BRANCH }}
+        AUTHOR_EMAIL: ${{ inputs.AUTHOR_EMAIL }}
+        MESSAGE: Sync changelog ${{ github.sha }}
+        FILES: ./debian/changelog
+        SOURCE_BRANCH: feat/${{ github.sha }}
+        TARGET_BRANCH: ${{ inputs.TARGET_BRANCH }}
