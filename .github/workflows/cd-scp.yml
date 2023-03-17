@@ -13,7 +13,7 @@ on:
         description: Environment where the variables and secrets are scoped to
       RUNNER:
         required: false
-        default: self-hosted
+        default: ubuntu-latest
         type: string
         description: A GitHub runner type
       ARTIFACT_NAME:

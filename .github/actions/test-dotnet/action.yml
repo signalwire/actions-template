@@ -5,6 +5,11 @@ inputs:
   DOTNET_VERSION:
     required: false
     default: "6.0.403"
+    description: .NET version
+  RUN_TESTS:
+    required: false
+    default: 'true'
+    description: Whenever you wanna run tests.
 
 runs:
   using: "composite"
@@ -19,16 +24,17 @@ runs:
       shell: bash
       
     - name: Build
-      run: dotnet build --configuration Release
+      run: sudo dotnet build --configuration Release
       shell: bash
 
     - name: Test
       run: dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=TESTING || true
+      if: inputs.RUN_TESTS != 'false'
       shell: bash
 
     - name: Test Report
       uses: dorny/test-reporter@v1
-      if: always()
+      if: always() && inputs.RUN_TESTS == 'true'
       with:
         name: DotNET Tests
         path: "**/test-results.trx"                            

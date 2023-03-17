@@ -4,7 +4,7 @@ description: Proxy requests using Teleport
 inputs:
   TELEPORT_VERSION:
     required: false
-    default: 11.1.0
+    default: 12.0.4
     description: The teleport binary client version
   JOIN_METHOD:
     required: false
@@ -72,7 +72,7 @@ runs:
     - name: Authorize against Teleport
       id: auth-k8s
       if: inputs.K8S_CLUSTER_NAME != ''
-      uses: gravitational/teleport-actions/auth-k8s@v1
+      uses: teleport-actions/auth-k8s@v1.1.1
       with:
         # Specify the publically accessible address of your Teleport proxy.
         proxy: ${{ env.PROXY_URL }}

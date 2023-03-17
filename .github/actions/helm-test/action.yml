@@ -1,0 +1,40 @@
+name: Helm local tests
+description: Test a helm chart prior to deployment
+
+inputs:
+  CHART_PATH:
+    required: true
+    description: Chart path as context
+  VALUES_FILE:  
+    required: true
+    description: Default values file
+        
+runs:
+  using: "composite"
+  steps:
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 3.9.0
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ inputs.CHART_PATH }}/charts
+        key: ${{ runner.os }}-${{ inputs.CHART_PATH }}
+        
+    - name: Fetch dependencies
+      run: helm dep update ${{ inputs.CHART_PATH }}
+      shell: bash
+
+    - name: Helm validate
+      if: env.INLINE_VALUES != ''
+      run: helm lint ${{ inputs.CHART_PATH }} -f=${{ inputs.VALUES_FILE }} --set ${{ env.INLINE_VALUES }}
+      shell: bash
+    
+    - name: Helm validate
+      if: env.INLINE_VALUES == ''
+      run: helm lint ${{ inputs.CHART_PATH }} -f=${{ inputs.VALUES_FILE }}
+      shell: bash
+
+    

@@ -1,0 +1,96 @@
+name: Build Deb Packages
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        type: string
+      PROJECT_NAME:
+        required: true
+        type: string
+      BASE_BRANCH:
+        required: false
+        type: string
+        default: 'master'
+        description: Default base branch to create a PR.
+      BASE_IMAGE:
+        required: true
+        description: Base image used to build
+        type: string
+      PLATFORM:
+        required: false
+        description: Default OS/Arch
+        default: linux/amd64
+        type: string
+    # outputs:
+    #   ARTIFACT_NAME:
+    #     value: deb-${{env.IMAGE_TAG}}-${{env.PLATFORM}}-artifact
+
+jobs:
+  build:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Build
+    environment: ${{ inputs.ENVIRONMENT }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: General debs based on ${{ inputs.BASE_IMAGE }} for ${{ inputs.PLATFORM }}
+      run: |
+        cat > run.sh <<EOF
+        #!/bin/bash
+        apt-get update && \
+        DEBIAN_FRONTEND=noninteractive apt-get -yq install \
+        dos2unix lsb-release build-essential devscripts  pkg-config \
+        debhelper dh-autoreconf libglib2.0-dev libssl-dev doxygen graphviz
+
+        dch -b -M -v "`dpkg-parsechangelog --show-field Version | cut -f1 -d"-"`-$GITHUB_RUN_ID~`echo $GITHUB_SHA | cut -c1-10`~`lsb_release -cs`" --force-distribution -D "`lsb_release -cs`" "Nightly build, `echo $GITHUB_SHA | cut -c1-10`" 
+        debuild -b -us -uc 
+        ls -la ..
+        mv ../*.deb .
+        EOF
+        chmod +x run.sh
+    
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+
+    - name: build debs
+      run: docker run --platform linux/${{inputs.PLATFORM}} --rm --entrypoint="/root/run.sh" -w /root -v $(pwd):/root ${{inputs.BASE_IMAGE}}
+
+    - name: Set custom variables
+      run: |
+        echo image_tag=$(echo ${{inputs.BASE_IMAGE}} | awk -F ':' '{print $2}') >> $GITHUB_ENV
+        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
+        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
+
+    - name: Create dummy file to ilustrate that the copy has finished
+      run: echo $GITHUB_SHA > ready.txt
+      shell: sh
+      if: inputs.TRANSFER_CONFIRMATION == true
+      env:
+         GITHUB_SHA: ${{ github.sha }}
+
+    - name: Compress files
+      run: |
+        tar -czvf $current_time-$image_tag-${{inputs.PLATFORM}}.tar.gz $(ls | grep '.deb\|ready.txt')
+
+    - name: Generate SHA checksum
+      run: |
+        sha512sum $current_time-$image_tag-${{inputs.PLATFORM}}.tar.gz > $current_time-$image_tag-${{inputs.PLATFORM}}.sha1
+      
+    - uses: actions/upload-artifact@v3
+      with:
+        name: deb-artifact
+        path: |
+          *.tar.gz
+          *.sha1
+

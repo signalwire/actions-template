@@ -1,0 +1,37 @@
+name: Slack notification
+description: Send Slack messages using WebHooks
+
+inputs:
+  CHANNEL: 
+    description: Channel to post a message
+    required: true
+  MESSAGE:
+    description: Text message to post
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Send custom JSON data to Slack workflow
+      id: slack
+      uses: slackapi/slack-github-action@v1.23.0
+      with:
+        payload: |
+          {
+            "text": "${{ inputs.MESSAGE }}",
+            "channel": "${{ inputs.CHANNEL }}",
+            "username": "webhookbot",
+            "icon_emoji": ":ghost:",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{ inputs.MESSAGE }}"
+                }
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
