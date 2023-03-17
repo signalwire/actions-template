@@ -1,0 +1,94 @@
+name: Build Deb Packages
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        type: string
+      PROJECT_NAME:
+        required: true
+        type: string
+      BASE_BRACNH:
+        required: false
+        type: string
+        default: 'master'
+        description: Default base branch to create a PR.
+
+jobs:
+  build:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Build
+    environment: ${{ inputs.ENVIRONMENT }}
+    strategy:
+      matrix:
+        os_name:
+          - stretch
+          - buster
+          - bullseye
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+
+    - name: Build Deb Packages
+      uses: signalwire/build-deb-${{matrix.os_name}}-packages-action@main
+    
+    - name: Set default time
+      run: |
+        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
+        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
+
+    - name: Create dummy file to ilustrate that the copy has finished
+      run: echo $GITHUB_SHA > ready.txt
+      if: inputs.TRANSFER_CONFIRMATION == true
+      env:
+         GITHUB_SHA: ${{ github.sha }}
+ 
+    - name: Compress files
+      run: |
+        tar -czvf $current_time-${{matrix.os_name}}.tar.gz $(ls | grep '.rpm\|ready.txt')
+
+    - name: Generate SHA checksum
+      run: |
+        sha512sum $current_time-${{matrix.os_name}}.tar.gz > $current_time-${{matrix.os_name}}.sha1
+      
+    - uses: actions/upload-artifact@v3
+      with:
+        name: deb-${{matrix.os_name}}-artifact
+        path: |
+          *.tar.gz
+          *.sha1
+
+  commit:
+    runs-on: ${{ inputs.RUNNER }}
+    name: Commit Changes
+    environment: ${{ inputs.ENVIRONMENT }}
+    needs: build
+    steps:
+    - run: |
+        git config user.name 'GitHub <noreply@github.com>'
+        git config user.email '${{ github.actor }}@users.noreply.github.com'
+        git add debian/
+        git commit -m "Modify tracked file during workflow"
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v4
+      with:
+        title: 'Update changelog'
+        body: Update changelog to reflect release changes
+        branch: update-changelog
+        base: ${{ inputs.BASE_BRANCH }}
