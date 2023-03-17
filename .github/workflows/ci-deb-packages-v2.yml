@@ -93,4 +93,10 @@ jobs:
         path: |
           *.tar.gz
           *.sha1
+    
+    - uses: actions/upload-artifact@v3
+      with:
+        name: deb-changelog-artifact
+        path: |
+          ./debian/changelog
 

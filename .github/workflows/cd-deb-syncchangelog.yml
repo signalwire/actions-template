@@ -1,0 +1,62 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Sync Changelog
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: self-hosted
+        type: string
+      AUTHOR_EMAIL:
+        required: true
+        type: string
+        description: Author email used to send files to GitHub.
+      TARGET_BRANCH:
+        required: true
+        type: string
+        description: Target branch to make a PR.
+    secrets:
+      PAT:
+        required: false
+
+jobs:
+  deploy:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Build
+    permissions: write-all
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.PAT }}
+    
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+
+    - name: Download Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: deb-changelog-artifact
+
+    - uses: ./actions/.github/actions/git_add_pr
+      name: Sync changelog
+      with:
+        AUTHOR_EMAIL: ${{ inputs.AUTHOR_EMAIL }}
+        MESSAGE: Sync changelog ${{ github.sha }}
+        FILES: ./debian/changelog
+        SOURCE_BRANCH: feat/${{ github.sha }}
+        TARGET_BRANCH: ${{ inputs.TARGET_BRANCH }}
