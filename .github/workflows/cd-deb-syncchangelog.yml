@@ -52,6 +52,8 @@ jobs:
       with:
         name: deb-changelog-artifact
 
+    - run: ls -la
+
     - uses: ./actions/.github/actions/git_add_pr
       name: Sync changelog
       with:
