@@ -36,3 +36,4 @@ runs:
         github_token: ${{ github.token }}
         source_branch: ${{ inputs.SOURCE_BRANCH }}
         target_branch: ${{ inputs.TARGET_BRANCH }}
+        get_diff: false
