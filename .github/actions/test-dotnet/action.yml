@@ -39,4 +39,4 @@ runs:
         name: DotNET Tests
         path: "**/test-results.trx"                            
         reporter: dotnet-trx
-        fail-on-error: false #TODO: fix me
+        fail-on-error: true
