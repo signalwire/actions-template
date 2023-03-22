@@ -28,7 +28,7 @@ on:
         type: string
         default: ubuntu-latest
         description: The default runner.
-      SLACK_MESSSAGE:
+      SLACK_MESSAGE:
         required: false
         type: string
         # default: "GitHub Action result: ${{ github.event.pull_request.html_url || github.event.head_commit.url }} \n Previous image: ${{ steps.swarm-deploy.output.PREVIOUS_IMAGE}} \nNew image: ${{ inputs.IMAGE_TAG}}"
