@@ -196,6 +196,7 @@ jobs:
       CONTAINER_SCAN: ${{ inputs.CONTAINER_SCAN }}
       CONTAINER_TEST: ${{ inputs.CONTAINER_TEST }}
       RUNNER: ${{ inputs.RUNNER }}
+      TAG: ${{ inputs.TAG }}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
