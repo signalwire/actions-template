@@ -91,7 +91,7 @@ jobs:
 
     - name: Parse ENDPOINT_ID if it's an input
       run: echo ENDPOINT_ID=${{inputs.ENDPOINT_ID}} >> $GITHUB_ENV 
-      if: ${{ inputs.ENDPOINT_ID == '' }} 
+      if: ${{ inputs.ENDPOINT_ID != '' }} 
     
     - name: Parse ENDPOINT_ID if it's stored as a secret
       run: echo ENDPOINT_ID=$ID >> $GITHUB_ENV 
