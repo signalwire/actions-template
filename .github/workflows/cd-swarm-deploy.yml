@@ -42,6 +42,7 @@ on:
         required: false
         type: string
         description: Another option to set ENDPOINT_ID.
+        default: ''
     secrets:
       ENDPOINT_ID:
         required: true
