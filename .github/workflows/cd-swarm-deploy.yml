@@ -45,7 +45,7 @@ on:
         default: ''
     secrets:
       ENDPOINT_ID:
-        required: true
+        required: false
         description: Portainer Endpoint ID.
       PORTAINER_API_KEY:
         required: true
