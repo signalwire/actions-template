@@ -52,7 +52,7 @@ runs:
       continue-on-error: true
 
     - name: Test
-      run: sudo dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=TESTING || true
+      run: sudo dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=LOCALTESTING || true
       if: inputs.RUN_TESTS != 'false'
       shell: bash
 
