@@ -77,6 +77,11 @@ on:
         type: boolean
         description: Whenever you wanna run tests.
         default: true
+      DOTNET_INSTALL_DIR:
+        type: string
+        required: false
+        default: '/usr/share/dotnet'
+        description: Set a custom .NET install dir
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -137,6 +142,7 @@ jobs:
       uses: ./actions/.github/actions/test-dotnet
       with:
         DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
+        DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
         RUN_TESTS: ${{ inputs.RUN_TESTS }}
     
     - name: Test JS

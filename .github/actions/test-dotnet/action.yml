@@ -10,6 +10,10 @@ inputs:
     required: false
     default: 'true'
     description: Whenever you wanna run tests.
+  DOTNET_INSTALL_DIR:
+    required: false
+    default: '/usr/share/dotnet'
+    description: Set a custom .NET install dir
 
 runs:
   using: "composite"
@@ -18,13 +22,15 @@ runs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ inputs.DOTNET_VERSION }}
+      env:
+        DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
 
     - name: test docker-compose
       run: docker ps
       shell: bash
       
     - name: Build
-      run: sudo dotnet build --configuration Release
+      run: dotnet build --configuration Release
       shell: bash
     
     - name: Rename .env
@@ -33,7 +39,7 @@ runs:
       continue-on-error: true
 
     - name: Test
-      run: sudo dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=TESTING || true
+      run: dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=TESTING || true
       if: inputs.RUN_TESTS != 'false'
       shell: bash
 
