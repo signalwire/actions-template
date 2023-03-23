@@ -121,6 +121,7 @@ on:
       RUN_TESTS:
         type: boolean
         description: Whenever you wanna run tests.
+        default: true
     secrets:
       SONAR_HOST_URL:
         required: false
