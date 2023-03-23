@@ -22,7 +22,7 @@ runs:
       id: cache-dotnet
       uses: actions/cache@v3
       with:
-        path: ${{ env.DOTNET_INSTALL_DIR }}
+        path: ${{ inputs.DOTNET_INSTALL_DIR }}
         key: ${{ runner.os }}-dotnet-7
         restore-keys: ${{ runner.os }}-dotnet-7
 
@@ -41,7 +41,7 @@ runs:
     - name: debug
       run: ls -la
       shell: bash
-      
+
     - name: Build
       run: dotnet build --configuration Release
       shell: bash
