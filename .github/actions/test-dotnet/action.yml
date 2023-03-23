@@ -18,21 +18,22 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Cache dotnet
-      id: cache-dotnet
-      uses: actions/cache@v3
-      with:
-        path: ${{ inputs.DOTNET_INSTALL_DIR }}
-        key: ${{ runner.os }}-dotnet-7
-        restore-keys: ${{ runner.os }}-dotnet-7
+    # - name: Cache dotnet
+    #   id: cache-dotnet
+    #   uses: actions/cache@v3
+    #   with:
+    #     path: ${{ inputs.DOTNET_INSTALL_DIR }}
+    #     key: ${{ runner.os }}-dotnet-7
+    #     restore-keys: ${{ runner.os }}-dotnet-7
 
     - name: Setup .NET Core
-      if: ${{ steps.cache-dotnet.outputs.cache-hit != 'true' }}
+      # if: ${{ steps.cache-dotnet.outputs.cache-hit != 'true' }}
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ inputs.DOTNET_VERSION }}
       env:
         DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
+        DOTNET_MULTILEVEL_LOOKUP: 'false'
 
     - name: test docker-compose
       run: docker ps
