@@ -12,13 +12,22 @@ inputs:
     description: Whenever you wanna run tests.
   DOTNET_INSTALL_DIR:
     required: false
-    default: '/usr/share/dotnet'
+    default: './.dotnet'
     description: Set a custom .NET install dir
 
 runs:
   using: "composite"
   steps:
+    - name: Cache dotnet
+      id: cache-dotnet
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.DOTNET_INSTALL_DIR }}
+        key: ${{ runner.os }}-dotnet-7
+        restore-keys: ${{ runner.os }}-dotnet-7
+
     - name: Setup .NET Core
+      if: ${{ steps.cache-dotnet.outputs.cache-hit != 'true' }}
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ inputs.DOTNET_VERSION }}
@@ -27,6 +36,10 @@ runs:
 
     - name: test docker-compose
       run: docker ps
+      shell: bash
+    
+    - name: debug
+      run: ls -la
       shell: bash
       
     - name: Build
