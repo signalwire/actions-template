@@ -114,6 +114,7 @@ jobs:
 
     - uses: actions/checkout@v3
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
+      name: Checkout submodules
       with:
         ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
         submodules: 'recursive'
