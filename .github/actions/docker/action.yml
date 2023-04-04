@@ -111,6 +111,7 @@ runs:
         context: ${{ inputs.CONTEXT }}
         platforms: ${{ inputs.PLATFORMS }}
         build-args: ${{ inputs.BUILD_ARGS }}
+        secrets: ${{ env.DOCKER_SECRETS }}
 
     - name: Test
       if: github.event_name == 'pull_request' && inputs.CONTAINER_TEST == 'true'
