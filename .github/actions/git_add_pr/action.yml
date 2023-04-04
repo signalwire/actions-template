@@ -32,7 +32,7 @@ runs:
         push: true
     
     - name: Create Sync PR
-      uses: devops-infra/action-pull-request@v0.5.3
+      uses: devops-infra/action-pull-request@v0.5.5
       with:
         github_token: ${{ github.token }}
         source_branch: ${{ inputs.SOURCE_BRANCH }}
