@@ -92,7 +92,7 @@ on:
         description: 'Whenever the container should be tested on pr.'
       RUNNER:
         type: string
-        default: 'ubuntu'
+        default: 'ubuntu-latest'
         description: 'The default runner.'
       ENVIRONMENT: 
         type: string

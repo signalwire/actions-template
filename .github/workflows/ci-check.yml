@@ -47,7 +47,7 @@ on:
         default: false
       RUNNER:
         type: string
-        default: 'ubuntu'
+        default: 'ubuntu-latest'
         description: 'The default runner.'
       ENVIRONMENT: 
         type: string
