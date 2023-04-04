@@ -119,7 +119,7 @@ jobs:
       - name: Terragrunt init
         id: init
         working-directory: ${{ inputs.WORKING_DIR }}
-        run: terragrunt run-all init
+        run: terragrunt run-all init --terragrunt-non-interactive
       
       - name: Authenticate against Teleport to use Vault
         if: inputs.TELEPORT_APP != ''
@@ -150,7 +150,7 @@ jobs:
 
       - name: Terragrunt plan
         id: plan
-        run: terragrunt run-all plan -no-color > plan.txt
+        run: terragrunt run-all plan -no-color --terragrunt-non-interactive > plan.txt
         working-directory: ${{ inputs.WORKING_DIR }}
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
