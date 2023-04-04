@@ -83,7 +83,7 @@ on:
         description: 'A custom command to test the docker container.'
       RUNNER:
         type: string
-        default: 'ubuntu'
+        default: 'ubuntu-latest'
         description: 'The default runner.'
       ENVIRONMENT: 
         type: string
