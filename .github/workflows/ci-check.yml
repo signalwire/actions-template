@@ -166,6 +166,10 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         CONTRIBSYS_CREDENTIALS: ${{ secrets.CONTRIBSYS_CREDENTIALS }}
     
+    - name: Test configs
+      if: inputs.LANGUAGE == 'configs' || inputs.LANGUAGE == 'configs'
+      uses: ./actions/.github/actions/test-configs
+    
     - name: SonarQube Coverage
       if: ${{ inputs.COVERAGE == true }}
       uses: ./actions/.github/actions/sonarqube
