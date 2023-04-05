@@ -145,6 +145,9 @@ on:
       CONTRIBSYS_CREDENTIALS:
         required: false
         description: Contribsys credentials used for ruby gems
+      DOCKER_SECRETS:
+        required: false
+        description: 'Docker internal secrets.'
     outputs:
       IMAGE_TAG: 
         value: ${{ jobs.BUILD.outputs.IMAGE_TAG }}
@@ -208,4 +211,5 @@ jobs:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      DOCKER_SECRETS: ${{ secrets.DOCKER_SECRETS }}
 
