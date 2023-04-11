@@ -104,7 +104,6 @@ on:
       GH_BOT_DEPLOY_TOKEN:
         required: false
         description: 'Personal access token used to fetch submodules.'
-        default =
       GCP_SA:
         required: false
         description: 'GCP Service Account'
