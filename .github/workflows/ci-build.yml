@@ -104,6 +104,7 @@ on:
       GH_BOT_DEPLOY_TOKEN:
         required: false
         description: 'Personal access token used to fetch submodules.'
+        default =
       GCP_SA:
         required: false
         description: 'GCP Service Account'
@@ -143,7 +144,7 @@ jobs:
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
       with:
         ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
-        token: ${{ secrets.GH_BOT_DEPLOY_TOKEN }}
+        token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
         submodules: 'recursive'
 
     - uses: actions/checkout@v3
