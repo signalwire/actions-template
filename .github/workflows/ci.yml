@@ -127,6 +127,11 @@ on:
         required: false
         default: '/usr/share/dotnet'
         description: Set a custom .NET install dir
+      BUILD_ARGS:
+        required: false
+        type: string
+        default: ''
+        description: Docker build args.
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -207,6 +212,7 @@ jobs:
       CONTAINER_TEST: ${{ inputs.CONTAINER_TEST }}
       RUNNER: ${{ inputs.RUNNER }}
       TAG: ${{ inputs.TAG }}
+      BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
