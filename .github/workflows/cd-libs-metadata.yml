@@ -24,6 +24,11 @@ on:
         default: ''
         description: File full-path
         type: string
+      TARGET_REPO:
+        required: true
+        default: ''
+        description: Target repo to sync changes.
+        type: string
       LIB_NAME:
         required: true
         default: ''
@@ -43,7 +48,7 @@ jobs:
         id: metabranch
         continue-on-error: true
         with:
-          repository: signalwire/actions-template
+          repository: ${{ inputs.TARGET_REPO }}
           ref: ${{ inputs.LIB_NAME }}
       
       - name: Checkout metadatarepo default branch 
