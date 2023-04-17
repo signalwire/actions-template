@@ -52,6 +52,7 @@ jobs:
     steps:
       - name: Checkout metadatarepo
         uses: actions/checkout@v3
+        continue-on-error: true
         id: metabranch
         with:
           repository: ${{ inputs.TARGET_REPO }}
