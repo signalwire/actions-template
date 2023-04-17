@@ -79,4 +79,5 @@ jobs:
           git checkout ${{ inputs.LIB_NAME }}
           echo "${{inputs.FILE_PATH}}/${{inputs.ARTIFACT_NAME}}" >> metadata.txt
           git add metadata.txt
+          git commit -m "add ${{inputs.FILE_PATH}}/${{inputs.ARTIFACT_NAME}}"
           git push
