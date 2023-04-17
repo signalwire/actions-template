@@ -79,5 +79,7 @@ jobs:
           git checkout ${{ inputs.LIB_NAME }}
           echo "${{inputs.FILE_PATH}}/${{inputs.ARTIFACT_NAME}}" >> metadata.txt
           git add metadata.txt
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
           git commit -m "add ${{inputs.FILE_PATH}}/${{inputs.ARTIFACT_NAME}}"
           git push
