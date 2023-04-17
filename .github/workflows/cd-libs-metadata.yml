@@ -1,0 +1,68 @@
+name: Push libs metadata to another Git repo
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: Environment where the variables and secrets are scoped to
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        type: string
+        description: A GitHub runner type
+      ARTIFACT_NAME:
+        required: false
+        default: ''
+        description: The artifact name to pull from a previous step
+        type: string
+      FILE_PATH:
+        required: true
+        default: ''
+        description: File full-path
+        type: string
+      LIB_NAME:
+        required: true
+        default: ''
+        type: string
+        description: Lib name that will be used as target branch.
+
+jobs:
+  sync:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Sync metadata for ${{inputs.LIB_NAME}} at ${{inputs.FILE_PATH}}/${{inputs.ARTIFACT_NAME}}
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+      - name: Checkout metadatarepo
+        uses: actions/checkout@v3
+        id: metabranch
+        continue-on-error: true
+        with:
+          repository: signalwire/actions-template
+          ref: ${{ inputs.LIB_NAME }}
+      
+      - name: Checkout metadatarepo default branch 
+        if: steps.metabranch.conclusion == 'failed'
+        uses: actions/checkout@v3
+        continue-on-error: true
+        with:
+          repository: signalwire/actions-template
+          ref: ${{ inputs.LIB_NAME }}
+      
+      - name: Create remote if not exists
+        if: steps.metabranch.conclusion == 'failed'
+        run: |
+          git checkout -b ${{ inputs.LIB_NAME }}
+          touch metadata.txt
+          git push --set-upstream origin ${{ inputs.LIB_NAME }}
+      
+      - name: Sync changes
+        run: |
+          echo "${{inputs.FILE_PATH}}/${{inputs.ARTIFACT_NAME}}" >> metadata.txt
+          git add metadata.txt
+          git push
