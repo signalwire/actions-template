@@ -59,6 +59,14 @@ jobs:
           ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
           token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
       
+      - name: Checkout metadatarepo
+        uses: actions/checkout@v3
+        if: steps.metabranch.conclusion == 'failed'
+        with:
+          repository: ${{ inputs.TARGET_REPO }}
+          ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+          token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
+      
       - name: Create remote
         continue-on-error: true
         run: |
