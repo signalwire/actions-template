@@ -1,0 +1,94 @@
+name: Push libs metadata to another Git repo
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: Environment where the variables and secrets are scoped to
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        type: string
+        description: A GitHub runner type
+      ARTIFACT_NAME:
+        required: false
+        default: ''
+        description: The artifact name to pull from a previous step
+        type: string
+      FILE_PATH:
+        required: true
+        default: ''
+        description: File full-path
+        type: string
+      TARGET_REPO:
+        required: true
+        default: ''
+        description: Target repo to sync changes.
+        type: string
+      LIB_NAME:
+        required: true
+        default: ''
+        type: string
+        description: Lib name that will be used as target branch.
+    secrets:
+      GH_BOT_DEPLOY_TOKEN:
+        required: false
+        description: 'Personal access token used to fetch submodules.'
+      GH_BOT_DEPLOY_KEY:
+        required: false
+        description: Key used to clone private repos
+
+jobs:
+  sync:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Sync metadata for ${{inputs.LIB_NAME}} at ${{inputs.FILE_PATH}}/${{inputs.ARTIFACT_NAME}}
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+      - name: Checkout metadatarepo
+        uses: actions/checkout@v3
+        continue-on-error: true
+        id: metabranch
+        with:
+          repository: ${{ inputs.TARGET_REPO }}
+          ref: ${{ inputs.LIB_NAME }}
+          ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+          token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
+      
+      - name: Checkout metadatarepo
+        uses: actions/checkout@v3
+        if: steps.metabranch.outcome != 'success'
+        with:
+          repository: ${{ inputs.TARGET_REPO }}
+          ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+          token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
+      
+      - name: Create remote
+        continue-on-error: true
+        run: |
+          git checkout -b ${{ inputs.LIB_NAME }}
+          git push --set-upstream origin ${{ inputs.LIB_NAME }}
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.ARTIFACT_NAME }}
+
+      - name: Sync changes
+        run: |
+          git checkout ${{ inputs.LIB_NAME }}
+
+          # list all files with .gz or .sha1 extension in the directory and save to a file
+          printf "${{inputs.FILE_PATH}}/%s\n" *.gz *.sha1 >> metadata.txt
+
+          echo "File list saved to metadata.txt"
+          git add metadata.txt
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+          git commit -m "update metadata.txt"
+          git push
