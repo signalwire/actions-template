@@ -72,7 +72,6 @@ jobs:
         continue-on-error: true
         run: |
           git checkout -b ${{ inputs.LIB_NAME }}
-          touch metadata.txt
           git push --set-upstream origin ${{ inputs.LIB_NAME }}
 
       - name: Sync changes
