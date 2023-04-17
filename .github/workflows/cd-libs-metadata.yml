@@ -62,7 +62,7 @@ jobs:
       
       - name: Checkout metadatarepo
         uses: actions/checkout@v3
-        if: steps.metabranch.conclusion == 'failed'
+        if: steps.metabranch.outcome != 'success'
         with:
           repository: ${{ inputs.TARGET_REPO }}
           ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
