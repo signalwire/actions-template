@@ -35,6 +35,9 @@ on:
         type: string
         description: Lib name that will be used as target branch.
     secrets:
+      GH_BOT_DEPLOY_TOKEN:
+        required: false
+        description: 'Personal access token used to fetch submodules.'
       GH_BOT_DEPLOY_KEY:
         required: false
         description: Key used to clone private repos
@@ -54,6 +57,7 @@ jobs:
           repository: ${{ inputs.TARGET_REPO }}
           ref: ${{ inputs.LIB_NAME }}
           ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+          token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
       
       - name: Create remote
         continue-on-error: true
