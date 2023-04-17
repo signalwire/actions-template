@@ -56,23 +56,16 @@ jobs:
           ref: ${{ inputs.LIB_NAME }}
           ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       
-      - name: Checkout metadatarepo default branch 
-        if: steps.metabranch.conclusion == 'failed'
-        uses: actions/checkout@v3
+      - name: Create remote
         continue-on-error: true
-        with:
-          repository: signalwire/actions-template
-          ref: ${{ inputs.LIB_NAME }}
-      
-      - name: Create remote if not exists
-        if: steps.metabranch.conclusion == 'failed'
         run: |
           git checkout -b ${{ inputs.LIB_NAME }}
           touch metadata.txt
           git push --set-upstream origin ${{ inputs.LIB_NAME }}
-      
+
       - name: Sync changes
         run: |
+          git checkout ${{ inputs.LIB_NAME }}
           echo "${{inputs.FILE_PATH}}/${{inputs.ARTIFACT_NAME}}" >> metadata.txt
           git add metadata.txt
           git push
