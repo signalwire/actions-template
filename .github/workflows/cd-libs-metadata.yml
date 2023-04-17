@@ -34,6 +34,10 @@ on:
         default: ''
         type: string
         description: Lib name that will be used as target branch.
+    secrets:
+      GH_BOT_DEPLOY_KEY:
+        required: false
+        description: Key used to clone private repos
 
 jobs:
   sync:
@@ -50,6 +54,7 @@ jobs:
         with:
           repository: ${{ inputs.TARGET_REPO }}
           ref: ${{ inputs.LIB_NAME }}
+          ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       
       - name: Checkout metadatarepo default branch 
         if: steps.metabranch.conclusion == 'failed'
