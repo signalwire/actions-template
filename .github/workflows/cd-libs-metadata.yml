@@ -71,7 +71,7 @@ jobs:
         id: metabranch
         with:
           repository: ${{ inputs.TARGET_REPO }}
-          ref: ${{ inputs.LIB_NAME }}
+          ref: ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{inputs.TARGET_PLATFORM}}
           ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
           token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
       
@@ -86,8 +86,8 @@ jobs:
       - name: Create remote
         continue-on-error: true
         run: |
-          git checkout -b ${{ inputs.LIB_NAME }}
-          git push --set-upstream origin ${{ inputs.LIB_NAME }}
+          git checkout -b ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{inputs.TARGET_PLATFORM}}
+          git push --set-upstream origin ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{inputs.TARGET_PLATFORM}}
 
       - name: Download Artifacts
         uses: actions/download-artifact@v3
