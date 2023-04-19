@@ -46,9 +46,11 @@ inputs:
   CONTAINER_TEST:
     default: 'true'
     description: 'Whenever the container should be tested on pr.'
+    required: false
   CONTAINER_TEST_COMMAND:
     default: ''
     description: 'A custom command to test the docker container.'
+    required: false
 outputs:
   IMAGE_TAG:
     description: "Export image tag"
@@ -147,7 +149,7 @@ runs:
     #   shell: bash
 
     - name: Exporting image tag
-      # run: echo "IMAGE_TAG=${{ fromJSON(steps.meta.outputs.json).tags[0] }}" >> $GITHUB_OUTPUT
-      run: echo "IMAGE_TAG=${{ steps.meta.outputs.json }}" >> $GITHUB_OUTPUT
+      run: echo "IMAGE_TAG=${{ fromJSON(steps.meta.outputs.json).tags[0] }}" >> $GITHUB_OUTPUT
+      # run: echo "IMAGE_TAG=${{ steps.meta.outputs.json }}" >> $GITHUB_OUTPUT
       id: tag
       shell: bash
