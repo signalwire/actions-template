@@ -157,5 +157,5 @@ runs:
       # run: |
       #   JSON=${{ steps.meta.outputs.json }}
       #   echo "IMAGE_TAG=${JSON//'%'/'%25'}" >> $GITHUB_OUTPUT
-      # id: tag
+      id: tag
       shell: bash
