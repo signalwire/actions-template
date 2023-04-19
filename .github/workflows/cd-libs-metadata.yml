@@ -29,6 +29,21 @@ on:
         default: ''
         description: Target repo to sync changes.
         type: string
+      TARGET_OS:
+        required: true
+        default: ''
+        description: OS base name.
+        type: string
+      TARGET_OS_VERSION:
+        required: true
+        default: ''
+        description: OS version.
+        type: string
+      TARGET_PLATFORM:
+        required: true
+        default: ''
+        description: OS version.
+        type: string
       LIB_NAME:
         required: true
         default: ''
@@ -56,7 +71,7 @@ jobs:
         id: metabranch
         with:
           repository: ${{ inputs.TARGET_REPO }}
-          ref: ${{ inputs.LIB_NAME }}
+          ref: ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{inputs.TARGET_PLATFORM}}
           ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
           token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
       
@@ -71,8 +86,8 @@ jobs:
       - name: Create remote
         continue-on-error: true
         run: |
-          git checkout -b ${{ inputs.LIB_NAME }}
-          git push --set-upstream origin ${{ inputs.LIB_NAME }}
+          git checkout -b ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{inputs.TARGET_PLATFORM}}
+          git push --set-upstream origin ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{inputs.TARGET_PLATFORM}}
 
       - name: Download Artifacts
         uses: actions/download-artifact@v3
@@ -81,14 +96,15 @@ jobs:
 
       - name: Sync changes
         run: |
-          git checkout ${{ inputs.LIB_NAME }}
-
+          git checkout ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{inputs.TARGET_PLATFORM}}
+          git pull
           # list all files with .gz or .sha1 extension in the directory and save to a file
-          printf "${{inputs.FILE_PATH}}/%s\n" *.gz *.sha1 >> metadata.txt
+          printf "${{inputs.FILE_PATH}}/%s\n" *-${{inputs.TARGET_OS_VERSION}}-${{inputs.TARGET_PLATFORM}}.tar.gz >> ${{inputs.TARGET_OS_VERSION}}.txt
+          echo ${{github.sha}} >> hash.txt
 
-          echo "File list saved to metadata.txt"
-          git add metadata.txt
+          git add ${{inputs.TARGET_OS_VERSION}}.txt
+          git add hash.txt
           git config --global user.email "github-actions@github.com"
           git config --global user.name "github-actions"
-          git commit -m "update metadata.txt"
+          git commit -m "update metadata"
           git push
