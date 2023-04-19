@@ -150,6 +150,6 @@ runs:
 
     - name: Exporting image tag
       # run: echo "IMAGE_TAG=${{ fromJSON(steps.meta.outputs.json).tags[0] }}" >> $GITHUB_OUTPUT
-      run: echo "IMAGE_TAG=$(${{ steps.meta.outputs.json }} | jq -c .)" >> $GITHUB_OUTPUT
+      run: echo "IMAGE_TAG=${{ steps.meta.outputs.tags }}" >> $GITHUB_OUTPUT
       id: tag
       shell: bash
