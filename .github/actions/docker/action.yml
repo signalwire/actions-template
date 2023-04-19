@@ -153,7 +153,7 @@ runs:
     #   shell: bash
 
     - name: Exporting image tag
-      run: echo "IMAGE_TAG=${{ fromJSON(steps.meta.outputs.json).tags[${{inputs.OUTPUT_TAG_INDEX}}] }}" >> $GITHUB_OUTPUT
+      run: echo "IMAGE_TAG=${{ fromJSON(steps.meta.outputs.json).tags[inputs.OUTPUT_TAG_INDEX] }}" >> $GITHUB_OUTPUT
       # run: |
       #   JSON=${{ steps.meta.outputs.json }}
       #   echo "IMAGE_TAG=${JSON//'%'/'%25'}" >> $GITHUB_OUTPUT
