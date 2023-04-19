@@ -132,6 +132,11 @@ on:
         type: string
         default: ''
         description: Docker build args.
+      OUTPUT_TAG_INDEX:
+        type: number
+        default: 0
+        description: 'Return a custom tag in case more than one is requested.'
+        required: false
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -213,6 +218,7 @@ jobs:
       RUNNER: ${{ inputs.RUNNER }}
       TAG: ${{ inputs.TAG }}
       BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
+      OUTPUT_TAG_INDEX: ${{ inputs.OUTPUT_TAG_INDEX }}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

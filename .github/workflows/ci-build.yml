@@ -87,7 +87,12 @@ on:
         description: 'The default runner.'
       ENVIRONMENT: 
         type: string
-        description: 'The environment related to an WF execution'
+        description: 'The environment related to an WF execution.'
+      OUTPUT_TAG_INDEX:
+        type: number
+        default: 0
+        description: 'Return a custom tag in case more than one is requested.'
+        required: false
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -201,6 +206,7 @@ jobs:
         BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
         CONTAINER_TEST: ${{ inputs.CONTAINER_TEST }}
         CONTAINER_TEST_COMMAND: ${{ inputs.CONTAINER_TEST_COMMAND }}
+        OUTPUT_TAG_INDEX: ${{ inputs.OUTPUT_TAG_INDEX }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
