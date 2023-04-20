@@ -158,6 +158,9 @@ on:
       DOCKER_SECRETS:
         required: false
         description: 'Docker internal secrets.'
+      BUILD_ARGS:
+        required: false
+        description: Whenever we wanna use secrets and mount them as env
     outputs:
       IMAGE_TAG: 
         value: ${{ jobs.BUILD.outputs.IMAGE_TAG }}
@@ -224,4 +227,5 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       DOCKER_SECRETS: ${{ secrets.DOCKER_SECRETS }}
+      BUILD_ARGS: ${{ secrets.BUILD_ARGS }}
 
