@@ -104,6 +104,11 @@ runs:
         username: ${{ env.DOCKERHUB_USERNAME }}
         password: ${{ env.DOCKERHUB_TOKEN }}
 
+    - name: Parse BUILD_ARGS if it's an input
+      if: inputs.BUILD_ARGS != ''
+      run: echo BUILD_ARGS=${{inputs.BUILD_ARGS}} >> $GITHUB_ENV
+      shell: bash
+
     - name: Build and export to Docker
       uses: docker/build-push-action@v4
       if: inputs.PLATFORMS == 'linux/amd64'
@@ -116,7 +121,7 @@ runs:
         file: ${{ inputs.FILE }}
         context: ${{ inputs.CONTEXT }}
         platforms: ${{ inputs.PLATFORMS }}
-        build-args: ${{ inputs.BUILD_ARGS }}
+        build-args: ${{ env.BUILD_ARGS }}
         secrets: ${{ env.DOCKER_SECRETS }}
 
     - name: Test
@@ -145,7 +150,7 @@ runs:
         file: ${{ inputs.FILE }}
         context: ${{ inputs.CONTEXT }}
         platforms: ${{ inputs.PLATFORMS }}
-        build-args: ${{ inputs.BUILD_ARGS }}
+        build-args: ${{ env.BUILD_ARGS }}
 
     # - name: Scanning image
     #   if: github.event_name == 'pull_request'
