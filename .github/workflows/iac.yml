@@ -145,7 +145,7 @@ jobs:
       
       - name: Terragrunt validate
         id: validate
-        run: terragrunt run-all validate
+        run: terragrunt run-all validate --terragrunt-non-interactive
         working-directory: ${{ inputs.WORKING_DIR }}
 
       - name: Terragrunt plan
