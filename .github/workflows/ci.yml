@@ -137,6 +137,11 @@ on:
         default: 0
         description: 'Return a custom tag in case more than one is requested.'
         required: false
+      REVISION_PATH:
+        type: string
+        default: .
+        description: Whenever the WF requires a different path than . for the revision file
+        required: false
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -222,6 +227,7 @@ jobs:
       TAG: ${{ inputs.TAG }}
       BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
       OUTPUT_TAG_INDEX: ${{ inputs.OUTPUT_TAG_INDEX }}
+      REVISION_PATH: ${{ inputs.REVISION_PATH }}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
