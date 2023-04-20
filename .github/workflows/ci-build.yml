@@ -93,6 +93,11 @@ on:
         default: 0
         description: 'Return a custom tag in case more than one is requested.'
         required: false
+      REVISION_PATH:
+        type: string
+        default: .
+        description: Whenever the WF requires a different path than . for the revision file
+        required: false
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -161,11 +166,10 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - run: git submodule status > REVISION
+    - run: git submodule status > ${{inputs.REVISION_PATH}}/REVISION
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
       
-    - run: git show -s --oneline --no-abbrev-commit >> REVISION
-
+    - run: git show -s --oneline --no-abbrev-commit >> ${{inputs.REVISION_PATH}}/REVISION
 
     - name: Checkout actions
       uses: actions/checkout@v3
