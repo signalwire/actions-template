@@ -100,5 +100,5 @@ jobs:
         SKIP_TAGS: ${{ inputs.SKIP_TAGS}}
         MONITOR: ${{ inputs.MONITOR}}
       env:
-        AWX_URL: ${{ secrets.AWX_URL }}
+        AWX_HOST: ${{ secrets.AWX_HOST }}
         AWX_OAUTH_TOKEN: ${{ secrets.AWX_OAUTH_TOKEN }}
