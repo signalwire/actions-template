@@ -1,0 +1,70 @@
+name: Ansible
+description: Run ansible using AWX
+
+inputs:
+  AWX_HOST:
+    description: "AWX or Ansible Tower URL."
+    required: true
+  AWX_OAUTH_TOKEN:
+    description: "AWX or Ansible Tower Oauth token."
+    required: true
+  AWX_VERIFY_SSL:
+    description: "Require valid SSL certificate"
+    required: false
+    default: "true"
+  RESOURCE_TYPE:
+    description: "One of resource types: project, job_template or workflow_job_template."
+    required: true
+  RESOURCE_NAME:
+    description: "Name or ID of project, job_template or workflow_job_template."
+    required: true
+  JOB_TYPE:
+    description: "Run or chek playbook."
+    required: false
+  LIMIT:
+    description: "Host pattern that will be managed or affected by the playbook."
+    required: false
+  TAGS:
+    description: "Playbook tags to apply."
+    required: false
+  SKIP_TAGS:
+    description: "Playbook tags to skip."
+    required: false
+  TIMEOUT:
+    description: "If set with monitor, time out waiting on job completion."
+    required: false
+  INVENTORY:
+    description: "Name or ID of the associated inventory."
+    required: false
+  BRANCH:
+    description: "SCM branch to override."
+    required: false
+  MONITOR:
+    description: "Monitor job progress in realtime."
+    required: false
+    default: "true"
+  EXTRA_VARS:
+    description: "Pass extra command line variables to the playbook."
+    required: false
+    
+runs:
+  using: "composite"
+  steps:
+
+    - name: "Run ${{ inputs.RESOURCE_TYPE}} for ${{ inputs.RESOURCE_NAME}}"
+      uses: fitbeard/action-trigger-awx@v22.0.0
+      with:
+        tower_url: ${{ env.AWX_HOST }}
+        tower_token: ${{ env.AWX_OAUTH_TOKEN }}
+        tower_verify_ssl: ${{ inputs.AWX_VERIFY_SSL }}
+        resource_type: ${{ inputs.RESOURCE_TYPE }}
+        resource_name: ${{ inputs.RESOURCE_NAME }}
+        limit: ${{ inputs.LIMIT }}
+        extra_vars: ${{ inputs.EXTRA_VARS }}
+        branch: ${{ inputs.BRANCH }}
+        inventory: ${{ inputs.INVENTORY }}
+        tags: ${{ inputs.TAGS }}
+        skip_tags: ${{ inputs.SKIP_TAGS }}
+        monitor: ${{ inputs.MONITOR }}
+        timeout: ${{ inputs.TIMEOUT }}
+

@@ -1,0 +1,104 @@
+name: Ansible
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: self-hosted
+        type: string
+      AWX_VERIFY_SSL:
+        description: "Require valid SSL certificate"
+        required: false
+        default: "true"
+        type: string
+      RESOURCE_TYPE:
+        description: "One of resource types: project, job_template or workflow_job_template."
+        required: true
+        type: string
+      RESOURCE_NAME:
+        description: "Name or ID of project, job_template or workflow_job_template."
+        required: true
+        type: string
+      JOB_TYPE:
+        description: "Run or chek playbook."
+        required: false
+        type: string
+      LIMIT:
+        description: "Host pattern that will be managed or affected by the playbook."
+        required: false
+        type: string
+      TAGS:
+        description: "Playbook tags to apply."
+        required: false
+        type: string
+      SKIP_TAGS:
+        description: "Playbook tags to skip."
+        required: false
+        type: string
+      TIMEOUT:
+        description: "If set with monitor, time out waiting on job completion."
+        required: false
+        type: number
+      INVENTORY:
+        description: "Name or ID of the associated inventory."
+        required: false
+        type: string
+      BRANCH:
+        description: "SCM branch to override."
+        required: false
+        type: string
+      MONITOR:
+        description: "Monitor job progress in realtime."
+        required: false
+        default: "true"
+        type: string
+      EXTRA_VARS:
+        description: "Pass extra command line variables to the playbook."
+        required: false
+        type: string
+    secrets:
+      AWX_HOST:
+        description: "AWX or Ansible Tower URL."
+        required: true
+      AWX_OAUTH_TOKEN:
+        description: "AWX or Ansible Tower Oauth token."
+        required: true
+
+jobs:
+  deploy:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Deploy
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: feat/awx #TODO: fix
+        path: actions
+
+    - uses: ./actions/.github/actions/ansible
+      name: Trigger AWX
+      with:
+        AWX_VERIFY_SSL: ${{ inputs.AWX_VERIFY_SSL}}
+        RESOURCE_TYPE: ${{ inputs.RESOURCE_TYPE}}
+        RESOURCE_NAME: ${{ inputs.RESOURCE_NAME}}
+        LIMIT: ${{ inputs.LIMIT}}
+        EXTRA_VARS: ${{ inputs.EXTRA_VARS}}
+        BRANCH: ${{ inputs.BRANCH}}
+        INVENTORY: ${{ inputs.INVENTORY}}
+        TAGS: ${{ inputs.TAGS}}
+        SKIP_TAGS: ${{ inputs.SKIP_TAGS}}
+        MONITOR: ${{ inputs.MONITOR}}
+      env:
+        AWX_URL: ${{ secrets.AWX_URL }}
+        AWX_OAUTH_TOKEN: ${{ secrets.AWX_OAUTH_TOKEN }}
