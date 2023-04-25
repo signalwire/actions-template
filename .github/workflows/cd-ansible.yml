@@ -62,6 +62,11 @@ on:
         description: "Pass extra command line variables to the playbook."
         required: false
         type: string
+      LOCAL_MANIFESTS:
+        description: In case deployment manifests are local this should be true.
+        required: false
+        default: false
+        type: boolean
     secrets:
       AWX_HOST:
         description: "AWX or Ansible Tower URL."
@@ -78,6 +83,10 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+      if: inputs.LOCAL_MANIFESTS == true
 
     - name: Checkout actions
       uses: actions/checkout@v3
