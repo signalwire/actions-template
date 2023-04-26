@@ -97,7 +97,8 @@ jobs:
         do
           echo "${i}" >> $GITHUB_ENV
         done
-    
+    - name: debug
+      run: ls -l
     - name: Cypress run
       uses: cypress-io/github-action@v5
       with:
