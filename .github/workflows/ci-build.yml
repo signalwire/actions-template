@@ -219,7 +219,9 @@ jobs:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         DOCKER_SECRETS: ${{ secrets.DOCKER_SECRETS }}
-        BUILD_ARGS: ${{ secrets.BUILD_ARGS }}
+        BUILD_ARGS: |
+          ${{ secrets.BUILD_ARGS }}
+          ${{ inputs.BUILD_ARGS }}
         # GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.GCLOUD_TOKEN }}    
     
     # Disabled due performance issues
