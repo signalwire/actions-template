@@ -65,7 +65,6 @@ jobs:
       run: |
         for i in $(echo ${{secrets.CYPRESS_ENV}} | tr ',' '\n')
         do
-          export $(echo $i | tr '=' ' ')
           echo "${i}" >> $GITHUB_ENV
         done
     
