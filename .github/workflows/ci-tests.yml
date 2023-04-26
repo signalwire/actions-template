@@ -32,10 +32,24 @@ on:
         type: boolean
         description: Cypress install dependencies.
         default: true
+      SUBMODULES_PRIVATE: 
+        required: false
+        type: boolean
+        default: true
+      SUBMODULES_RECURSIVE:
+        required: false
+        type: boolean
+        default: false
     secrets:
       CYPRESS_ENV: 
         required: false
         description: Cypress inline kv comma-separated env.
+      GH_BOT_DEPLOY_KEY:
+        required: false
+        description: 'SSH key used to fetch submodules.'
+      GH_BOT_DEPLOY_TOKEN:
+        required: false
+        description: 'Personal access token used to fetch submodules.'
 
 jobs:
   
@@ -53,6 +67,22 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ inputs.NODE_VERSION }}
+
+    - uses: actions/checkout@v3
+      name: Checkout private submoules recursively
+      id: private
+      if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
+      with:
+        ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+        token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
+        submodules: 'recursive'
+
+    - uses: actions/checkout@v3
+      name: Checkout public submoules recursively
+      id: public
+      if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}
+      with:
+        submodules: 'recursive'
 
     - uses: actions/cache@v2
       with:
