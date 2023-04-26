@@ -32,9 +32,11 @@ on:
         type: boolean
         description: Cypress install dependencies.
         default: true
-      
+    secrets:
+      CYPRESS_ENV: 
+        required: false
+        description: Cypress inline kv comma-separated env.
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   
   cypress:
@@ -58,6 +60,14 @@ jobs:
           ~/.cache/Cypress
           node_modules
         key: cache-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+    - name: Split key-value pairs
+      run: |
+        for i in $(echo ${{secrets.CYPRESS_ENV}} | tr ',' '\n')
+        do
+          export $(echo $i | tr '=' ' ')
+          echo "${i}" >> $GITHUB_ENV
+        done
     
     - name: Cypress run
       uses: cypress-io/github-action@v5
