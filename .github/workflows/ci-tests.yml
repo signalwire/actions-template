@@ -1,0 +1,69 @@
+name: Tests
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      RUNNER:
+        type: string
+        default: 'ubuntu-latest'
+        description: 'The default runner.'
+      ENVIRONMENT: 
+        type: string
+        description: 'The environment related to an WF execution.'
+      NODE_VERSION:
+        type: number
+        description: Default node version.
+        default: 16
+      CONTEXT:
+        type: string
+        description: Context to run tests
+        default: .
+      CONFIG_FILE:
+        type: string
+        description: Cypress config file
+        default: ''
+      START_COMMAND:
+        type: string
+        description: Cypress run command
+        default: 'npm run test:ci'
+      CYPRESS_INSTALL:
+        type: boolean
+        description: Cypress install dependencies.
+        default: true
+      
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  
+  cypress:
+    # The type of runner that the job will run on
+    runs-on: ${{ inputs.RUNNER }}
+    environment: ${{ inputs.ENVIRONMENT }}
+    name: Cypress
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.NODE_VERSION }}
+
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/Cypress
+          node_modules
+        key: cache-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+    
+    - name: Cypress run
+      uses: cypress-io/github-action@v5
+      with:
+        working-directory: ${{ inputs.CONTEXT }}
+        install: ${{ inputs.CYPRESS_INSTALL }}
+        record: true
+        config-file: ${{ inputs.CONFIG_FILE }}
+        start: ${{ inputs.START_COMMAND }}
