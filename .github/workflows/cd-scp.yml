@@ -41,7 +41,7 @@ on:
         type: boolean
         default: true
         description: Uploads a confirmation file named ready.txt to ilustrate that the transfer has ended
-      CREATE_DESTINAITON_FOLDERS:
+      CREATE_DESTINATION_FOLDERS:
         required: false
         default: false
         description: Create folder on destination
@@ -78,7 +78,7 @@ jobs:
     
     - name: Create destination folders
       uses: ./actions/.github/actions/teleport
-      if: inputs.CREATE_DESTINAITON_FOLDERS == true
+      if: inputs.CREATE_DESTINATION_FOLDERS == true
       with:
         EXEC_COMMANDS: mkdir -p ${{ inputs.TARGET_FOLDER }}
       env: 
