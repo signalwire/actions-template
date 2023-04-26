@@ -97,13 +97,20 @@ jobs:
         do
           echo "${i}" >> $GITHUB_ENV
         done
+
+    - name: npm i
+      if: inputs.CYPRESS_INSTALL == true
+      run: |
+        cd ${{ inputs.CONTEXT }}
+        npm i
+
     - name: debug
       run: ls -l
     - name: Cypress run
       uses: cypress-io/github-action@v5
       with:
         working-directory: ${{ inputs.CONTEXT }}
-        install: ${{ inputs.CYPRESS_INSTALL }}
+        install: false
         record: true
         config-file: ${{ inputs.CONFIG_FILE }}
         start: ${{ inputs.START_COMMAND }}
