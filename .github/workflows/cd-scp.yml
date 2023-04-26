@@ -41,6 +41,11 @@ on:
         type: boolean
         default: true
         description: Uploads a confirmation file named ready.txt to ilustrate that the transfer has ended
+      CREATE_DESTINATION_FOLDERS:
+        required: false
+        default: false
+        description: Create folder on destination
+        type: boolean
     secrets:
       TELEPORT_TOKEN:
         required: true
@@ -71,6 +76,17 @@ jobs:
       with:
         name: ${{ inputs.ARTIFACT_NAME }}
     
+    - name: Create destination folders
+      uses: ./actions/.github/actions/teleport
+      if: inputs.CREATE_DESTINATION_FOLDERS == true
+      with:
+        EXEC_COMMANDS: mkdir -p ${{ inputs.TARGET_FOLDER }}
+      env: 
+        USERNAME: ${{ secrets.USERNAME }}
+        HOSTNAME: ${{ secrets.HOSTNAME }}
+        PROXY_URL: ${{ secrets.PROXY_URL }}
+        TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+
     - name: Copy files to remote host
       uses: ./actions/.github/actions/teleport
       with:
