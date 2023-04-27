@@ -1,0 +1,70 @@
+name: Generate meta file
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: Environment where the variables and secrets are scoped to
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        type: string
+        description: A GitHub runner type
+      ARTIFACT_NAME:
+        required: false
+        default: ''
+        description: The artifact name to pull from a previous step
+        type: string
+      META_NAME:
+        required: true
+        default: ''
+        type: string
+        description: Lib name that will be used as target branch.
+      PATH_PREFIX:
+        required: true
+        default: ''
+        type: string
+        description: A path prefix to be added to meta.
+      PLATFORM:
+        required: false
+        description: Default OS/Arch
+        default: linux/amd64
+        type: string
+    outputs:
+      TIME:
+        value: ${{ steps.time.outputs.current_time }}
+      
+
+jobs:
+  sync:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Sync metadata for ${{inputs.LIB_NAME}}
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+      
+      - name: Static time
+        id: time
+        run: |
+          echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
+          echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.ARTIFACT_NAME }}
+
+      - name: Generate file
+        run: |
+         printf "${{inputs.FILE_PATH}}/%s\n" *.tar.gz > $current_time.txt
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: meta
+          path: |
+            $current_time.txt
