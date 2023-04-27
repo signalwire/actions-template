@@ -31,14 +31,14 @@ on:
         type: string
     outputs:
       TIME:
-        value: ${{ steps.time.outputs.current_time }}
+        value: ${{ jobs.meta.outputs.current_time }}
       
 
 jobs:
-  sync:
+  meta:
 
     runs-on: ${{ inputs.RUNNER }}
-    name: Sync metadata for ${{inputs.LIB_NAME}}
+    name: Generate metadata for ${{inputs.LIB_NAME}}
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
