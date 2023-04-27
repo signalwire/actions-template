@@ -62,4 +62,4 @@ jobs:
         with:
           name: ${{inputs.OS_PLATFORM}}-meta
           path: |
-            $current_time.txt
+            ${{steps.time.outputs.current_time}}.txt
