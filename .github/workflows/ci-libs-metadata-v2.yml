@@ -19,11 +19,6 @@ on:
         default: ''
         description: The artifact name to pull from a previous step
         type: string
-      META_NAME:
-        required: true
-        default: ''
-        type: string
-        description: Lib name that will be used as target branch.
       PATH_PREFIX:
         required: true
         default: ''
