@@ -62,9 +62,9 @@ jobs:
     - name: build debs
       run: docker run --platform linux/${{inputs.PLATFORM}} --rm --entrypoint="/root/run.sh" -w /root -v $(pwd):/root ${{inputs.BASE_IMAGE}}
 
-    # - name: Set custom variables
-    #   run: |
-    #     echo image_tag=$(echo ${{inputs.BASE_IMAGE}} | awk -F ':' '{print $2}') >> $GITHUB_ENV
+    - name: Set custom variables
+      run: |
+        echo image_tag=$(echo ${{inputs.BASE_IMAGE}} | awk -F ':' '{print $2}') >> $GITHUB_ENV
     #     echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
     #     echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
 
@@ -77,7 +77,7 @@ jobs:
 
     - name: Compress files
       run: |
-        tar -czvf ${{inputs.BASE_IMAGE}}.tar.gz $(ls | grep '.deb\|hash.txt')
+        tar -czvf $image_tag.tar.gz $(ls | grep '.deb\|hash.txt')
 
     - name: Generate SHA checksum
       run: |
