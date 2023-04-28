@@ -27,7 +27,7 @@ on:
       OS_PLATFORM:
         required: false
         description: Default OS/Arch
-        default: linux/amd64
+        default: amd64
         type: string
     outputs:
       TIME:
