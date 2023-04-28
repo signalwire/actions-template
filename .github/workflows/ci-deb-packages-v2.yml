@@ -81,7 +81,7 @@ jobs:
 
     - name: Generate SHA checksum
       run: |
-        sha512sum ${{inputs.BASE_IMAGE}}.tar.gz > ${{inputs.BASE_IMAGE}}.sha1
+        sha512sum $image_tag.tar.gz > $image_tag.sha1
       
     - uses: actions/upload-artifact@v3
       with:
