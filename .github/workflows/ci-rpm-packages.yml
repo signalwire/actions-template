@@ -31,7 +31,7 @@ on:
         default: amd64
         type: string
       TARGET_ARTIFACT_NAME:
-        required: true
+        required: false
         description: Artifact name.
         default: centos
         type: string
@@ -62,7 +62,7 @@ jobs:
     - name: Create dummy file to ilustrate that the copy has finished
       run: echo $GITHUB_SHA > hash.txt
       env:
-         GITHUB_SHA: ${{ github.sha }}
+        GITHUB_SHA: ${{ github.sha }}
 
     - name: Compress files
       run: |
