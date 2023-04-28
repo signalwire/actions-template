@@ -43,11 +43,11 @@ jobs:
 
     steps:
       
-      - name: Static time
-        id: time
-        run: |
-          echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
-          echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
+      # - name: Static time
+      #   id: time
+      #   run: |
+      #     echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
+      #     echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
 
       - name: Download Artifacts
         uses: actions/download-artifact@v3
@@ -56,10 +56,10 @@ jobs:
 
       - name: Generate file
         run: |
-         printf "${{inputs.FILE_PATH_PREFIX}}/%s\n" *.tar.gz > $current_time.txt
+         printf "${{inputs.FILE_PATH_PREFIX}}/%s\n" *.tar.gz > metafile.txt
 
       - uses: actions/upload-artifact@v3
         with:
           name: ${{inputs.OS_PLATFORM}}-meta
           path: |
-            ${{steps.time.outputs.current_time}}.txt
+            metafile.txt
