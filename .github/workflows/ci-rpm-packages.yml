@@ -25,6 +25,16 @@ on:
         required: false
         type: string
         default: 'false'
+      PLATFORM:
+        required: false
+        description: Default OS/Arch
+        default: amd64
+        type: string
+      TARGET_ARTIFACT_NAME:
+        required: true
+        description: Artifact name.
+        default: centos
+        type: string
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -43,41 +53,28 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Checkout actions
-      uses: actions/checkout@v3
-      with:
-        repository: signalwire/actions-template
-        ref: main
-        path: actions
-
     - name: Build RPM Packages
       uses: signalwire/build-rpm-packages-action@dev
       with:
         project_name: ${{inputs.PROJECT_NAME}}
         packager: ${{inputs.PACKAGER}}
     
-    - name: Set default time
-      run: |
-        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
-        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
-
     - name: Create dummy file to ilustrate that the copy has finished
-      run: echo $GITHUB_SHA > ready.txt
-      if: inputs.TRANSFER_CONFIRMATION == true
+      run: echo $GITHUB_SHA > hash.txt
       env:
          GITHUB_SHA: ${{ github.sha }}
- 
+
     - name: Compress files
       run: |
-        tar -czvf $current_time.tar.gz $(ls | grep '.rpm\|ready.txt')
+        tar -czvf ${{inputs.TARGET_ARTIFACT_NAME}}.tar.gz $(ls | grep '.rpm\|hash.txt')
 
     - name: Generate SHA checksum
       run: |
-        sha512sum $current_time.tar.gz > $current_time.sha1
+        sha512sum ${{inputs.TARGET_ARTIFACT_NAME}}.tar.gz > ${{inputs.TARGET_ARTIFACT_NAME}}.sha1
       
     - uses: actions/upload-artifact@v3
       with:
-        name: rpm-artifact
+        name: rpm-${{inputs.PLATFORM}}-artifact
         path: |
           *.tar.gz
           *.sha1

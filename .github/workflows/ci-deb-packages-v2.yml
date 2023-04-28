@@ -65,13 +65,10 @@ jobs:
     - name: Set custom variables
       run: |
         echo image_tag=$(echo ${{inputs.BASE_IMAGE}} | awk -F ':' '{print $2}') >> $GITHUB_ENV
-    #     echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
-    #     echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
 
-    - name: Create dummy file to ilustrate that the copy has finished
+    - name: Copy git hash
       run: echo $GITHUB_SHA > hash.txt
       shell: sh
-      if: inputs.TRANSFER_CONFIRMATION == true
       env:
          GITHUB_SHA: ${{ github.sha }}
 
@@ -95,4 +92,3 @@ jobs:
         name: deb-changelog-artifact
         path: |
           ./debian/changelog
-
