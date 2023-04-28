@@ -1,0 +1,122 @@
+name: Tests
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      RUNNER:
+        type: string
+        default: 'ubuntu-latest'
+        description: 'The default runner.'
+      ENVIRONMENT: 
+        type: string
+        description: 'The environment related to an WF execution.'
+      NODE_VERSION:
+        type: number
+        description: Default node version.
+        default: 16
+      CONTEXT:
+        type: string
+        description: Context to run tests
+        default: .
+      CONFIG_FILE:
+        type: string
+        description: Cypress config file
+        default: ''
+      START_COMMAND:
+        type: string
+        description: Cypress run command
+        default: 'npm run test:ci'
+      CYPRESS_INSTALL:
+        type: boolean
+        description: Cypress install dependencies.
+        default: true
+      SUBMODULES_PRIVATE: 
+        required: false
+        type: boolean
+        default: true
+        description: Pull git submodules
+      SUBMODULES_RECURSIVE:
+        required: false
+        type: boolean
+        default: false
+        description: Set git submodules recursive flag
+      PARALLEL:
+        required: false
+        type: boolean
+        default: true
+        description: Run tests in parallel
+    secrets:
+      CYPRESS_ENV: 
+        required: false
+        description: Cypress inline kv comma-separated env.
+      GH_BOT_DEPLOY_KEY:
+        required: false
+        description: 'SSH key used to fetch submodules.'
+      GH_BOT_DEPLOY_TOKEN:
+        required: false
+        description: 'Personal access token used to fetch submodules.'
+
+jobs:
+  
+  cypress:
+    # The type of runner that the job will run on
+    runs-on: ${{ inputs.RUNNER }}
+    environment: ${{ inputs.ENVIRONMENT }}
+    name: Cypress
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.NODE_VERSION }}
+
+    - uses: actions/checkout@v3
+      name: Checkout private submoules recursively
+      id: private
+      if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
+      with:
+        ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+        token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
+        submodules: 'recursive'
+
+    - uses: actions/checkout@v3
+      name: Checkout public submoules recursively
+      id: public
+      if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}
+      with:
+        submodules: 'recursive'
+
+    - name: Split key-value pairs
+      run: |
+        for i in $(echo ${{secrets.CYPRESS_ENV}} | tr ',' '\n')
+        do
+        echo "${i}" >> $GITHUB_ENV
+        done
+      
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/Cypress
+          node_modules
+        key: cache-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+    - name: npm i
+      if: inputs.CYPRESS_INSTALL == true
+      run: |
+        cd ${{ inputs.CONTEXT }}
+        npm i
+
+    - name: Cypress run
+      uses: cypress-io/github-action@v5
+      with:
+        working-directory: ${{ inputs.CONTEXT }}
+        install: false
+        parallel: ${{ inputs.PARALLEL }}
+        record: true
+        config-file: ${{ inputs.CONFIG_FILE }}
+        start: ${{ inputs.START_COMMAND }}
