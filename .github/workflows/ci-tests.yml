@@ -40,6 +40,11 @@ on:
         required: false
         type: boolean
         default: false
+      PARALLEL:
+        required: false
+        type: boolean
+        default: true
+        description: Run tests in parallel
     secrets:
       CYPRESS_ENV: 
         required: false
@@ -111,6 +116,7 @@ jobs:
       with:
         working-directory: ${{ inputs.CONTEXT }}
         install: false
+        parallel: ${{ inputs.PARALLEL }}
         record: true
         config-file: ${{ inputs.CONFIG_FILE }}
         start: ${{ inputs.START_COMMAND }}
