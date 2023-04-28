@@ -36,10 +36,12 @@ on:
         required: false
         type: boolean
         default: true
+        description: Pull git submodules
       SUBMODULES_RECURSIVE:
         required: false
         type: boolean
         default: false
+        description: Set git submodules recursive flag
       PARALLEL:
         required: false
         type: boolean
@@ -89,6 +91,13 @@ jobs:
       with:
         submodules: 'recursive'
 
+    - name: Split key-value pairs
+      run: |
+        for i in $(echo ${{secrets.CYPRESS_ENV}} | tr ',' '\n')
+        do
+        echo "${i}" >> $GITHUB_ENV
+        done
+      
     - uses: actions/cache@v2
       with:
         path: |
@@ -96,21 +105,12 @@ jobs:
           node_modules
         key: cache-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
 
-    - name: Split key-value pairs
-      run: |
-        for i in $(echo ${{secrets.CYPRESS_ENV}} | tr ',' '\n')
-        do
-          echo "${i}" >> $GITHUB_ENV
-        done
-
     - name: npm i
       if: inputs.CYPRESS_INSTALL == true
       run: |
         cd ${{ inputs.CONTEXT }}
         npm i
 
-    - name: debug
-      run: ls -l
     - name: Cypress run
       uses: cypress-io/github-action@v5
       with:
