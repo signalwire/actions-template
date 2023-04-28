@@ -59,7 +59,7 @@ jobs:
         project_name: ${{inputs.PROJECT_NAME}}
         packager: ${{inputs.PACKAGER}}
     
-    - name: Create dummy file to ilustrate that the copy has finished
+    - name: Generate hash file
       run: echo $GITHUB_SHA > hash.txt
       env:
         GITHUB_SHA: ${{ github.sha }}
