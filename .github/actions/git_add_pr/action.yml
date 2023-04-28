@@ -30,6 +30,7 @@ runs:
         add: ${{ inputs.FILES }}
         new_branch: ${{ inputs.SOURCE_BRANCH }}
         push: true
+        fetch: true
     
     - name: Create Sync PR
       uses: devops-infra/action-pull-request@v0.5.5
