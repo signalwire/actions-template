@@ -48,7 +48,7 @@ jobs:
         ref: main
         path: actions
 
-    - uses: ./actions/.github/actions/docker-retag
+    - uses: ./actions/.github/actions/docker-tag-clone
       name: Copy docker tag
       with:
         TARGET_TAG: ${{inputs.TARGET_TAG}}
