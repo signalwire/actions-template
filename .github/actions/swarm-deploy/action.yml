@@ -25,7 +25,7 @@ runs:
           curl -s -H "X-API-Key: ${{env.PORTAINER_API_KEY}}" https://deploy.signalwire.cloud/api/endpoints/${{env.ENDPOINT_ID}}/docker/services/${{ inputs.STACK_NAME }} > service.spec.json
           
           version=$(jq '.Version.Index' service.spec.json)
-          previousimg=$(jq '.Spec.TaskTemplate.ContainerSpec.Image' service.spec.json)
+          previousimg=$(jq '.Spec.TaskTemplate.ContainerSpec.Image' -r service.spec.json)
           
           jq '.Spec.TaskTemplate.ContainerSpec.Image="${{ inputs.IMAGE_TAG}}" | .Spec' service.spec.json > update.spec.json
           
