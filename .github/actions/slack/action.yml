@@ -12,13 +12,16 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Remove quotes
+      run: echo 'MESSAGE=${{inputs.MESSAGE}}' | jq -r . >> $GITHUB_ENV
+      shell: bash
     - name: Send custom JSON data to Slack workflow
       id: slack
       uses: slackapi/slack-github-action@v1.23.0
       with:
         payload: |
           {
-            "text": "${{ inputs.MESSAGE }}",
+            "text": "${{ env.MESSAGE }}",
             "channel": "${{ inputs.CHANNEL }}",
             "username": "webhookbot",
             "icon_emoji": ":ghost:",
@@ -27,7 +30,7 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "${{ inputs.MESSAGE }}"
+                  "text": "${{ env.MESSAGE }}"
                 }
               }
             ]
