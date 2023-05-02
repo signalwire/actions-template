@@ -1,0 +1,65 @@
+name: Generate meta file
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: Environment where the variables and secrets are scoped to
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        type: string
+        description: A GitHub runner type
+      ARTIFACT_NAME:
+        required: false
+        default: ''
+        description: The artifact name to pull from a previous step
+        type: string
+      FILE_PATH_PREFIX:
+        required: false
+        default: ''
+        description: A prefix to append to meta file.
+        type: string
+      OS_PLATFORM:
+        required: false
+        description: Default OS/Arch
+        default: amd64
+        type: string
+    outputs:
+      TIME:
+        value: ${{ jobs.meta.outputs.current_time }}
+      
+
+jobs:
+  meta:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Generate metadata for ${{inputs.LIB_NAME}}
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+      
+      # - name: Static time
+      #   id: time
+      #   run: |
+      #     echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
+      #     echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.ARTIFACT_NAME }}
+
+      - name: Generate file
+        run: |
+         echo "${{inputs.FILE_PATH_PREFIX}}" > metafile.txt
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{inputs.OS_PLATFORM}}-meta
+          path: |
+            metafile.txt
