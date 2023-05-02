@@ -107,7 +107,7 @@ jobs:
       if: always()
       name: slack notification
       with:
-        MESSAGE: "GitHub Action result: ${{ github.event.pull_request.html_url || github.event.head_commit.url }} \n Previous image: ${{ steps.swarm-deploy.outputs.PREVIOUS_IMAGE}} \nNew image: ${{ inputs.IMAGE_TAG}}" 
+        MESSAGE: 'GitHub Action result: ${{ github.event.pull_request.html_url || github.event.head_commit.url }} \n Previous image: ${{ steps.swarm-deploy.outputs.PREVIOUS_IMAGE}} \nNew image: ${{ inputs.IMAGE_TAG}}'
         CHANNEL: "${{ inputs.SLACK_CHANNEL }}"
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
