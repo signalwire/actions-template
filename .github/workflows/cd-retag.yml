@@ -1,0 +1,77 @@
+name: Docker tagging
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        type: string
+      SOURCE_TAG:
+        description: Docker source tag
+        required: false
+        type: string
+        default: |
+          type=schedule
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=sha
+      TARGET_TAG:
+        description: Docker target tag
+        required: true
+        type: string
+      PROJECT_NAME:
+        required: true
+        description: Project naming matching registry repo
+        type: string
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+        description: 'DockerHub username.'
+      DOCKERHUB_TOKEN:
+        required: true
+        description: 'DockerHub PAT.'
+
+jobs:
+  deploy:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Tagging
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+
+    - name: Checkout actions
+      uses: actions/checkout@v3
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+
+    - uses: ./actions/.github/actions/docker
+      name: Docker build
+      id: dockertag
+      with:
+        PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
+        TAG: ${{ inputs.TARGET_TAG }}
+        TAG_ONLY: true
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - uses: ./actions/.github/actions/docker-tag-clone
+      name: Copy docker tag
+      with:
+        TARGET_TAG: ${{ steps.dockertag.outputs.IMAGE_TAG }}
+        SOURCE_TAG: ${{inputs.SOURCE_TAG}}
+        PROJECT_NAME: ${{inputs.PROJECT_NAME}}
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}

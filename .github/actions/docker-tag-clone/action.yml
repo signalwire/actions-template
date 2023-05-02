@@ -1,0 +1,23 @@
+name: Copy docker
+description: Copy docker tag from an existing image
+
+inputs:
+  SOURCE_TAG:
+    required: true
+    description: Image tag
+  TARGET_TAG:
+    required: true
+    description: Taget image tag
+    
+runs:
+  using: "composite"
+  steps:
+    - name: Copy and Push Docker tags
+      uses: julb/action-copy-docker-tag@v1
+      with:
+        username: ${{ env.DOCKERHUB_USERNAME }}
+        password: ${{ env.DOCKERHUB_PASSWORD }}
+        from: ${{inputs.SOURCE_TAG}}
+        tags: |
+          ${{inputs.TARGET_TAG}}
+          
