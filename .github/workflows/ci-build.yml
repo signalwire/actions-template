@@ -131,9 +131,9 @@ on:
       IMAGE_TAG: 
         value: ${{ jobs.build.outputs.IMAGE_TAG }}
         description: Container image tag from docker build
-      ${{inputs.PROJECT_NAME}}_result: 
-        value: ${{ jobs.build.outputs.IMAGE_TAG }}
-        description: Container image tag from docker build
+      IMAGE_MATRIX:
+        description: Image based matrix
+        value: ${{ jobs.build.outputs.IMAGE_MATRIX }}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -148,6 +148,8 @@ jobs:
       contents: read
     outputs:
       IMAGE_TAG: ${{ steps.build.outputs.IMAGE_TAG }}
+      IMAGE_MATRIX: ${{ fromJson(steps.out.outputs.result).image }}
+
     steps:
     - uses: actions/checkout@v3
       with:
@@ -227,6 +229,14 @@ jobs:
           ${{ inputs.BUILD_ARGS }}
         # GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.GCLOUD_TOKEN }}    
     
+    - uses: cloudposse/github-action-matrix-outputs-write@main
+      id: out
+      with:
+        matrix-step-name: build
+        matrix-key: ${{ inputs.PROJECT_NAME }}
+        outputs: |-
+          image: ${{ steps.build.outputs.IMAGE_TAG }}
+          
     # Disabled due performance issues
     # - uses: ./actions/.github/actions/trivy
     #   name: Container Scan
