@@ -55,6 +55,10 @@ inputs:
     default: '0'
     description: 'Return a custom tag in case more than one is requested.'
     required: false
+  TAG_ONLY:
+    default: 'false'
+    description: 'Generate tag only.'
+    required: false
 outputs:
   IMAGE_TAG:
     description: "Export image tag"
@@ -99,6 +103,7 @@ runs:
 
     - name: Login to DockerHub
       uses: docker/login-action@v2
+      if: inputs.TAG_ONLY == 'false'
       # if: contains(inputs.REGISTRY, 'docker.com' )
       with:
         username: ${{ env.DOCKERHUB_USERNAME }}
@@ -111,7 +116,7 @@ runs:
 
     - name: Build and export to Docker
       uses: docker/build-push-action@v4
-      if: inputs.PLATFORMS == 'linux/amd64'
+      if: inputs.PLATFORMS == 'linux/amd64' && inputs.TAG_ONLY == 'false'
       with:
         load: true
         tags: |
@@ -125,7 +130,7 @@ runs:
         secrets: ${{ env.DOCKER_SECRETS }}
 
     - name: Test
-      if: github.event_name == 'pull_request' && inputs.CONTAINER_TEST == 'true'
+      if: github.event_name == 'pull_request' && inputs.CONTAINER_TEST == 'true' && inputs.TAG_ONLY == 'false'
       id: test
       shell: bash
       run: |
@@ -139,7 +144,7 @@ runs:
         echo "name=container-logs::$EXECUTIONLOG" >> $GITHUB_OUTPUT
     
     - name: Build and push
-      if: ${{ inputs.PUSH == 'true' && github.event_name != 'pull_request'}}
+      if: inputs.PUSH == 'true' && github.event_name != 'pull_request' && inputs.TAG_ONY == 'false'
       uses: docker/build-push-action@v4
       with:
         push: true

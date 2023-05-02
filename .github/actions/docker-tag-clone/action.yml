@@ -2,9 +2,6 @@ name: Copy docker
 description: Copy docker tag from an existing image
 
 inputs:
-  PROJECT_NAME:
-    required: true
-    description: 'Project naming matching registry repo'
   SOURCE_TAG:
     required: true
     description: Image tag
@@ -20,6 +17,7 @@ runs:
       with:
         username: ${{ env.DOCKERHUB_USERNAME }}
         password: ${{ env.DOCKERHUB_PASSWORD }}
-        from: ${{inputs.PROJECT_NAME}}:${{inputs.SOURCE_TAG}}
-        tags: ${{inputs.PROJECT_NAME}}:${{inputs.TARGET_TAG}}
+        from: ${{inputs.SOURCE_TAG}}
+        tags: |
+          ${{inputs.TARGET_TAG}}
           
