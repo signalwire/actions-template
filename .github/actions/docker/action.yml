@@ -116,7 +116,7 @@ runs:
 
     - name: Build and export to Docker
       uses: docker/build-push-action@v4
-      if: inputs.PLATFORMS == 'linux/amd64' && inputs.PUSH == 'false' && inputs.TAG_ONLY == 'true'
+      if: ${{ inputs.PLATFORMS == 'linux/amd64' && inputs.PUSH == 'false' && inputs.TAG_ONLY == 'true' }}
       with:
         load: true
         tags: |
@@ -144,7 +144,7 @@ runs:
         echo "name=container-logs::$EXECUTIONLOG" >> $GITHUB_OUTPUT
     
     - name: Build and push
-      if: inputs.PUSH == 'true' && inputs.TAG_ONY == 'false'
+      if: ${{ inputs.PUSH == 'true' && inputs.TAG_ONY == 'false' }}
       uses: docker/build-push-action@v4
       with:
         push: true
