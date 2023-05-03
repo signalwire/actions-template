@@ -55,6 +55,11 @@ jobs:
         ref: main
         path: actions
 
+    - uses: cloudposse/github-action-matrix-outputs-read@main
+      id: read
+      with:
+        matrix-step-name: build
+
     - uses: ./actions/.github/actions/docker
       name: Docker build
       id: dockertag
@@ -65,13 +70,17 @@ jobs:
       env:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - name: filter
+      run: |
+        filtered_output='${{steps.read.outputs.result}}'
+        echo SOURCE_TAG=$(echo $filtered_output | jq '.image."${{inputs.PROJECT_NAME}}"' -r) >> $GITHUB_ENV
 
     - uses: ./actions/.github/actions/docker-tag-clone
       name: Copy docker tag
       with:
         TARGET_TAG: ${{ steps.dockertag.outputs.IMAGE_TAG }}
-        SOURCE_TAG: ${{inputs.SOURCE_TAG}}
-        PROJECT_NAME: ${{inputs.PROJECT_NAME}}
+        SOURCE_TAG: ${{ env.SOURCE_TAG }}
       env:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
