@@ -144,7 +144,7 @@ runs:
         echo "name=container-logs::$EXECUTIONLOG" >> $GITHUB_OUTPUT
     
     - name: Build and push
-      if: inputs.PUSH == 'true' && inputs.TAG_ONY == 'false'
+      if: inputs.PUSH == 'true' # && inputs.TAG_ONY == 'false'
       uses: docker/build-push-action@v4
       with:
         push: true
