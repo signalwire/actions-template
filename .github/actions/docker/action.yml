@@ -113,12 +113,11 @@ runs:
       if: inputs.BUILD_ARGS != ''
       run: echo BUILD_ARGS=${{inputs.BUILD_ARGS}} >> $GITHUB_ENV
       shell: bash
-
-    - name: Build and export to Docker
+    
+    - name: Build and push
       uses: docker/build-push-action@v4
-      if: ${{ inputs.PLATFORMS == 'linux/amd64' && inputs.PUSH == 'false' && inputs.TAG_ONLY == 'true' }}
       with:
-        load: true
+        push: ${{ inputs.PUSH == 'true' && inputs.TAG_ONLY == 'false' }}
         tags: |
           ${{ steps.meta.outputs.tags }}
         cache-from: type=gha
@@ -127,8 +126,7 @@ runs:
         context: ${{ inputs.CONTEXT }}
         platforms: ${{ inputs.PLATFORMS }}
         build-args: ${{ env.BUILD_ARGS }}
-        secrets: ${{ env.DOCKER_SECRETS }}
-
+    
     - name: Test
       if: github.event_name == 'pull_request' && inputs.CONTAINER_TEST == 'true' && inputs.TAG_ONLY == 'false'
       id: test
@@ -142,20 +140,6 @@ runs:
         EXECUTIONLOG="${EXECUTIONLOG//$'\n'/'%0A'}"
         EXECUTIONLOG="${EXECUTIONLOG//$'\r'/'%0D'}"
         echo "name=container-logs::$EXECUTIONLOG" >> $GITHUB_OUTPUT
-    
-    - name: Build and push
-      if: ${{ inputs.PUSH == 'true' && inputs.TAG_ONY == 'false' }}
-      uses: docker/build-push-action@v4
-      with:
-        push: true
-        tags: |
-          ${{ steps.meta.outputs.tags }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        file: ${{ inputs.FILE }}
-        context: ${{ inputs.CONTEXT }}
-        platforms: ${{ inputs.PLATFORMS }}
-        build-args: ${{ env.BUILD_ARGS }}
 
     # - name: Scanning image
     #   if: github.event_name == 'pull_request'
