@@ -116,7 +116,7 @@ runs:
 
     - name: Build and export to Docker
       uses: docker/build-push-action@v4
-      if: inputs.PLATFORMS == 'linux/amd64' && inputs.TAG_ONLY == 'false'
+      if: inputs.PLATFORMS == 'linux/amd64' && inputs.PUSH == 'false' && inputs.TAG_ONLY == 'true'
       with:
         load: true
         tags: |
