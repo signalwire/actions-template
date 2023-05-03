@@ -16,7 +16,7 @@ runs:
       uses: julb/action-copy-docker-tag@v1
       with:
         username: ${{ env.DOCKERHUB_USERNAME }}
-        password: ${{ env.DOCKERHUB_PASSWORD }}
+        password: ${{ env.DOCKERHUB_TOKEN }}
         from: ${{inputs.SOURCE_TAG}}
         tags: |
           ${{inputs.TARGET_TAG}}
