@@ -74,7 +74,7 @@ jobs:
     - name: filter
       run: |
         filtered_output=${{steps.read.outputs.result}}
-        echo SOURCE_TAG=$(echo $filtered_output | jq '."${{inputs.PROJECT_NAME}}".image' -r) >> $GITHUB_ENV
+        echo SOURCE_TAG=$(echo $filtered_output | jq '.image."${{inputs.PROJECT_NAME}}"' -r) >> $GITHUB_ENV
 
     - uses: ./actions/.github/actions/docker-tag-clone
       name: Copy docker tag
