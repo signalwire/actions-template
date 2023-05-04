@@ -59,11 +59,18 @@ runs:
         bin/rails zeitwerk:check
       shell: bash
 
-    - name: Run brakeman
+    - name: Generate Brakeman report
+      if: inputs.BRAKEMAN == 'true'
+      run: |
+        bundle exec brakeman --skip-files bundle/ -q -w2 -f json > tmp/brakeman.json || exit 0
+      shell: bash
+
+    - name: Publish report
       if: inputs.BRAKEMAN == 'true'
       uses: devmasx/brakeman-linter-action@v1.0.0
       env:
         GITHUB_TOKEN: ${{github.token}}
+        REPORT_PATH: tmp/brakeman.json
 
     - name: Install Reviewdog
       if: inputs.RUBOCOP == 'true'
