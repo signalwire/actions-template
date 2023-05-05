@@ -32,7 +32,7 @@ on:
         description: Commands to execute on remote host
         type: string
       TARGET_FOLDER:
-        required: true
+        required: false
         default: ''
         type: string
         description: Target folder where the files should be sent on remote
