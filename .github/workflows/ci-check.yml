@@ -144,7 +144,7 @@ jobs:
 
     - name: Test .NET
       if: ${{ inputs.LANGUAGE == 'dot-net' }}
-      uses: ./actions/.github/actions/test-dotnet@dotnetcerts
+      uses: ./actions/.github/actions/test-dotnet/action.yml@dotnetcerts
       with:
         DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
         DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
