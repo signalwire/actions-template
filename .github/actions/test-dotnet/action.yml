@@ -47,6 +47,7 @@ runs:
       shell: bash
 
     - name: Generate a self-signed certificate to enable HTTPS
+      if: inputs.GENERATE_DEV_CERTS != 'false'
       run: sudo dotnet dev-certs https -v
       shell: bash
       continue-on-error: true
