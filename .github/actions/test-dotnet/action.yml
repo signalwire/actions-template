@@ -62,6 +62,14 @@ runs:
       shell: bash
       continue-on-error: true
 
+    - name: dotenv
+      shell: bash
+      continue-on-error: true
+      run: |
+        set -o allexport
+        source .env
+        set +o allexport
+
     - name: Printenv
       run: printenv
       shell: bash
