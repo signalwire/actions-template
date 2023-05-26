@@ -13,10 +13,9 @@
 | parameter | description | required | default |
 | --- | --- | --- | --- |
 | DOTNET-VERSION | undefined | `false` | 3.1.402 |
+| GENERATE_DEV_CERTS | Generate dev-certs for https | `false` | `false` |
 
 
 ## Runs
 
 This action is a `composite` action.
-
-
