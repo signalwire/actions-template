@@ -201,6 +201,7 @@ jobs:
       RUBOCOP: ${{ inputs.RUBOCOP }}
       RUN_TESTS: ${{ inputs.RUN_TESTS }}
       DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
+      GENERATE_DEV_CERTS: ${{ inputs.GENERATE_DEV_CERTS }}
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
