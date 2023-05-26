@@ -127,7 +127,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: signalwire/actions-template
-        ref: main
+        ref: dotnetcerts
         path: actions
 
     - name: Up Test dependencies
@@ -144,7 +144,7 @@ jobs:
 
     - name: Test .NET
       if: ${{ inputs.LANGUAGE == 'dot-net' }}
-      uses: ./actions/.github/actions/test-dotnet/action.yml@dotnetcerts
+      uses: ./actions/.github/actions/test-dotnet
       with:
         DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
         DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
