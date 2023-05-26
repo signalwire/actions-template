@@ -67,10 +67,9 @@ runs:
       continue-on-error: true
       run: |
         cat .env
-        export $(grep -v '^#' .env | xargs -d '\n')
-        # set -o allexport
-        # source .env
-        # set +o allexport
+        set -o allexport
+        source .env
+        set +o allexport
 
     - name: Printenv
       run: printenv
