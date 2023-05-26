@@ -68,6 +68,10 @@ on:
         required: false
         type: string
         default: "6.0.403"
+      GENERATE_DEV_CERTS:
+        required: false
+        type: boolean
+        default: false
       TAG:
         required: false
         type: string

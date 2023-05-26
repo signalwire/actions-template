@@ -6,6 +6,10 @@ inputs:
     required: false
     default: "6.0.403"
     description: .NET version
+  GENERATE_DEV_CERTS:
+    required: false
+    default: 'false'
+    description: Generate dev-certs for https
   RUN_TESTS:
     required: false
     default: 'true'
@@ -50,6 +54,11 @@ runs:
       run: mv .env.ci .env
       shell: bash
       continue-on-error: true
+
+    - name: Generate a self-signed certificate to enable HTTPS
+      if: inputs.GENERATE_DEV_CERTS != 'false'
+      run: dotnet dev-certs https -v
+      shell: bash
 
     - name: Test
       run: sudo dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=LOCALTESTING || true
