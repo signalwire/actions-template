@@ -144,6 +144,7 @@ jobs:
       with:
         DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
         DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
+        GENERATE_DEV_CERTS: ${{ inputs.GENERATE_DEV_CERTS }}
         RUN_TESTS: ${{ inputs.RUN_TESTS }}
     
     - name: Test JS
