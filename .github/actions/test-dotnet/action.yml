@@ -46,17 +46,17 @@ runs:
       run: ls -la
       shell: bash
 
+    - name: Generate a self-signed certificate to enable HTTPS
+      run: sudo dotnet dev-certs https -v
+      shell: bash
+      continue-on-error: true
+
     - name: Build
       run: sudo dotnet build --configuration Release
       shell: bash
     
     - name: Rename .env
       run: mv .env.ci .env
-      shell: bash
-      continue-on-error: true
-
-    - name: Generate a self-signed certificate to enable HTTPS
-      run: dotnet dev-certs https -v
       shell: bash
       continue-on-error: true
 
