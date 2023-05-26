@@ -41,6 +41,10 @@ on:
         required: false
         type: string
         default: "6.0.403"
+      GENERATE_DEV_CERTS:
+        required: false
+        type: boolean
+        default: false
       SUBMODULES_RECURSIVE:
         required: false
         type: boolean
@@ -140,7 +144,7 @@ jobs:
 
     - name: Test .NET
       if: ${{ inputs.LANGUAGE == 'dot-net' }}
-      uses: ./actions/.github/actions/test-dotnet
+      uses: ./actions/.github/actions/test-dotnet@dotnetcerts
       with:
         DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
         DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
