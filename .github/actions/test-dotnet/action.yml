@@ -38,22 +38,14 @@ runs:
       run: docker ps
       shell: bash
     
-    - name: Load .env file
-      uses: aarcangeli/load-dotenv@v1.0.0
-      with:
-        filenames: |
-          .env.ci
-        quiet: true
-        if-file-not-found: ignore
-
     - name: Build
       run: sudo dotnet build --configuration Release
       shell: bash
     
-    - name: Rename .env
-      run: mv .env.ci .env
-      shell: bash
-      continue-on-error: true
+    - name: Load .env file
+      uses: xom9ikk/dotenv@v2
+      with:
+        path: .env.ci
 
     - name: Test
       run: sudo dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=LOCALTESTING || true
