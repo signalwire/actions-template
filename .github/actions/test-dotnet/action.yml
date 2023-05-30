@@ -38,9 +38,13 @@ runs:
       run: docker ps
       shell: bash
     
-    - name: debug
-      run: ls -la
-      shell: bash
+    - name: Load .env file
+      uses: aarcangeli/load-dotenv@v1.0.0
+      with:
+        filenames: |
+          .env.ci
+        quiet: true
+        if-file-not-found: ignore
 
     - name: Build
       run: sudo dotnet build --configuration Release
