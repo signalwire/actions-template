@@ -45,7 +45,8 @@ runs:
     - name: Load .env file
       uses: xom9ikk/dotenv@v2
       with:
-        path: .env.ci
+        mode: ci
+        load-mode: skip
 
     - name: Test
       run: dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=LOCALTESTING || true
