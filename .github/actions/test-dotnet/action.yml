@@ -47,7 +47,7 @@ runs:
         if-file-not-found: ignore
 
     - name: Build
-      run: sudo dotnet build --configuration Release
+      run: dotnet build --configuration Release
       shell: bash
     
     - name: Rename .env
@@ -56,7 +56,7 @@ runs:
       continue-on-error: true
 
     - name: Test
-      run: sudo dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=LOCALTESTING || true
+      run: dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=LOCALTESTING || true
       if: inputs.RUN_TESTS != 'false'
       shell: bash
 
