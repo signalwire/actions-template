@@ -53,11 +53,6 @@ runs:
       if: inputs.RUN_TESTS != 'false'
       shell: bash
 
-    - name: Workaround tests
-      run: chown runner:docker -R **/test-results.trx
-      shell: bash
-      continue-on-error: true
-
     - name: Test Report
       uses: dorny/test-reporter@v1
       if: always() && inputs.RUN_TESTS == 'true'
