@@ -65,6 +65,8 @@ on:
         required: false
       OVH_CONSUMER_KEY:
         required: false
+      OVH_CLOUD_PROJECT_SERVICE:
+        required: false
       TELEPORT_TOKEN:
         required: false
         description: Teleport Token name
@@ -166,6 +168,7 @@ jobs:
           OVH_APPLICATION_KEY: ${{ secrets.OVH_APPLICATION_KEY }}
           OVH_APPLICATION_SECRET: ${{ secrets.OVH_APPLICATION_SECRET }}
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
+          OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
 
       - name: Load plan file
         id: read
@@ -244,3 +247,4 @@ jobs:
           OVH_APPLICATION_KEY: ${{ secrets.OVH_APPLICATION_KEY }}
           OVH_APPLICATION_SECRET: ${{ secrets.OVH_APPLICATION_SECRET }}
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
+          OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
