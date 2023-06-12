@@ -149,6 +149,8 @@ jobs:
         id: validate
         run: terragrunt run-all validate --terragrunt-non-interactive
         working-directory: ${{ inputs.WORKING_DIR }}
+        env:
+          OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
 
       - name: Terragrunt plan
         id: plan
@@ -156,7 +158,6 @@ jobs:
         working-directory: ${{ inputs.WORKING_DIR }}
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
-          TF_VAR_OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
           OS_AUTH_URL: https://auth.cloud.ovh.net/v3
           OS_IDENTITY_API_VERSION: 3
           OS_PROJECT_DOMAIN_NAME: Default
