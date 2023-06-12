@@ -149,6 +149,8 @@ jobs:
         id: validate
         run: terragrunt run-all validate --terragrunt-non-interactive
         working-directory: ${{ inputs.WORKING_DIR }}
+        env:
+          OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
 
       - name: Terragrunt plan
         id: plan
