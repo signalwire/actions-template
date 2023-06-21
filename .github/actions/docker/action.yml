@@ -59,6 +59,10 @@ inputs:
     default: 'false'
     description: 'Generate tag only.'
     required: false
+  UPLOAD_ARTIFACT:
+    default: ''
+    description: 'Set to non-blank to upload the built image as an artifact for use later on in a workflow.'
+    required: false
 outputs:
   IMAGE_TAG:
     description: "Export image tag"
