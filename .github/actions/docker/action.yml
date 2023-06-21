@@ -124,7 +124,7 @@ runs:
       with:
         load: true
         tags: |
-          ${{ format('{0}{1}', steps.meta.outputs.tags, (inputs.UPLOAD_ARTIFACT && '\ntype=docker,dest=/tmp/image.tar') || '') }}
+          ${{ format('{0}{1}', steps.meta.outputs.tags, (inputs.UPLOAD_ARTIFACT && "\ntype=docker,dest=/tmp/image.tar") || '') }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         file: ${{ inputs.FILE }}
