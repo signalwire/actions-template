@@ -136,9 +136,9 @@ runs:
     - name: Upload artifact
       if: inputs.UPLOAD_ARTIFACT != ''
       uses: actions/upload-artifact@v2
-        with:
-          name: baseimage
-          path: /tmp/image.tar
+      with:
+        name: baseimage
+        path: /tmp/image.tar
 
     - name: Test
       if: github.event_name == 'pull_request' && inputs.CONTAINER_TEST == 'true' && inputs.TAG_ONLY == 'false'
