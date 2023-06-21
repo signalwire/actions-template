@@ -120,7 +120,7 @@ runs:
       with:
         load: true
         tags: |
-          ${{ steps.meta.outputs.tags }}
+          ${{ format('{0}{1}', steps.meta.outputs.tags, (inputs.UPLOAD_ARTIFACT && '\ntype=docker,dest=/tmp/image.tar') || '') }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         file: ${{ inputs.FILE }}
@@ -128,6 +128,13 @@ runs:
         platforms: ${{ inputs.PLATFORMS }}
         build-args: ${{ env.BUILD_ARGS }}
         secrets: ${{ env.DOCKER_SECRETS }}
+
+    - name: Upload artifact
+      if: inputs.UPLOAD_ARTIFACT != ''
+      uses: actions/upload-artifact@v2
+        with:
+          name: baseimage
+          path: /tmp/image.tar
 
     - name: Test
       if: github.event_name == 'pull_request' && inputs.CONTAINER_TEST == 'true' && inputs.TAG_ONLY == 'false'
