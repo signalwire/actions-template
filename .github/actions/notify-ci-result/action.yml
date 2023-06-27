@@ -66,7 +66,10 @@ runs:
       uses: thollander/actions-comment-pull-request@v2
       with:
         message: |
-          Scan-build ${{ github.repository }} > [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).\n ${{ inputs.message }}.\nPlease check the results.
+          Scan-build ${{ github.repository }}:
+           [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+           ${{ inputs.message }}.
+           Please check the results.
     - name: Notify scan build result to slack
       if: ${{ inputs.for == 'scan_build' && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       uses: signalwire/actions-template/.github/actions/slack@main
@@ -94,7 +97,9 @@ runs:
       uses: thollander/actions-comment-pull-request@v2
       with:
         message: |
-          Unit-Tests ${{ github.repository }} > [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).\n Some tests are failing.\nPlease check the results.
+          Unit-Tests ${{ github.repository }}: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+          Some tests are failing.
+          Please check the results.
     - name: Notify run tests result to slack
       if: ${{ inputs.for == 'run_tests' && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       uses: signalwire/actions-template/.github/actions/slack@main
