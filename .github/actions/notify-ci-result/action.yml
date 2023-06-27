@@ -19,12 +19,16 @@ inputs:
   channel:
     required: true
     description: slack channel id to notify
+  slack_webhook_url:
+    required: true
+    description: slack webhook url
   scan_build_path:
     required: true
     description: path where the scan-build results are located
   test_logs_path:
     required: true
     description: path where the scan-build results are located
+    
 
 runs:
   using: "composite"
@@ -70,7 +74,7 @@ runs:
         CHANNEL: ${{ inputs.channel }}
         MESSAGE: Scan-build ${{ github.repository }} > <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_id }}>.\n ${{ inputs.message }}.\nPlease check the results.
       env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL  }}
+        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url  }}
     ### NOTIFY RUN TESTS
     - name: Tar run tests logs
       id: test_tar
@@ -98,4 +102,4 @@ runs:
         CHANNEL: ${{ inputs.channel }}
         MESSAGE: Unit-Tests ${{ github.repository }} > <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_id }}>.\n Some tests are failing.\nPlease check the results.
       env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL  }}
+        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url  }}
