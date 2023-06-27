@@ -2,14 +2,9 @@ name: Notify CI Result
 description: Notify CI/Scan-build result to slack channel or comment on PR
 
 inputs:
-  scan_build:
-    required: false
-    description: notify scan build result
-    default: "false"
-  run_tests:
-    required: false
-    description: notify scan build result
-    default: "false"
+  for:
+    required: true
+    description: for which CI step should notification be processed for i.e ("scan_build", "run_tests")
   compilation_failed:
     required: false
     description: set this to "true" if the compilation failed during scan-build
@@ -34,8 +29,9 @@ inputs:
 runs:
   using: "composite"
   steps:
+    ### NOTIFY SCAN BUILD
     - name: Tar scan build results
-      if: ${{ inputs.scan_build == "true" }}
+      if: ${{ inputs.for == "scan_build" }}
       id: scan_tar
       env:
         COMPILATION_FAILED: ${{ inputs.compilation_failed }}
@@ -55,47 +51,48 @@ runs:
         fi
       shell: bash
     - name: Upload scan build artifacts
-      if: ${{ inputs.scan_build == "true" }}
+      if: ${{ inputs.for == "scan_build" }}
       uses: actions/upload-artifact@v3
       with:
         name: ${{ steps.scan_tar.outputs.ARTIFACT }}-${{ github.sha }}-${{ github.run_id }}
         path: ${{ steps.scan_tar.outputs.ARTIFACT_PATH }}
         retention-days: 5
     - name: Comment scan build result on PR
-      if: ${{ inputs.scan_build == "true"  && github.event_name == "pull_request" }}
+      if: ${{ inputs.for == "scan_build"  && github.event_name == "pull_request" }}
       uses: thollander/actions-comment-pull-request@v2
       with:
         message: |
           Scan-build ${{ github.repository }} > [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).\n ${{ inputs.message }}.\nPlease check the results.
     - name: Notify scan build result to slack
-      if: ${{ inputs.scan_build == "true" && github.event_name == "push" && github.ref == "refs/heads/master" }}
+      if: ${{ inputs.for == "scan_build" && github.event_name == "push" && github.ref == "refs/heads/master" }}
       uses: signalwire/actions-template/.github/actions/slack@main
       with:
         CHANNEL: ${{ inputs.channel }}
         MESSAGE: Scan-build ${{ github.repository }} > <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_id }}>.\n ${{ inputs.message }}.\nPlease check the results.
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL  }}
+    ### NOTIFY RUN TESTS
     - name: Tar run tests logs
       id: test_tar
-      if: ${{ inputs.run_tests == "true" }}
+      if: ${{ inputs.for == "run_tests" }}
       run: |
         cd ${{ inputs.test_logs_path }} && ls -l && tar czvf ./logs.tar.gz logs/*
       shell: bash
     - name: Upload run tests artifacts
-      if: ${{ inputs.run_tests == "true" }}
+      if: ${{ inputs.for == "run_tests" }}
       uses: actions/upload-artifact@v3
       with:
         name: stack-test-results-${{ github.sha }}-${{ github.run_number }}
         path: ${{ inputs.test_logs_path }}/logs.tar.gz
         retention-days: 5
     - name: Comment run tests result on PR
-      if: ${{ inputs.run_testes == "true"  && github.event_name == "pull_request" }}
+      if: ${{ inputs.for == "run_tests"  && github.event_name == "pull_request" }}
       uses: thollander/actions-comment-pull-request@v2
       with:
         message: |
           Unit-Tests ${{ github.repository }} > [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).\n Some tests are failing.\nPlease check the results.
     - name: Notify run tests result to slack
-      if: ${{ inputs.run_tests == "true" && github.event_name == "push" && github.ref == "refs/heads/master" }}
+      if: ${{ inputs.for == "run_tests" && github.event_name == "push" && github.ref == "refs/heads/master" }}
       uses: signalwire/actions-template/.github/actions/slack@main
       with:
         CHANNEL: ${{ inputs.channel }}
