@@ -89,7 +89,7 @@ runs:
       if: ${{ inputs.for == 'run_tests' }}
       uses: actions/upload-artifact@v3
       with:
-        name: stack-test-results-${{ github.sha }}-${{ github.run_number }}
+        name: test-results-${{ github.sha }}-${{ github.run_number }}
         path: ${{ inputs.test_logs_path }}/logs.tar.gz
         retention-days: 5
     - name: Comment run tests result on PR
