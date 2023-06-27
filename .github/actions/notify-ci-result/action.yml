@@ -1,0 +1,110 @@
+name: Notify CI Result
+description: Notify CI/Scan-build result to slack channel or comment on PR
+
+inputs:
+  for:
+    required: true
+    description: for which CI step should notification be processed for i.e ("scan_build", "run_tests")
+  compilation_failed:
+    required: false
+    description: set this to "true" if the compilation failed during scan-build
+    default: "false"
+  bugs_found:
+    required: false
+    description: set this to "true" if the bugs were found during scan-build
+    default: "false"
+  message:
+    required: false
+    description: message to send to slack or comment on PR
+  channel:
+    required: true
+    description: slack channel id to notify
+  slack_webhook_url:
+    required: true
+    description: slack webhook url
+  scan_build_path:
+    required: true
+    description: path where the scan-build results are located
+  test_logs_path:
+    required: true
+    description: path where the scan-build results are located
+    
+
+runs:
+  using: "composite"
+  steps:
+    ### NOTIFY SCAN BUILD
+    - name: Tar scan build results
+      if: ${{ inputs.for == 'scan_build' }}
+      id: scan_tar
+      env:
+        COMPILATION_FAILED: ${{ inputs.compilation_failed }}
+        BUGS_FOUND: ${{ inputs.bugs_found }}
+      run: |
+        cd ${{ inputs.scan_build_path }}
+        ls -l
+        if [[ "true" == $COMPILATION_FAILED ]]; then
+          tar czvf $PWD/scan-build-result.tar.gz ./scan-build-result.txt;
+          echo "ARTIFACT_PATH=$PWD/scan-build-result.tar.gz" >> $GITHUB_OUTPUT;
+          echo "ARTIFACT=scan-build-result" >> $GITHUB_OUTPUT;
+        fi
+        if [[ "true" == $BUGS_FOUND ]]; then
+          tar czvf $PWD/reports.tar.gz $REPORT;
+          echo "ARTIFACT_PATH=$PWD/reports.tar.gz" >> $GITHUB_OUTPUT;
+          echo "ARTIFACT=reports" >> $GITHUB_OUTPUT;
+        fi
+      shell: bash
+    - name: Upload scan build artifacts
+      if: ${{ inputs.for == 'scan_build' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ steps.scan_tar.outputs.ARTIFACT }}-${{ github.sha }}-${{ github.run_id }}
+        path: ${{ steps.scan_tar.outputs.ARTIFACT_PATH }}
+        retention-days: 5
+    - name: Comment scan build result on PR
+      if: ${{ inputs.for == 'scan_build' && github.event_name == 'pull_request' }}
+      uses: thollander/actions-comment-pull-request@v2
+      with:
+        message: |
+          Scan-build ${{ github.repository }}:
+           [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+           ${{ inputs.message }}.
+           Please check the results.
+    - name: Notify scan build result to slack
+      if: ${{ inputs.for == 'scan_build' && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      uses: signalwire/actions-template/.github/actions/slack@main
+      with:
+        CHANNEL: ${{ inputs.channel }}
+        MESSAGE: Scan-build ${{ github.repository }} > <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_id }}>.\n ${{ inputs.message }}.\nPlease check the results.
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url  }}
+    ### NOTIFY RUN TESTS
+    - name: Tar run tests logs
+      id: test_tar
+      if: ${{ inputs.for == 'run_tests' }}
+      run: |
+        cd ${{ inputs.test_logs_path }} && ls -l && tar czvf ./logs.tar.gz logs/*
+      shell: bash
+    - name: Upload run tests artifacts
+      if: ${{ inputs.for == 'run_tests' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ github.sha }}-${{ github.run_number }}
+        path: ${{ inputs.test_logs_path }}/logs.tar.gz
+        retention-days: 5
+    - name: Comment run tests result on PR
+      if: ${{ inputs.for == 'run_tests'  && github.event_name == 'pull_request' }}
+      uses: thollander/actions-comment-pull-request@v2
+      with:
+        message: |
+          Unit-Tests ${{ github.repository }}: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+          Some tests are failing.
+          Please check the results.
+    - name: Notify run tests result to slack
+      if: ${{ inputs.for == 'run_tests' && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      uses: signalwire/actions-template/.github/actions/slack@main
+      with:
+        CHANNEL: ${{ inputs.channel }}
+        MESSAGE: Unit-Tests ${{ github.repository }} > <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_id }}>.\n Some tests are failing.\nPlease check the results.
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url  }}
