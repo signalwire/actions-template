@@ -46,13 +46,15 @@ runs:
         REPORT: ${{ inputs.REPORT }}
       run: |
         cd ${{ inputs.scan_build_path }}
+        echo "bug-found: $BUGS_FOUND";
+        echo "compilation-failed: $COMPILATION_FAILED"
         ls -l
-        if [[ "true" == $COMPILATION_FAILED ]]; then
+        if [[ "true" == "$COMPILATION_FAILED" ]]; then
           tar czvf $PWD/scan-build-result.tar.gz ./scan-build-result.txt;
           echo "ARTIFACT_PATH=$PWD/scan-build-result.tar.gz" >> $GITHUB_OUTPUT;
           echo "ARTIFACT=scan-build-result" >> $GITHUB_OUTPUT;
         fi
-        if [[ "true" == $BUGS_FOUND ]]; then
+        if [[ "true" == "$BUGS_FOUND" ]]; then
           tar czvf $PWD/reports.tar.gz $REPORT/*;
           echo "ARTIFACT_PATH=$PWD/reports.tar.gz" >> $GITHUB_OUTPUT;
           echo "ARTIFACT=reports" >> $GITHUB_OUTPUT;
