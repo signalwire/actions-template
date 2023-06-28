@@ -7,11 +7,11 @@ inputs:
     description: for which CI step should notification be processed for i.e ("scan_build", "run_tests")
   compilation_failed:
     required: false
-    description: set this to "true" if the compilation failed during scan-build
+    description: set this to "true" if the compilation failed during scan-build (required for scan_build)
     default: "false"
   bugs_found:
     required: false
-    description: set this to "true" if the bugs were found during scan-build
+    description: set this to "true" if the bugs were found during scan-build (required for scan_build)
     default: "false"
   message:
     required: false
@@ -23,14 +23,14 @@ inputs:
     required: true
     description: slack webhook url
   scan_build_path:
-    required: true
-    description: path where the scan-build was ran
+    required: false
+    description: path where the scan-build was ran (required for scan_build)
   report:
-    required: true
-    description: scan-build reports path
+    required: false
+    description: scan-build reports path (required for scan_build)
   test_logs_path:
-    required: true
-    description: path where the scan-build results are located
+    required: false
+    description: path where the test logs are located (required for run_tests)
     
 
 runs:
