@@ -88,7 +88,7 @@ runs:
       id: test_tar
       if: ${{ inputs.for == 'run_tests' }}
       run: |
-        cd ${{ inputs.test_logs_path }} && ls -l && tar czvf ./logs.tar.gz logs/*
+        cd ${{ inputs.test_logs_path }} && ls -l && tar -czvf ./logs.tar.gz -C logs .
       shell: bash
     - name: Upload run tests artifacts
       if: ${{ inputs.for == 'run_tests' }}
