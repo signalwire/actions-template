@@ -24,7 +24,10 @@ inputs:
     description: slack webhook url
   scan_build_path:
     required: true
-    description: path where the scan-build results are located
+    description: path where the scan-build was ran
+  report:
+    required: true
+    description: scan-build reports path
   test_logs_path:
     required: true
     description: path where the scan-build results are located
@@ -40,6 +43,7 @@ runs:
       env:
         COMPILATION_FAILED: ${{ inputs.compilation_failed }}
         BUGS_FOUND: ${{ inputs.bugs_found }}
+        REPORT: ${{ inputs.REPORT }}
       run: |
         cd ${{ inputs.scan_build_path }}
         ls -l
@@ -49,7 +53,7 @@ runs:
           echo "ARTIFACT=scan-build-result" >> $GITHUB_OUTPUT;
         fi
         if [[ "true" == $BUGS_FOUND ]]; then
-          tar czvf $PWD/reports.tar.gz $REPORT;
+          tar czvf $PWD/reports.tar.gz $REPORT/*;
           echo "ARTIFACT_PATH=$PWD/reports.tar.gz" >> $GITHUB_OUTPUT;
           echo "ARTIFACT=reports" >> $GITHUB_OUTPUT;
         fi
