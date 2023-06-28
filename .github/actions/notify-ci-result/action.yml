@@ -55,7 +55,7 @@ runs:
           echo "ARTIFACT=scan-build-result" >> $GITHUB_OUTPUT;
         fi
         if [[ "true" == "$BUGS_FOUND" ]]; then
-          tar -czvf $PWD/reports.tar.gz -C $REPORT .;
+          tar -czvf $PWD/reports.tar.gz -C $REPORT .
           echo "ARTIFACT_PATH=$PWD/reports.tar.gz" >> $GITHUB_OUTPUT;
           echo "ARTIFACT=reports" >> $GITHUB_OUTPUT;
         fi
