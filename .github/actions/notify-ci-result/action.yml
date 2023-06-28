@@ -41,8 +41,8 @@ runs:
       if: ${{ inputs.for == 'scan_build' }}
       id: scan_tar
       env:
-        COMPILATION_FAILED: ${{ inputs.compilation_failed }}
-        BUGS_FOUND: ${{ inputs.bugs_found }}
+        COMPILATION_FAILED: "${{ inputs.compilation_failed }}"
+        BUGS_FOUND: "${{ inputs.bugs_found }}"
         REPORT: ${{ inputs.REPORT }}
       run: |
         cd ${{ inputs.scan_build_path }}
@@ -72,8 +72,7 @@ runs:
       uses: thollander/actions-comment-pull-request@v2
       with:
         message: |
-          Scan-build ${{ github.repository }}:
-           [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+          Scan-build ${{ github.repository }}: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
            ${{ inputs.message }}.
            Please check the results.
     - name: Notify scan build result to slack
