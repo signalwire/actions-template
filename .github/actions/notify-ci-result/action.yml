@@ -7,11 +7,11 @@ inputs:
     description: for which CI step should notification be processed for i.e ("scan_build", "run_tests")
   compilation_failed:
     required: false
-    description: set this to "true" if the compilation failed during scan-build
+    description: set this to "true" if the compilation failed during scan-build (required for scan_build)
     default: "false"
   bugs_found:
     required: false
-    description: set this to "true" if the bugs were found during scan-build
+    description: set this to "true" if the bugs were found during scan-build (required for scan_build)
     default: "false"
   message:
     required: false
@@ -23,11 +23,14 @@ inputs:
     required: true
     description: slack webhook url
   scan_build_path:
-    required: true
-    description: path where the scan-build results are located
+    required: false
+    description: path where the scan-build was ran (required for scan_build)
+  report:
+    required: false
+    description: scan-build reports path (required for scan_build)
   test_logs_path:
-    required: true
-    description: path where the scan-build results are located
+    required: false
+    description: path where the test logs are located (required for run_tests)
     
 
 runs:
@@ -38,18 +41,21 @@ runs:
       if: ${{ inputs.for == 'scan_build' }}
       id: scan_tar
       env:
-        COMPILATION_FAILED: ${{ inputs.compilation_failed }}
-        BUGS_FOUND: ${{ inputs.bugs_found }}
+        COMPILATION_FAILED: "${{ inputs.compilation_failed }}"
+        BUGS_FOUND: "${{ inputs.bugs_found }}"
+        REPORT: ${{ inputs.REPORT }}
       run: |
         cd ${{ inputs.scan_build_path }}
+        echo "bug-found: $BUGS_FOUND";
+        echo "compilation-failed: $COMPILATION_FAILED"
         ls -l
-        if [[ "true" == $COMPILATION_FAILED ]]; then
-          tar czvf $PWD/scan-build-result.tar.gz ./scan-build-result.txt;
+        if [[ "true" == "$COMPILATION_FAILED" ]]; then
+          tar czvf $PWD/scan-build-result.tar.gz scan-build-result.txt;
           echo "ARTIFACT_PATH=$PWD/scan-build-result.tar.gz" >> $GITHUB_OUTPUT;
           echo "ARTIFACT=scan-build-result" >> $GITHUB_OUTPUT;
         fi
-        if [[ "true" == $BUGS_FOUND ]]; then
-          tar czvf $PWD/reports.tar.gz $REPORT;
+        if [[ "true" == "$BUGS_FOUND" ]]; then
+          tar -czvf $PWD/reports.tar.gz -C $REPORT .
           echo "ARTIFACT_PATH=$PWD/reports.tar.gz" >> $GITHUB_OUTPUT;
           echo "ARTIFACT=reports" >> $GITHUB_OUTPUT;
         fi
@@ -66,8 +72,7 @@ runs:
       uses: thollander/actions-comment-pull-request@v2
       with:
         message: |
-          Scan-build ${{ github.repository }}:
-           [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+          Scan-build ${{ github.repository }}: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
            ${{ inputs.message }}.
            Please check the results.
     - name: Notify scan build result to slack
@@ -83,7 +88,7 @@ runs:
       id: test_tar
       if: ${{ inputs.for == 'run_tests' }}
       run: |
-        cd ${{ inputs.test_logs_path }} && ls -l && tar czvf ./logs.tar.gz logs/*
+        cd ${{ inputs.test_logs_path }} && ls -l && tar -czvf ./logs.tar.gz -C logs .
       shell: bash
     - name: Upload run tests artifacts
       if: ${{ inputs.for == 'run_tests' }}
