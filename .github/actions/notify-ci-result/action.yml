@@ -72,15 +72,13 @@ runs:
       uses: thollander/actions-comment-pull-request@v2
       with:
         message: |
-          Scan-build ${{ github.repository }}: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
-           ${{ inputs.message }}.
-           Please check the results.
+          Scan-build: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}). ${{ inputs.message }}.
     - name: Notify scan build result to slack
       if: ${{ inputs.for == 'scan_build' && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       uses: signalwire/actions-template/.github/actions/slack@main
       with:
         CHANNEL: ${{ inputs.channel }}
-        MESSAGE: Scan-build ${{ github.repository }} > <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_id }}>.\n ${{ inputs.message }}.\nPlease check the results.
+        MESSAGE: Scan-build ${{ github.repository }} > <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_id }}>. ${{ inputs.message }}.
       env:
         SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url  }}
     ### NOTIFY RUN TESTS
@@ -102,14 +100,12 @@ runs:
       uses: thollander/actions-comment-pull-request@v2
       with:
         message: |
-          Unit-Tests ${{ github.repository }}: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
-          Some tests are failing.
-          Please check the results.
+          Unit-Tests: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}). Some tests are failing.
     - name: Notify run tests result to slack
       if: ${{ inputs.for == 'run_tests' && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
       uses: signalwire/actions-template/.github/actions/slack@main
       with:
         CHANNEL: ${{ inputs.channel }}
-        MESSAGE: Unit-Tests ${{ github.repository }} > <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_id }}>.\n Some tests are failing.\nPlease check the results.
+        MESSAGE: Unit-Tests ${{ github.repository }} > <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.run_id }}>. Some tests are failing.
       env:
         SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url  }}
