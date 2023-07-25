@@ -153,6 +153,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
+        ref: ${{ github.event.pull_request.head.ref || github.ref }}
         fetch-depth: 0
 
     - uses: actions/checkout@v3
@@ -160,6 +161,7 @@ jobs:
       id: private
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
       with:
+        ref: ${{ github.event.pull_request.head.ref || github.ref }}
         ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
         token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
         submodules: 'recursive'
@@ -169,6 +171,7 @@ jobs:
       id: public
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}
       with:
+        ref: ${{ github.event.pull_request.head.ref || github.ref }}
         submodules: 'recursive'
 
     - run: git submodule status > ${{inputs.REVISION_PATH}}/REVISION
