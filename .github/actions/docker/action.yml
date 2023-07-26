@@ -81,9 +81,6 @@ runs:
       with:
         version: latest
         endpoint: builders
-        driver-opts: |
-            image=moby/buildkit:v0.12.0
-        buildkitd-flags: --debug
 
     - name: Docker meta
       id: meta
