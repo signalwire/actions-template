@@ -144,7 +144,6 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
     name: BUILD
     permissions:
-      id-token: write
       contents: read
     outputs:
       IMAGE_TAG: ${{ steps.build.outputs.IMAGE_TAG }}
