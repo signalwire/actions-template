@@ -66,7 +66,6 @@ runs:
       with:
         name: ${{ steps.scan_tar.outputs.ARTIFACT }}-${{ github.sha }}-${{ github.run_id }}
         path: ${{ steps.scan_tar.outputs.ARTIFACT_PATH }}
-        retention-days: 5
     - name: Comment scan build result on PR
       if: ${{ inputs.for == 'scan_build' && github.event_name == 'pull_request' }}
       uses: thollander/actions-comment-pull-request@v2
@@ -94,7 +93,6 @@ runs:
       with:
         name: test-results-${{ github.sha }}-${{ github.run_number }}
         path: ${{ inputs.test_logs_path }}/logs.tar.gz
-        retention-days: 5
     - name: Comment run tests result on PR
       if: ${{ inputs.for == 'run_tests'  && github.event_name == 'pull_request' }}
       uses: thollander/actions-comment-pull-request@v2
