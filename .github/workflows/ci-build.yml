@@ -208,7 +208,7 @@ jobs:
 
     - uses: ./actions/.github/actions/docker
       name: Docker build
-      id: docker_build
+      id: build
       with:
         PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
         PUSH: ${{ inputs.PUSH }}
@@ -235,10 +235,10 @@ jobs:
     - uses: cloudposse/github-action-matrix-outputs-write@main
       id: out
       with:
-        matrix-step-name: docker_build
+        matrix-step-name: buildimg
         matrix-key: ${{ inputs.PROJECT_NAME }}
         outputs: |-
-          image: ${{ steps.docker_build.outputs.IMAGE_TAG }}
+          image: ${{ steps.build.outputs.IMAGE_TAG }}
           
     # Disabled due performance issues
     # - uses: ./actions/.github/actions/trivy
