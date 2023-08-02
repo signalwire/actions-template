@@ -50,13 +50,11 @@ runs:
         echo "compilation-failed: $COMPILATION_FAILED"
         ls -l
         if [[ "true" == "$COMPILATION_FAILED" ]]; then
-          tar czvf $PWD/scan-build-result.tar.gz scan-build-result.txt;
           echo "ARTIFACT_PATH=$PWD/scan-build-result.tar.gz" >> $GITHUB_OUTPUT;
           echo "ARTIFACT=scan-build-result" >> $GITHUB_OUTPUT;
         fi
         if [[ "true" == "$BUGS_FOUND" ]]; then
-          tar -czvf $PWD/reports.tar.gz -C $REPORT .
-          echo "ARTIFACT_PATH=$PWD/reports.tar.gz" >> $GITHUB_OUTPUT;
+          echo "ARTIFACT_PATH=$REPORT" >> $GITHUB_OUTPUT;
           echo "ARTIFACT=reports" >> $GITHUB_OUTPUT;
         fi
       shell: bash
