@@ -50,7 +50,7 @@ runs:
         echo "compilation-failed: $COMPILATION_FAILED"
         ls -l
         if [[ "true" == "$COMPILATION_FAILED" ]]; then
-          echo "ARTIFACT_PATH=$PWD/scan-build-result.txt >> $GITHUB_OUTPUT;
+          echo "ARTIFACT_PATH=$PWD/scan-build-result.txt" >> $GITHUB_OUTPUT;
           echo "ARTIFACT=scan-build-result" >> $GITHUB_OUTPUT;
         fi
         if [[ "true" == "$BUGS_FOUND" ]]; then
