@@ -37,7 +37,7 @@ runs:
   using: "composite"
   steps:
     ### NOTIFY SCAN BUILD
-    - name: Tar scan build results
+    - name: Path to upload for scan build results
       if: ${{ inputs.for == 'scan_build' }}
       id: scan_tar
       env:
@@ -50,13 +50,11 @@ runs:
         echo "compilation-failed: $COMPILATION_FAILED"
         ls -l
         if [[ "true" == "$COMPILATION_FAILED" ]]; then
-          tar czvf $PWD/scan-build-result.tar.gz scan-build-result.txt;
-          echo "ARTIFACT_PATH=$PWD/scan-build-result.tar.gz" >> $GITHUB_OUTPUT;
+          echo "ARTIFACT_PATH=$PWD/scan-build-result.txt" >> $GITHUB_OUTPUT;
           echo "ARTIFACT=scan-build-result" >> $GITHUB_OUTPUT;
         fi
         if [[ "true" == "$BUGS_FOUND" ]]; then
-          tar -czvf $PWD/reports.tar.gz -C $REPORT .
-          echo "ARTIFACT_PATH=$PWD/reports.tar.gz" >> $GITHUB_OUTPUT;
+          echo "ARTIFACT_PATH=$REPORT" >> $GITHUB_OUTPUT;
           echo "ARTIFACT=reports" >> $GITHUB_OUTPUT;
         fi
       shell: bash
@@ -81,18 +79,12 @@ runs:
       env:
         SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url  }}
     ### NOTIFY RUN TESTS
-    - name: Tar run tests logs
-      id: test_tar
-      if: ${{ inputs.for == 'run_tests' }}
-      run: |
-        cd ${{ inputs.test_logs_path }} && ls -l && tar -czvf ./logs.tar.gz -C logs .
-      shell: bash
     - name: Upload run tests artifacts
       if: ${{ inputs.for == 'run_tests' }}
       uses: actions/upload-artifact@v3
       with:
         name: test-results-${{ github.sha }}-${{ github.run_number }}
-        path: ${{ inputs.test_logs_path }}/logs.tar.gz
+        path: ${{ inputs.test_logs_path }}/logs
     - name: Comment run tests result on PR
       if: ${{ inputs.for == 'run_tests'  && github.event_name == 'pull_request' }}
       uses: thollander/actions-comment-pull-request@v2
