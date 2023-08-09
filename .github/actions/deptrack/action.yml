@@ -9,7 +9,7 @@ runs:
   steps:
     - name: Generaing Bom
       uses: CycloneDX/gh-node-module-generatebom@master
-    - uses: DependencyTrack/gh-upload-sbom@v1.0.0
+    - uses: DependencyTrack/gh-upload-sbom@v2.0.1
       with:
         serverhostname: ${{ inputs.DEPENDENCYTRACK_URL }}
         apikey: ${{ env.DEPENDENCYTRACK_APIKEY }}
