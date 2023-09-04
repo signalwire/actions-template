@@ -108,11 +108,11 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4
       with:
         fetch-depth: 0
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
       name: Checkout submodules
       with:
@@ -120,7 +120,7 @@ jobs:
         submodules: 'recursive'
 
     - name: Checkout actions
-      uses: actions/checkout@v3
+      uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4
       with:
         repository: signalwire/actions-template
         ref: main
