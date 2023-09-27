@@ -98,6 +98,10 @@ on:
         default: .
         description: Whenever the WF requires a different path than . for the revision file
         required: false
+      REF:
+        type: string
+        description:  ref to pull and build default to github.ref
+        required: false
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -153,7 +157,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        ref: ${{ github.event.pull_request.head.ref || github.ref }}
+        ref: ${{ inputs.REF || github.ref }}
         fetch-depth: 0
 
     - uses: actions/checkout@v3
@@ -161,7 +165,7 @@ jobs:
       id: private
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
       with:
-        ref: ${{ github.event.pull_request.head.ref || github.ref }}
+        ref: ${{ inputs.REF || github.ref }}
         ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
         token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
         submodules: 'recursive'
@@ -171,7 +175,7 @@ jobs:
       id: public
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}
       with:
-        ref: ${{ github.event.pull_request.head.ref || github.ref }}
+        ref: ${{ inputs.REF || github.ref }}
         submodules: 'recursive'
 
     - run: git submodule status > ${{inputs.REVISION_PATH}}/REVISION
