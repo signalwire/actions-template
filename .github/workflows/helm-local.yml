@@ -47,7 +47,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: azure/setup-helm@v3
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: helm version
         run: helm version
         shell: bash
