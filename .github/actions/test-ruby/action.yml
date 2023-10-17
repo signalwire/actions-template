@@ -78,7 +78,7 @@ runs:
 
     - name: Generate RuboCop report
       if: inputs.RUBOCOP == 'true'
-      uses: d-lebed/rubocop-run-action@v0.9.0
+      uses: d-lebed/rubocop-run-action@v0.10.0
       with:
         options: --format=RdjsonFormatter --out=reviewdog-report.json --format=progress
         rdjson_formatter: ${{ inputs.REVIEWDOG }}
