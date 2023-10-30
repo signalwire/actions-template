@@ -35,13 +35,13 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
         token: ${{ secrets.PAT }}
     
     - name: Checkout actions
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: signalwire/actions-template
         ref: main

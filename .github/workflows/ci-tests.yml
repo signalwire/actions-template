@@ -66,7 +66,7 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
     name: Cypress
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -75,7 +75,7 @@ jobs:
       with:
         node-version: ${{ inputs.NODE_VERSION }}
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout private submoules recursively
       id: private
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
@@ -84,7 +84,7 @@ jobs:
         token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
         submodules: 'recursive'
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout public submoules recursively
       id: public
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}

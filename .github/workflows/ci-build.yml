@@ -155,12 +155,12 @@ jobs:
       IMAGE_MATRIX: ${{ fromJson(steps.out.outputs.result).image }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: ${{ inputs.REF || github.ref }}
         fetch-depth: 0
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout private submoules recursively
       id: private
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
@@ -170,7 +170,7 @@ jobs:
         token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
         submodules: 'recursive'
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout public submoules recursively
       id: public
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}
@@ -184,7 +184,7 @@ jobs:
     - run: git show -s --oneline --no-abbrev-commit >> ${{inputs.REVISION_PATH}}/REVISION
 
     - name: Checkout actions
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: signalwire/actions-template
         ref: main 
