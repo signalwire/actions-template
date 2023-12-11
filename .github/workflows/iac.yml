@@ -112,17 +112,7 @@ jobs:
         with:
           workload_identity_provider: ${{ secrets.GCP_WIP }}
           service_account: ${{ secrets.GCP_SA }}
-      
-      - name: run terragrunt
-        uses: autero1/action-terragrunt@v1.3.1
-        with:
-          terragrunt_version: ${{ inputs.tg_version }}
-
-      - name: Terragrunt init
-        id: init
-        working-directory: ${{ inputs.WORKING_DIR }}
-        run: terragrunt run-all init --terragrunt-non-interactive
-      
+          
       - name: Authenticate against Teleport to use Vault
         if: inputs.TELEPORT_APP != ''
         id: teleportapp
@@ -144,6 +134,16 @@ jobs:
           echo VAULT_TOKEN=$VAULT_TOKEN >> $GITHUB_ENV
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+
+      - name: run terragrunt
+        uses: autero1/action-terragrunt@v1.3.1
+        with:
+          terragrunt_version: ${{ inputs.tg_version }}
+
+      - name: Terragrunt init
+        id: init
+        working-directory: ${{ inputs.WORKING_DIR }}
+        run: terragrunt run-all init --terragrunt-non-interactive
       
       - name: Terragrunt validate
         id: validate
