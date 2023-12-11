@@ -12,7 +12,7 @@ on:
       tg_version: 
         required: false
         type: string
-        default: '0.36.8'
+        default: '0.53.2'
       AWS_REGION: 
         required: true
         type: string
