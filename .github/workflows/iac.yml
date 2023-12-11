@@ -112,6 +112,9 @@ jobs:
         with:
           workload_identity_provider: ${{ secrets.GCP_WIP }}
           service_account: ${{ secrets.GCP_SA }}
+      
+      - name: Sops Binary Installer
+        uses: mdgreenwald/mozilla-sops-action@v1.4.1
           
       - name: Authenticate against Teleport to use Vault
         if: inputs.TELEPORT_APP != ''
