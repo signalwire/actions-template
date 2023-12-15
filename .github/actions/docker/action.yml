@@ -115,7 +115,7 @@ runs:
       shell: bash
 
     - name: Build and export to Docker
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       if: inputs.PLATFORMS == 'linux/amd64' && inputs.TAG_ONLY == 'false'
       with:
         load: true
@@ -145,7 +145,7 @@ runs:
     
     - name: Build and push
       if: inputs.PUSH == 'true' # && inputs.TAG_ONY == 'false'
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       with:
         push: true
         tags: |
