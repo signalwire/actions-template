@@ -34,7 +34,7 @@ runs:
       run: sudo apt update ; sudo apt install libpq-dev -y
       shell: bash
 
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
         node-version: 16
 
