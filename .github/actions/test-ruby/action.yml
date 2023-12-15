@@ -5,7 +5,7 @@ description: Ruby Unit Test report
 inputs:
   RUBY_VERSION:
     required: false
-    default: "2.7.6"
+    default: "3.0.6"
     description: "Default Ruby version"
   ENV_PATH: 
     description: 'The .env file for CI.'
