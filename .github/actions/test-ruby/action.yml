@@ -53,6 +53,13 @@ runs:
         restore-keys: |
           ${{ runner.os }}-gems-
 
+    - name: .env for CI
+      if: inputs.ENV_PATH != null
+      run: cp $ENV_PATH .env
+      shell: bash
+      env:
+        ENV_PATH: ${{ inputs.ENV_PATH }}
+
     - name: Run zeitwerk chek
       if: inputs.ZEITWERK == 'true'
       run: |
@@ -95,13 +102,6 @@ runs:
           -f=rdjson \
           < reviewdog-report.json
       shell: bash
-
-    - name: .env for CI
-      if: inputs.ENV_PATH != null
-      run: cp $ENV_PATH .env
-      shell: bash
-      env:
-        ENV_PATH: ${{ inputs.ENV_PATH }}
 
     - name: Split the input variable RUBY_RAKE_COMMANDS into an array and execute
       if: inputs.RUBY_RAKE_COMMANDS != null
