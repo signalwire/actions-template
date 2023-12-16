@@ -58,6 +58,9 @@ runs:
       env:
         ENV_PATH: ${{ inputs.ENV_PATH }}
 
+    - run: |
+        cat .env
+
     # - name: Run zeitwerk chek
     #   if: inputs.ZEITWERK == 'true'
     #   run: |
