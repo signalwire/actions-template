@@ -5,7 +5,7 @@ description: Ruby Unit Test report
 inputs:
   RUBY_VERSION:
     required: false
-    default: "2.7.6"
+    default: "3.0.6"
     description: "Default Ruby version"
   ENV_PATH: 
     description: 'The .env file for CI.'
@@ -34,7 +34,7 @@ runs:
       run: sudo apt update ; sudo apt install libpq-dev -y
       shell: bash
 
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
         node-version: 16
 
@@ -120,8 +120,6 @@ runs:
       run: |
         bundle exec rspec -f j -o tmp/rspec_results.json -f p
       shell: bash
-      env:
-        CONTRIBSYS_CREDENTIALS: ${{ env.CONTRIBSYS_CREDENTIALS }}
     
     - name: RSpec Report
       if: always()
