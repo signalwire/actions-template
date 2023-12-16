@@ -43,8 +43,6 @@ runs:
       with:
         bundler-cache: true
         ruby-version: ${{ inputs.RUBY_VERSION }}
-      env:
-        BUNDLE_GEMS__CONTRIBSYS__COM: ${{ env.CONTRIBSYS_CREDENTIALS }}
 
     - uses: actions/cache@v3
       with:
