@@ -154,7 +154,7 @@ jobs:
     
     - name: Test Ruby
       if: ${{ inputs.LANGUAGE == 'Ruby' }}
-      uses: ./actions/.github/actions/test-ruby@ryanwi/env-earlier
+      uses: ./actions/.github/actions/test-ruby/action.yml@ryanwi/env-earlier
       with:
         RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
         ENV_PATH: ${{ inputs.ENV_PATH }}
