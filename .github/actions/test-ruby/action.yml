@@ -61,17 +61,17 @@ runs:
     - run: |
         cat .env
 
-    # - name: Run zeitwerk chek
-    #   if: inputs.ZEITWERK == 'true'
-    #   run: |
-    #     bin/rails zeitwerk:check
-    #   shell: bash
+    - name: Run zeitwerk chek
+      if: inputs.ZEITWERK == 'true'
+      run: |
+        bin/rails zeitwerk:check
+      shell: bash
 
-    # - name: Generate Brakeman report
-    #   if: inputs.BRAKEMAN == 'true'
-    #   run: |
-    #     bundle exec brakeman --skip-files bundle/ -q -w2 -f json > tmp/brakeman.json || exit 0
-    #   shell: bash
+    - name: Generate Brakeman report
+      if: inputs.BRAKEMAN == 'true'
+      run: |
+        bundle exec brakeman --skip-files bundle/ -q -w2 -f json > tmp/brakeman.json || exit 0
+      shell: bash
 
 #     - name: Publish report
 #       if: inputs.BRAKEMAN == 'true'
