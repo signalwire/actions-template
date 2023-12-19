@@ -48,7 +48,7 @@ jobs:
         path: actions
 
     - name: Download Artifacts
-      uses: actions/download-artifact@v3.0.2
+      uses: actions/download-artifact@v4.1.0
       with:
         name: deb-changelog-artifact
         path: ./debian
