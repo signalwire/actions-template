@@ -45,7 +45,7 @@ runs:
 
     - name: Fetch credentials using Machine ID
       id: auth
-      uses: teleport-actions/auth@v1
+      uses: teleport-actions/auth@v2
       if: env.HOSTNAME != ''
       with:
         # Use the address of the auth/proxy server for your own cluster.
