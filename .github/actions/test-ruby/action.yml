@@ -109,7 +109,7 @@ runs:
     - name: Generate RuboCop report
       if: inputs.RUBOCOP == 'true'
       run: |
-        bundle exec rubocop -c .rubocop.yml
+        bundle exec rubocop
       shell: bash
 
     - name: Split the input variable RUBY_RAKE_COMMANDS into an array and execute
