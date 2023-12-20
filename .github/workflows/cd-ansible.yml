@@ -62,6 +62,10 @@ on:
         description: "Pass extra command line variables to the playbook."
         required: false
         type: string
+      CREDENTIALS:
+        description: "Name or ID of the associated credentials."
+        required: false
+        type: string
     secrets:
       AWX_HOST:
         description: "AWX or Ansible Tower URL."
@@ -99,6 +103,7 @@ jobs:
         TAGS: ${{ inputs.TAGS}}
         SKIP_TAGS: ${{ inputs.SKIP_TAGS}}
         MONITOR: ${{ inputs.MONITOR}}
+        CREDENTIALS: ${{ inputs.CREDENTIALS }}
       env:
         AWX_HOST: ${{ secrets.AWX_HOST }}
         AWX_OAUTH_TOKEN: ${{ secrets.AWX_OAUTH_TOKEN }}

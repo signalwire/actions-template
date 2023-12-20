@@ -46,6 +46,9 @@ inputs:
   EXTRA_VARS:
     description: "Pass extra command line variables to the playbook."
     required: false
+  CREDENTIALS:
+    description: "Credentials to use for this job."
+    required: false
     
 runs:
   using: "composite"
@@ -67,4 +70,5 @@ runs:
         skip_tags: ${{ inputs.SKIP_TAGS }}
         monitor: ${{ inputs.MONITOR }}
         timeout: ${{ inputs.TIMEOUT }}
+        credentials: ${{ inputs.CREDENTIALS }}
 
