@@ -52,7 +52,7 @@ runs:
   steps:
 
     - name: "Run ${{ inputs.RESOURCE_TYPE}} for ${{ inputs.RESOURCE_NAME}}"
-      uses: fitbeard/action-trigger-awx@v22.7.0
+      uses: fitbeard/action-trigger-awx@v23.5.1
       with:
         tower_url: ${{ env.AWX_HOST }}
         tower_token: ${{ env.AWX_OAUTH_TOKEN }}
