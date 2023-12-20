@@ -102,6 +102,16 @@ on:
         type: string
         description:  ref to pull and build default to github.ref
         required: false
+      CACHE_FROM:
+        type: string
+        default: 'type=gha'
+        description: 'Cache from.'
+        required: false
+      CACHE_TO:
+        type: string
+        default: 'type=gha,mode=max'
+        description: 'Cache to.'
+        required: false
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -130,7 +140,6 @@ on:
       BUILD_ARGS:
         required: false
         description: Whenever we wanna use secrets and mount them as env
-
     outputs:
       IMAGE_TAG: 
         value: ${{ jobs.build.outputs.IMAGE_TAG }}
@@ -226,6 +235,8 @@ jobs:
         CONTAINER_TEST: ${{ inputs.CONTAINER_TEST }}
         CONTAINER_TEST_COMMAND: ${{ inputs.CONTAINER_TEST_COMMAND }}
         OUTPUT_TAG_INDEX: ${{ inputs.OUTPUT_TAG_INDEX }}
+        CACHE_FROM: ${{ inputs.CACHE_FROM }}
+        CACHE_TO: ${{ inputs.CACHE_TO }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

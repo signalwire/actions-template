@@ -59,6 +59,14 @@ inputs:
     default: 'false'
     description: 'Generate tag only.'
     required: false
+  CACHE_FROM:
+    default: 'type=gha'
+    description: 'Cache from.'
+    required: false
+  CACHE_TO:
+    default: 'type=gha,mode=max'
+    description: 'Cache to.'
+    required: false
 outputs:
   IMAGE_TAG:
     description: "Export image tag"
@@ -150,8 +158,8 @@ runs:
         push: true
         tags: |
           ${{ steps.meta.outputs.tags }}
-        # cache-from: type=gha
-        # cache-to: type=gha,mode=max
+        cache-from: ${{ inputs.CACHE_FROM }}
+        cache-to: ${{ inputs.CACHE_TO }}}
         file: ${{ inputs.FILE }}
         context: ${{ inputs.CONTEXT }}
         platforms: ${{ inputs.PLATFORMS }}
