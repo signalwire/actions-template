@@ -101,6 +101,11 @@ runs:
     #       < reviewdog-report.json
     #   shell: bash
 
+    - name: Read RuboCop config
+      run: |
+        cat .rubocop.yml
+      shell: bash
+
     - name: Generate RuboCop report
       if: inputs.RUBOCOP == 'true'
       run: |
