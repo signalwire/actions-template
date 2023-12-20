@@ -57,7 +57,7 @@ jobs:
         chmod +x run.sh
     
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
 
     - name: build debs
       run: docker run --platform linux/${{inputs.PLATFORM}} --rm --entrypoint="/root/run.sh" -w /root -v $(pwd):/root ${{inputs.BASE_IMAGE}}
