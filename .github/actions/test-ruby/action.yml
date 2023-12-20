@@ -60,6 +60,7 @@ runs:
 
     - run: |
         cat .env
+      shell: bash
 
     - name: Run zeitwerk chek
       if: inputs.ZEITWERK == 'true'

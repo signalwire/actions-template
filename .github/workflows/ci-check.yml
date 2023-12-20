@@ -164,7 +164,6 @@ jobs:
         RUBOCOP: ${{ inputs.RUBOCOP }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        CONTRIBSYS_CREDENTIALS: ${{ secrets.CONTRIBSYS_CREDENTIALS }}
     
     - name: Test configs
       if: inputs.LANGUAGE == 'configs' || inputs.LANGUAGE == 'configs'
