@@ -139,7 +139,7 @@ jobs:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
       - name: run terragrunt
-        uses: autero1/action-terragrunt@v1.3.1
+        uses: autero1/action-terragrunt@v1.3.2
         with:
           terragrunt_version: ${{ inputs.tg_version }}
 
