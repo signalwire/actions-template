@@ -24,6 +24,7 @@ on:
       RUBY_VERSION:
         required: false
         type: string
+        default: "3.0.6"
       PUSH:
         required: false
         type: boolean
