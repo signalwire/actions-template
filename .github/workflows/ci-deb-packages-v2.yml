@@ -80,14 +80,14 @@ jobs:
       run: |
         sha512sum $image_tag.tar.gz > $image_tag.sha1
       
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: deb-${{inputs.PLATFORM}}-artifact
         path: |
           *.tar.gz
           *.sha1
     
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: deb-changelog-artifact
         path: |

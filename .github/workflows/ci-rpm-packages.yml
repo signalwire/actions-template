@@ -72,7 +72,7 @@ jobs:
       run: |
         sha512sum ${{inputs.TARGET_ARTIFACT_NAME}}.tar.gz > ${{inputs.TARGET_ARTIFACT_NAME}}.sha1
       
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: rpm-${{inputs.PLATFORM}}-artifact
         path: |

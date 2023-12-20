@@ -58,7 +58,7 @@ jobs:
         run: |
          echo "${{inputs.FILE_PATH_PREFIX}}" > metafile.txt
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{inputs.OS_PLATFORM}}-meta
           path: |

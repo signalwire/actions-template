@@ -85,7 +85,7 @@ jobs:
       run: |
         sha512sum $current_time-${{matrix.os_name}}.tar.gz > $current_time-${{matrix.os_name}}.sha1
       
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: deb-${{matrix.os_name}}-artifact
         path: |
