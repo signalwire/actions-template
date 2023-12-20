@@ -114,7 +114,7 @@ jobs:
           service_account: ${{ secrets.GCP_SA }}
       
       - name: Sops Binary Installer
-        uses: mdgreenwald/mozilla-sops-action@v1.4.1
+        uses: mdgreenwald/mozilla-sops-action@v1.5.0
           
       - name: Authenticate against Teleport to use Vault
         if: inputs.TELEPORT_APP != ''
