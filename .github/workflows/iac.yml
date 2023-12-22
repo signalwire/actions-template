@@ -16,7 +16,7 @@ on:
       TF_VERSION: 
         required: false
         type: string
-        default: '0.53.2'
+        default: '1.6.6'
       AWS_REGION: 
         required: true
         type: string
