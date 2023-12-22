@@ -9,14 +9,10 @@ on:
       WORKING_DIR:
         required: true
         type: string
-      TG_VERSION: 
+      tg_version: 
         required: false
         type: string
         default: '0.53.2'
-      TF_VERSION: 
-        required: false
-        type: string
-        default: '1.6.6'
       AWS_REGION: 
         required: true
         type: string
@@ -98,14 +94,9 @@ jobs:
           ref: main
           path: actions
 
-      - name: create directory to pass ssh-agent socket
-        run: "mkdir -p /home/runner/work/_temp/_github_workflow"
-        shell: bash
-
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY_TFMODULES }}
-          ssh-auth-sock: "/home/runner/work/_temp/_github_workflow/ssh-agent.sock"
       
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.0.1
@@ -147,35 +138,27 @@ jobs:
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
-      - name: init
-        uses: gruntwork-io/terragrunt-action@v1.0.10
+      - name: run terragrunt
+        uses: autero1/action-terragrunt@v1.3.2
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: 'run-all init --terragrunt-non-interactive'
-        env:
-          SSH_AUTH_SOCK: "/github/workflow/ssh-agent.sock"
-          
+          terragrunt_version: ${{ inputs.tg_version }}
+
+      - name: Terragrunt init
+        id: init
+        working-directory: ${{ inputs.WORKING_DIR }}
+        run: terragrunt run-all init --terragrunt-non-interactive
+      
       - name: Terragrunt validate
         id: validate
-        uses: gruntwork-io/terragrunt-action@v1.0.10
-        with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: run-all validate --terragrunt-non-interactive
+        run: terragrunt run-all validate --terragrunt-non-interactive
+        working-directory: ${{ inputs.WORKING_DIR }}
         env:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
 
       - name: Terragrunt plan
         id: plan
-        uses: gruntwork-io/terragrunt-action@v1.0.10
-        with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: run-all plan -no-color --terragrunt-non-interactive > plan.txt
+        run: terragrunt run-all plan -no-color --terragrunt-non-interactive > plan.txt
+        working-directory: ${{ inputs.WORKING_DIR }}
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
           OS_AUTH_URL: https://auth.cloud.ovh.net/v3
@@ -253,12 +236,8 @@ jobs:
 
       - name: Terragrunt apply-all
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: gruntwork-io/terragrunt-action@v1.0.10
-        with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: apply-all --terragrunt-non-interactive
+        run: terragrunt apply-all --terragrunt-non-interactive
+        working-directory: ${{ inputs.WORKING_DIR }}
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
           OS_AUTH_URL: https://auth.cloud.ovh.net/v3
