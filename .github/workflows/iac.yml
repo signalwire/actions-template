@@ -143,7 +143,7 @@ jobs:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
       - name: init
-        uses: gruntwork-io/terragrunt-action@v1.0.10
+        uses: gruntwork-io/terragrunt-action@v2.0.0
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
@@ -152,7 +152,7 @@ jobs:
           
       - name: Terragrunt validate
         id: validate
-        uses: gruntwork-io/terragrunt-action@v1.0.10
+        uses: gruntwork-io/terragrunt-action@v2.0.0
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
@@ -163,7 +163,7 @@ jobs:
 
       - name: Terragrunt plan
         id: plan
-        uses: gruntwork-io/terragrunt-action@v1.0.10
+        uses: gruntwork-io/terragrunt-action@v2.0.0
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
@@ -246,7 +246,7 @@ jobs:
 
       - name: Terragrunt apply-all
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: gruntwork-io/terragrunt-action@v1.0.10
+        uses: gruntwork-io/terragrunt-action@v2.0.0
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
