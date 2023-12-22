@@ -143,32 +143,32 @@ jobs:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
       - name: init
-        uses: gruntwork-io/terragrunt-action@v2
+        uses: the-commons-project/terragrunt-github-actions@master
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: 'run-all init --terragrunt-non-interactive'
+          tf_actions_version: ${{ inputs.TF_VERSION }}
+          tg_actions_version: ${{ inputs.TG_VERSION }}
+          tf_actions_working_dir: ${{ inputs.WORKING_DIR }}
+          tf_actions_subcommand: 'run-all init --terragrunt-non-interactive'
           
       - name: Terragrunt validate
         id: validate
-        uses: gruntwork-io/terragrunt-action@v2
+        uses: the-commons-project/terragrunt-github-actions@master
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: run-all validate --terragrunt-non-interactive
+          tf_actions_version: ${{ inputs.TF_VERSION }}
+          tg_actions_version: ${{ inputs.TG_VERSION }}
+          tf_actions_working_dir: ${{ inputs.WORKING_DIR }}
+          tf_actions_subcommand: run-all validate --terragrunt-non-interactive
         env:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
 
       - name: Terragrunt plan
         id: plan
-        uses: gruntwork-io/terragrunt-action@v2
+        uses: the-commons-project/terragrunt-github-actions@master
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: run-all plan -no-color --terragrunt-non-interactive > plan.txt
+          tf_actions_version: ${{ inputs.TF_VERSION }}
+          tg_actions_version: ${{ inputs.TG_VERSION }}
+          tf_actions_working_dir: ${{ inputs.WORKING_DIR }}
+          tf_actions_subcommand: run-all plan -no-color --terragrunt-non-interactive > plan.txt
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
           OS_AUTH_URL: https://auth.cloud.ovh.net/v3
@@ -246,12 +246,12 @@ jobs:
 
       - name: Terragrunt apply-all
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: gruntwork-io/terragrunt-action@v2
+        uses: the-commons-project/terragrunt-github-actions@master
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: apply-all --terragrunt-non-interactive
+          tf_actions_version: ${{ inputs.TF_VERSION }}
+          tg_actions_version: ${{ inputs.TG_VERSION }}
+          tf_actions_working_dir: ${{ inputs.WORKING_DIR }}
+          tf_actions_subcommand: apply-all --terragrunt-non-interactive
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
           OS_AUTH_URL: https://auth.cloud.ovh.net/v3
