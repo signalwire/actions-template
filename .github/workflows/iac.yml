@@ -77,7 +77,7 @@ on:
 jobs:
   terragrunt:
     name: 'Terragrunt ${{ inputs.WORKING_DIR}}'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.ENVIRONMENT }}
     
