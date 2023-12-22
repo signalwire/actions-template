@@ -138,6 +138,8 @@ jobs:
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
+      - uses: opentofu/setup-opentofu@v1
+
       - name: run terragrunt
         uses: autero1/action-terragrunt@v1.3.2
         with:
