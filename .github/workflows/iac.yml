@@ -148,7 +148,7 @@ jobs:
           tf_actions_version: ${{ inputs.TF_VERSION }}
           tg_actions_version: ${{ inputs.TG_VERSION }}
           tf_actions_working_dir: ${{ inputs.WORKING_DIR }}
-          tf_actions_subcommand: 'run-all init --terragrunt-non-interactive'
+          tf_actions_subcommand: init --terragrunt-non-interactive
           
       - name: Terragrunt validate
         id: validate
@@ -157,7 +157,7 @@ jobs:
           tf_actions_version: ${{ inputs.TF_VERSION }}
           tg_actions_version: ${{ inputs.TG_VERSION }}
           tf_actions_working_dir: ${{ inputs.WORKING_DIR }}
-          tf_actions_subcommand: run-all validate --terragrunt-non-interactive
+          tf_actions_subcommand: validate --terragrunt-non-interactive
         env:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
 
