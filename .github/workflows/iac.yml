@@ -98,6 +98,10 @@ jobs:
           ref: main
           path: actions
 
+      - name: create directory to pass ssh-agent socket
+        run: "mkdir -p /home/runner/work/_temp/_github_workflow"
+        shell: bash
+
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY_TFMODULES }}
