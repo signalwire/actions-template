@@ -148,7 +148,7 @@ jobs:
           tf_actions_version: ${{ inputs.TF_VERSION }}
           tg_actions_version: ${{ inputs.TG_VERSION }}
           tf_actions_working_dir: ${{ inputs.WORKING_DIR }}
-          tf_actions_subcommand: init --terragrunt-non-interactive
+          tf_actions_subcommand: init
           
       - name: Terragrunt validate
         id: validate
