@@ -190,6 +190,7 @@ jobs:
           tg_version: 0.53.2
           tg_dir: ${{ inputs.WORKING_DIR }}
           tg_command: 'run-all plan'
+          tg_comment: 1
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
           OS_AUTH_URL: https://auth.cloud.ovh.net/v3
@@ -205,41 +206,12 @@ jobs:
           OVH_APPLICATION_SECRET: ${{ secrets.OVH_APPLICATION_SECRET }}
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
 
       - name: Terraform Plan Status
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-      - name: Update Pull Request
-        uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
-        # env:
-        #   PLANPRINT: "terraform\n${{ steps.plan.outputs.content }}"
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = `### Refers to \`${{ inputs.WORKING_DIR }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-
-            <details><summary>Show Plan</summary>
-
-            \`\`\`\n
-            ${{ steps.plan.outputs.tg_action_output }}
-            \`\`\`
-
-            </details>
-
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
-      
       - name: Generate token
         id: generate_token
         uses: tibdex/github-app-token@v2
