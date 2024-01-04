@@ -9,11 +9,7 @@ on:
       WORKING_DIR:
         required: true
         type: string
-      TG_VERSION: 
-        required: false
-        type: string
-        default: '0.53.2'
-      TF_VERSION: 
+      tg_version: 
         required: false
         type: string
         default: '0.53.2'
@@ -38,18 +34,27 @@ on:
         type: string
         default: ''
         description: An app registered on teleport to authenticate using proxy
+      GCP_WIP:
+        required: false
+        type: string
+        default: ''
+        description: GCP Workload Identity Provider
+      PROJECT_ID:
+        required: false
+        type: string
+        default: ''
+        description: GCP Project ID
+      GCP_SA:
+        required: false
+        type: string
+        default: ''
+        description: GCP Service Account
     secrets:
-      PRIVATE_SSH_KEY_TFMODULES:
-        required: true
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_ACCESS_KEY_SECRET:
         required: true
       TF_VAR_DO_TOKEN:
-        required: false
-      GCP_SA:
-        required: false
-      GCP_WIP:
         required: false
       GH_APPROVAL_APP_ID:
         required: false
@@ -77,6 +82,15 @@ on:
       VAULT_TOKEN:
         required: false
         description: A Vault token in case vault is required
+      PAT_GIT:
+        required: false
+        description: A PAT token to clone the repository
+      KNOWN_HOSTS:
+        required: false
+        description: A known hosts file to clone the repository
+      PRIVATE_SSH_KEY_TFMODULES:
+        required: false
+        description: A private SSH key to clone the repository
 
 jobs:
   terragrunt:
@@ -98,10 +112,6 @@ jobs:
           ref: main
           path: actions
 
-      - uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY_TFMODULES }}
-      
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.0.1
         with:
@@ -111,11 +121,12 @@ jobs:
 
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v1'
+        uses: 'google-github-actions/auth@v2.0.0'
         if: inputs.GCP_ENV == true
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIP }}
-          service_account: ${{ secrets.GCP_SA }}
+          workload_identity_provider: ${{ inputs.GCP_WIP }}
+          project_id: ${{ inputs.PROJECT_ID }}
+          service_account: ${{ inputs.GCP_SA }}
       
       - name: Sops Binary Installer
         uses: mdgreenwald/mozilla-sops-action@v1.5.0
@@ -142,33 +153,43 @@ jobs:
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
-      - name: init
-        uses: gruntwork-io/terragrunt-action@v2
+      - uses: opentofu/setup-opentofu@v1
+
+      - name: Init
+        id: init
+        uses: gruntwork-io/terragrunt-action@v1.0.10
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
+          tf_version: 1.5.7
+          tg_version: 0.53.2
           tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: 'run-all init --terragrunt-non-interactive'
-          
-      - name: Terragrunt validate
+          tg_command: 'run-all init'
+        env:
+          # configure git to use custom token to clone repository.
+          INPUT_PRE_EXEC_1: |
+            git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
+          # print git configuration
+          INPUT_PRE_EXEC_2: |
+            git config --global --list
+      
+      - name: Validate
+        uses: gruntwork-io/terragrunt-action@v1.0.10
         id: validate
-        uses: gruntwork-io/terragrunt-action@v2
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
+          tf_version: 1.5.7
+          tg_version: 0.53.2
           tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: run-all validate --terragrunt-non-interactive
+          tg_command: 'run-all validate'
         env:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
-
-      - name: Terragrunt plan
+      
+      - name: Plan
+        uses: gruntwork-io/terragrunt-action@v1.0.10
         id: plan
-        uses: gruntwork-io/terragrunt-action@v2
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
+          tf_version: 1.5.7
+          tg_version: 0.53.2
           tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: run-all plan -no-color --terragrunt-non-interactive > plan.txt
+          tg_command: 'run-all plan'
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
           OS_AUTH_URL: https://auth.cloud.ovh.net/v3
@@ -185,12 +206,6 @@ jobs:
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
 
-      - name: Load plan file
-        id: read
-        uses: juliangruber/read-file-action@v1
-        with:
-          path: ${{ inputs.WORKING_DIR }}/plan.txt
-
       - name: Terraform Plan Status
         if: steps.plan.outcome == 'failure'
         run: exit 1
@@ -198,13 +213,12 @@ jobs:
       - name: Update Pull Request
         uses: actions/github-script@v7
         if: github.event_name == 'pull_request'
-        env:
-          PLANPRINT: "terraform\n${{ steps.read.outputs.content }}"
+        # env:
+        #   PLANPRINT: "terraform\n${{ steps.plan.outputs.content }}"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const output = `### Refers to \`${{ inputs.WORKING_DIR }}\`
-            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
@@ -212,7 +226,7 @@ jobs:
             <details><summary>Show Plan</summary>
 
             \`\`\`\n
-            ${process.env.PLANPRINT}
+            ${{ steps.plan.outputs.tg_action_output }}
             \`\`\`
 
             </details>
@@ -244,14 +258,15 @@ jobs:
           minimum-approvals: 1
           issue-title: "Terragrunt approval pending for ${{ inputs.WORKING_DIR }}"
 
-      - name: Terragrunt apply-all
+      - name: Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: gruntwork-io/terragrunt-action@v2
+        uses: gruntwork-io/terragrunt-action@v1.0.10
+        id: apply
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
-          tg_version: ${{ inputs.TG_VERSION }}
+          tf_version: 1.5.7
+          tg_version: 0.53.2
           tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: apply-all --terragrunt-non-interactive
+          tg_command: 'run-all apply'
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
           OS_AUTH_URL: https://auth.cloud.ovh.net/v3
