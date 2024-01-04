@@ -131,11 +131,8 @@ jobs:
       - name: Sops Binary Installer
         uses: mdgreenwald/mozilla-sops-action@v1.5.0
         with:
-          version: latest
-      
-      - uses: innovationnorway/setup-vault@v1
-        with:
-          version: '~1'
+          version: 3.7.3
+          
       - name: Authenticate against Teleport to use Vault
         if: inputs.TELEPORT_APP != ''
         id: teleportapp
