@@ -167,7 +167,7 @@ jobs:
         uses: gruntwork-io/terragrunt-action@v1.0.10
         with:
           tf_version: 1.5.7
-          tg_version: 0.53.2
+          tg_version: 0.54.12
           tg_dir: ${{ inputs.WORKING_DIR }}
           tg_command: 'run-all init'
         env:
