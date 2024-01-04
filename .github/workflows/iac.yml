@@ -162,12 +162,12 @@ jobs:
       - run: vault secrets list
       - uses: opentofu/setup-opentofu@v1
 
-      - run: git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "github.com"
+      - run: git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
       - run: git config --global --list
       - uses: eLco/setup-terragrunt@v1
       - run: |
           cd ${{ inputs.WORKING_DIR }} 
-          terragrunt run-all plan --terragrunt-non-interactive 
+          terragrunt run-all init --terragrunt-non-interactive 
       # - name: Init
       #   id: init
       #   uses: gruntwork-io/terragrunt-action@v1.0.10
