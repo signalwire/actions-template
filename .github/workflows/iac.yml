@@ -137,27 +137,27 @@ jobs:
         with:
           version: '~> 1'
           
-          - name: Authenticate against Teleport to use Vault
-          if: inputs.TELEPORT_APP != ''
-          id: teleportapp
-          uses: ./actions/.github/actions/teleport
-          env:
-            TOKEN: ${{ secrets.TELEPORT_TOKEN }}
-            PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
-            with:
-              TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
-              
-              - name: Configure Vault
-              if: inputs.TELEPORT_APP != ''
-              run: |
-              echo VAULT_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
-              #echo VAULT_API_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
-              echo VAULT_CLIENT_TIMEOUT=120s >> $GITHUB_ENV
-              echo VAULT_CLIENT_CERT=${{ steps.teleportapp.outputs.certificate-file }} >> $GITHUB_ENV
-              echo VAULT_CLIENT_KEY=${{ steps.teleportapp.outputs.key-file }} >> $GITHUB_ENV
-              echo VAULT_TOKEN=$VAULT_TOKEN >> $GITHUB_ENV
-              env:
-                VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      - name: Authenticate against Teleport to use Vault
+        if: inputs.TELEPORT_APP != ''
+        id: teleportapp
+        uses: ./actions/.github/actions/teleport
+        env:
+          TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+          PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+        with:
+          TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+            
+      - name: Configure Vault
+        if: inputs.TELEPORT_APP != ''
+        run: |
+          echo VAULT_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
+          #echo VAULT_API_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
+          echo VAULT_CLIENT_TIMEOUT=120s >> $GITHUB_ENV
+          echo VAULT_CLIENT_CERT=${{ steps.teleportapp.outputs.certificate-file }} >> $GITHUB_ENV
+          echo VAULT_CLIENT_KEY=${{ steps.teleportapp.outputs.key-file }} >> $GITHUB_ENV
+          echo VAULT_TOKEN=$VAULT_TOKEN >> $GITHUB_ENV
+        env:
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
                 
       - run: vault secrets list
       - uses: opentofu/setup-opentofu@v1
