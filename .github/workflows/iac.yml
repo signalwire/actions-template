@@ -167,7 +167,7 @@ jobs:
       - uses: eLco/setup-terragrunt@v1
       - run: |
           cd ${{ inputs.WORKING_DIR }} 
-          terragrunt run-all init --terragrunt-non-interactive 
+          terragrunt run-all plan --terragrunt-non-interactive 
       # - name: Init
       #   id: init
       #   uses: gruntwork-io/terragrunt-action@v1.0.10
