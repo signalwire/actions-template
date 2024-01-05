@@ -162,21 +162,31 @@ jobs:
       - run: vault secrets list
       - uses: opentofu/setup-opentofu@v1
 
-      - name: Init
-        id: init
-        uses: gruntwork-io/terragrunt-action@v1.0.10
+      - run: git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
+      - run: git config --global --list
+
+      - name: Setup Terragrunt
+        uses: autero1/action-terragrunt@v1.1.0
         with:
-          tf_version: 1.5.7
-          tg_version: 0.54.12
-          tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: 'run-all init'
-        env:
-          # configure git to use custom token to clone repository.
-          INPUT_PRE_EXEC_1: |
-            git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
-          # print git configuration
-          INPUT_PRE_EXEC_2: |
-            git config --global --list
+          terragrunt_version: latest
+
+      - run: terragrunt run-all init --terragrunt-non-interactive
+        working-directory: ${{ inputs.WORKING_DIR }}
+      # - name: Init
+      #   id: init
+      #   uses: gruntwork-io/terragrunt-action@v1.0.10
+      #   with:
+      #     tf_version: 1.5.7
+      #     tg_version: 0.54.12
+      #     tg_dir: ${{ inputs.WORKING_DIR }}
+      #     tg_command: 'run-all init'
+      #   env:
+      #     # configure git to use custom token to clone repository.
+      #     INPUT_PRE_EXEC_1: |
+      #       git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
+      #     # print git configuration
+      #     INPUT_PRE_EXEC_2: |
+      #       git config --global --list
       
       - name: Validate
         uses: gruntwork-io/terragrunt-action@v1.0.10
