@@ -162,7 +162,11 @@ jobs:
       - run: vault secrets list
       - uses: opentofu/setup-opentofu@v1
 
-      - run: git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
+      - run: |
+          git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
+          git config --global --add safe.directory /runner/_work
+          # Also trust any subfolder within workspace
+          git config --global --add safe.directory "*"
       - run: git config --global --list
 
       - name: Setup Terragrunt
