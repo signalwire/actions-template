@@ -149,18 +149,15 @@ jobs:
           echo VAULT_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
           #echo VAULT_API_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
           echo VAULT_CLIENT_TIMEOUT=120s >> $GITHUB_ENV
-          echo VAULT_CLIENT_CERT=${{ steps.teleportapp.outputs.certificate-file }} >> $GITHUB_ENV
-          echo VAULT_CLIENT_KEY=${{ steps.teleportapp.outputs.key-file }} >> $GITHUB_ENV
+          cp ${{ steps.teleportapp.outputs.certificate-file }} /${{github.workspace}}/certificate-file
+          echo VAULT_CLIENT_CERT=/${{github.workspace}}/certificate-file >> $GITHUB_ENV
+          cp ${{ steps.teleportapp.outputs.key-file }} /${{github.workspace}}/key-file
+          echo VAULT_CLIENT_KEY=/${{github.workspace}}/key-file >> $GITHUB_ENV
           echo VAULT_TOKEN=$VAULT_TOKEN >> $GITHUB_ENV
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
                 
       - uses: opentofu/setup-opentofu@v1
-
-      - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v1.1.0
-        with:
-          terragrunt_version: latest
 
       - name: Init
         id: init
@@ -189,17 +186,15 @@ jobs:
         env:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
       
-      # - name: Plan
-      #   uses: gruntwork-io/terragrunt-action@v1.0.10
-      #   id: plan
-      #   with:
-      #     tf_version: 1.5.7
-      #     tg_version: 0.53.2
-      #     tg_dir: ${{ inputs.WORKING_DIR }}
-      #     tg_command: 'run-all plan'
-      #     tg_comment: 1
-      - run: terragrunt run-all plan --terragrunt-non-interactive
-        working-directory: ${{ inputs.WORKING_DIR }}
+      - name: Plan
+        uses: gruntwork-io/terragrunt-action@v1.0.10
+        id: plan
+        with:
+          tf_version: 1.5.7
+          tg_version: 0.53.2
+          tg_dir: ${{ inputs.WORKING_DIR }}
+          tg_command: 'run-all plan'
+          tg_comment: 1
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
           OS_AUTH_URL: https://auth.cloud.ovh.net/v3
