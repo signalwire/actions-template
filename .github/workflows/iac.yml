@@ -157,36 +157,26 @@ jobs:
                 
       - uses: opentofu/setup-opentofu@v1
 
-      - run: |
-          git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
-      - run: git config --global --list
-
       - name: Setup Terragrunt
         uses: autero1/action-terragrunt@v1.1.0
         with:
           terragrunt_version: latest
 
-      - run: echo $PATH
-      - run: ls -la
-      - run: terragrunt run-all init --terragrunt-non-interactive
-        working-directory: ${{ inputs.WORKING_DIR }}
+      - name: Init
+        id: init
+        uses: gruntwork-io/terragrunt-action@v1.0.10
+        with:
+          tf_version: 1.5.7
+          tg_version: 0.54.12
+          tg_dir: ${{ inputs.WORKING_DIR }}
+          tg_command: 'run-all init'
         env:
-          TERRAGRUNT_DEBUG: true
-      # - name: Init
-      #   id: init
-      #   uses: gruntwork-io/terragrunt-action@v1.0.10
-      #   with:
-      #     tf_version: 1.5.7
-      #     tg_version: 0.54.12
-      #     tg_dir: ${{ inputs.WORKING_DIR }}
-      #     tg_command: 'run-all init'
-      #   env:
-      #     # configure git to use custom token to clone repository.
-      #     INPUT_PRE_EXEC_1: |
-      #       git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
-      #     # print git configuration
-      #     INPUT_PRE_EXEC_2: |
-      #       git config --global --list
+          # configure git to use custom token to clone repository.
+          INPUT_PRE_EXEC_1: |
+            git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
+          # print git configuration
+          INPUT_PRE_EXEC_2: |
+            git config --global --list
       
       - name: Validate
         uses: gruntwork-io/terragrunt-action@v1.0.10
@@ -199,15 +189,17 @@ jobs:
         env:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
       
-      - name: Plan
-        uses: gruntwork-io/terragrunt-action@v1.0.10
-        id: plan
-        with:
-          tf_version: 1.5.7
-          tg_version: 0.53.2
-          tg_dir: ${{ inputs.WORKING_DIR }}
-          tg_command: 'run-all plan'
-          tg_comment: 1
+      # - name: Plan
+      #   uses: gruntwork-io/terragrunt-action@v1.0.10
+      #   id: plan
+      #   with:
+      #     tf_version: 1.5.7
+      #     tg_version: 0.53.2
+      #     tg_dir: ${{ inputs.WORKING_DIR }}
+      #     tg_command: 'run-all plan'
+      #     tg_comment: 1
+      - run: terragrunt run-all plan --terragrunt-non-interactive
+        working-directory: ${{ inputs.WORKING_DIR }}
         env:
           TF_VAR_do_token: ${{ secrets.TF_VAR_DO_TOKEN }}
           OS_AUTH_URL: https://auth.cloud.ovh.net/v3
