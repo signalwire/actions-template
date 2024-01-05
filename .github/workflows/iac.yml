@@ -149,10 +149,10 @@ jobs:
           echo VAULT_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
           #echo VAULT_API_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
           echo VAULT_CLIENT_TIMEOUT=120s >> $GITHUB_ENV
-          cp ${{ steps.teleportapp.outputs.certificate-file }} /${{github.workspace}}/certificate-file
-          echo VAULT_CLIENT_CERT=/${{github.workspace}}/certificate-file >> $GITHUB_ENV
-          cp ${{ steps.teleportapp.outputs.key-file }} /${{github.workspace}}/key-file
-          echo VAULT_CLIENT_KEY=/${{github.workspace}}/key-file >> $GITHUB_ENV
+          cp ${{ steps.teleportapp.outputs.certificate-file }} ${{github.workspace}}/certificate-file
+          echo VAULT_CLIENT_CERT=/github/workspace/certificate-file >> $GITHUB_ENV
+          cp ${{ steps.teleportapp.outputs.key-file }} ${{github.workspace}}/key-file
+          echo VAULT_CLIENT_KEY=/github/workspace/key-file >> $GITHUB_ENV
           echo VAULT_TOKEN=$VAULT_TOKEN >> $GITHUB_ENV
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
