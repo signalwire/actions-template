@@ -132,10 +132,6 @@ jobs:
         uses: mdgreenwald/mozilla-sops-action@v1.5.0
         with:
           version: 3.7.3
-
-      - uses: innovationnorway/setup-vault@v1
-        with:
-          version: '~> 1'
           
       - name: Authenticate against Teleport to use Vault
         if: inputs.TELEPORT_APP != ''
@@ -153,36 +149,31 @@ jobs:
           echo VAULT_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
           #echo VAULT_API_ADDR=https://${{ inputs.TELEPORT_PROXY_URL }} >> $GITHUB_ENV
           echo VAULT_CLIENT_TIMEOUT=120s >> $GITHUB_ENV
-          echo VAULT_CLIENT_CERT=${{ steps.teleportapp.outputs.certificate-file }} >> $GITHUB_ENV
-          echo VAULT_CLIENT_KEY=${{ steps.teleportapp.outputs.key-file }} >> $GITHUB_ENV
+          cp ${{ steps.teleportapp.outputs.certificate-file }} ${{github.workspace}}/certificate-file
+          echo VAULT_CLIENT_CERT=/github/workspace/certificate-file >> $GITHUB_ENV
+          cp ${{ steps.teleportapp.outputs.key-file }} ${{github.workspace}}/key-file
+          echo VAULT_CLIENT_KEY=/github/workspace/key-file >> $GITHUB_ENV
           echo VAULT_TOKEN=$VAULT_TOKEN >> $GITHUB_ENV
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
                 
-      - run: vault secrets list
       - uses: opentofu/setup-opentofu@v1
 
-      - run: git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "github.com"
-      - run: git config --global --list
-      - uses: eLco/setup-terragrunt@v1
-      - run: |
-          cd ${{ inputs.WORKING_DIR }} 
-          terragrunt run-all plan --terragrunt-non-interactive 
-      # - name: Init
-      #   id: init
-      #   uses: gruntwork-io/terragrunt-action@v1.0.10
-      #   with:
-      #     tf_version: 1.5.7
-      #     tg_version: 0.54.12
-      #     tg_dir: ${{ inputs.WORKING_DIR }}
-      #     tg_command: 'run-all init'
-      #   env:
-      #     # configure git to use custom token to clone repository.
-      #     INPUT_PRE_EXEC_1: |
-      #       git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
-      #     # print git configuration
-      #     INPUT_PRE_EXEC_2: |
-      #       git config --global --list
+      - name: Init
+        id: init
+        uses: gruntwork-io/terragrunt-action@v1.0.10
+        with:
+          tf_version: 1.5.7
+          tg_version: 0.54.12
+          tg_dir: ${{ inputs.WORKING_DIR }}
+          tg_command: 'run-all init'
+        env:
+          # configure git to use custom token to clone repository.
+          INPUT_PRE_EXEC_1: |
+            git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
+          # print git configuration
+          INPUT_PRE_EXEC_2: |
+            git config --global --list
       
       - name: Validate
         uses: gruntwork-io/terragrunt-action@v1.0.10
@@ -220,6 +211,7 @@ jobs:
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+          # TF_LOG: trace
 
       - name: Terraform Plan Status
         if: steps.plan.outcome == 'failure'
