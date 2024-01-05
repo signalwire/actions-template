@@ -216,6 +216,11 @@ jobs:
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+          INPUT_PRE_EXEC_3: |
+            TF_LOG=trace
+      
+          INPUT_PRE_EXEC_4: |
+            TG_LOG=trace
 
       - name: Terraform Plan Status
         if: steps.plan.outcome == 'failure'
