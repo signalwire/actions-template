@@ -158,8 +158,8 @@ jobs:
       - uses: opentofu/setup-opentofu@v1
 
       - run: |
-          # git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
-          git config --global url."https://x-access-token:${{secrets.PAT_GIT}}@github.com/".insteadOf "https://github.com"
+          git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
+          git config --global --add safe.directory ${{ inputs.WORKING_DIR }}
           git config --global --add safe.directory "*"
       - run: git config --global --list
 
