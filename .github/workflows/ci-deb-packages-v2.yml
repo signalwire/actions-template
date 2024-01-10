@@ -45,50 +45,79 @@ jobs:
         fetch-depth: 0
 
     - name: General debs based on ${{ inputs.BASE_IMAGE }} for ${{ inputs.PLATFORM }}
+      shell: sh
       run: |
-        cat > run.sh <<EOF
+        mkdir -v -p /tmp/$GITHUB_RUN_ID/
+
+        cat << EOF | tee /tmp/$GITHUB_RUN_ID/run.sh
         #!/bin/bash
 
-        dch -b -M -v "`dpkg-parsechangelog --show-field Version | cut -f1 -d"-"`-$GITHUB_RUN_ID~`echo $GITHUB_SHA | cut -c1-10`~`lsb_release -cs`" --force-distribution -D "`lsb_release -cs`" "Nightly build, `echo $GITHUB_SHA | cut -c1-10`" 
-        debuild -b -us -uc 
-        ls -la ..
-        mv ../*.deb .
+        set -o pipefail
+
+        # eval inside builder image
+        local version=\$(dpkg-parsechangelog --show-field Version | cut -f1 -d"-")
+        if [ $? -ne 0 ]; then
+          exit 1
+        fi
+
+        local lsb=\$(lsb_release -cs)
+        if [ $? -ne 0 ]; then
+          exit 1
+        fi
+
+        # eval inside runner
+        local hash=$(echo $GITHUB_SHA | cut -c1-10)
+
+        dch -b -M -v "\${version}-${GITHUB_RUN_ID}~\${hash}~\${lsb}" --force-distribution -D "\${lsb}" "Nightly build, \${hash}"
+        if [ $? -ne 0 ]; then
+          exit 1
+        fi
+
+        debuild -b -us -uc && mv -v ../*.deb .
         EOF
-        chmod +x run.sh
+
+        chmod -v +x /tmp/$GITHUB_RUN_ID/run.sh
     
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
 
     - name: build debs
-      run: docker run --platform linux/${{inputs.PLATFORM}} --rm --entrypoint="/root/run.sh" -w /root -v $(pwd):/root ${{inputs.BASE_IMAGE}}
+      run: docker run --platform linux/${{inputs.PLATFORM}} --rm --entrypoint="/usr/local/bin/run.sh" -w /root -v $(pwd):/root -v /tmp/${GITHUB_RUN_ID}/run.sh:/usr/local/bin/run.sh ${{inputs.BASE_IMAGE}}
 
     - name: Set custom variables
+      shell: sh
       run: |
-        echo image_tag=$(echo ${{inputs.BASE_IMAGE}} | awk -F ':' '{print $2}') >> $GITHUB_ENV
+        codename=$(echo ${{inputs.BASE_IMAGE}} | awk -F ':' '{print $2}')
+        echo "IMAGE_TAG=$codename-${{inputs.PLATFORM}}" >> $GITHUB_ENV
 
     - name: Copy git hash
-      run: echo $GITHUB_SHA > hash.txt
       shell: sh
       env:
-         GITHUB_SHA: ${{ github.sha }}
+        GITHUB_SHA: ${{ github.sha }}
+      run: |
+        echo $GITHUB_SHA > hash.txt
 
     - name: Compress files
+      shell: sh
       run: |
-        tar -czvf $image_tag.tar.gz $(ls | grep '.deb\|hash.txt')
+        tar -czvf ${{ env.IMAGE_TAG }}.tar.gz $(ls -1 | grep '.deb\|hash.txt')
 
     - name: Generate SHA checksum
+      shell: sh
       run: |
-        sha512sum $image_tag.tar.gz > $image_tag.sha1
+        sha512sum ${{ env.IMAGE_TAG }}.tar.gz > ${{ env.IMAGE_TAG }}.sha1
       
     - uses: actions/upload-artifact@v4
       with:
-        name: deb-${{inputs.PLATFORM}}-artifact
+        name: deb-${{ env.IMAGE_TAG }}-artifact
         path: |
           *.tar.gz
           *.sha1
-    
+        if-no-files-found: error
+
     - uses: actions/upload-artifact@v4
       with:
-        name: deb-changelog-artifact
+        name: deb-${{ env.IMAGE_TAG }}-changelog-artifact
         path: |
           ./debian/changelog
+        if-no-files-found: error
