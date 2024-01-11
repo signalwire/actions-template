@@ -55,18 +55,18 @@ jobs:
         set -o pipefail
 
         # eval inside builder image
-        local version=\$(dpkg-parsechangelog --show-field Version | cut -f1 -d"-")
+        version=\$(dpkg-parsechangelog --show-field Version | cut -f1 -d"-")
         if [ $? -ne 0 ]; then
           exit 1
         fi
 
-        local lsb=\$(lsb_release -cs)
+        lsb=\$(lsb_release -cs)
         if [ $? -ne 0 ]; then
           exit 1
         fi
 
         # eval inside runner
-        local hash=$(echo $GITHUB_SHA | cut -c1-10)
+        hash=$(echo $GITHUB_SHA | cut -c1-10)
 
         dch -b -M -v "\${version}-${GITHUB_RUN_ID}~\${hash}~\${lsb}" --force-distribution -D "\${lsb}" "Nightly build, \${hash}"
         if [ $? -ne 0 ]; then
