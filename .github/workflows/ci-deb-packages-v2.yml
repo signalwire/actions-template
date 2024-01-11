@@ -68,7 +68,11 @@ jobs:
         # eval inside runner
         hash=$(echo $GITHUB_SHA | cut -c1-10)
 
-        dch -b -M -v "\${version}-${GITHUB_RUN_ID}~\${hash}~\${lsb}" --force-distribution -D "\${lsb}" "Nightly build, \${hash}"
+        # deb package version
+        dch_version=\${version}-${GITHUB_RUN_ID}~\${hash}~\${lsb}
+        echo "dch_version: \${dch_version}"
+
+        dch -b -M -v "\${dch_version}" --force-distribution -D "\${lsb}" "Nightly build, \${hash}"
         if [ $? -ne 0 ]; then
           exit 1
         fi
