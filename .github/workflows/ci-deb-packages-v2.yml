@@ -22,7 +22,11 @@ on:
         description: Default base branch to create a PR.
       BASE_IMAGE:
         required: true
-        description: Base image used to build
+        description: Base image without tag used to build
+        type: string
+      DISTRO_CODENAME:
+        required: true
+        description: Base image tag used to build
         type: string
       PLATFORM:
         required: false
@@ -44,7 +48,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: General debs based on ${{ inputs.BASE_IMAGE }} for ${{ inputs.PLATFORM }}
+    - name: General debs based on ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }} for ${{ inputs.PLATFORM }}
       shell: sh
       run: |
         mkdir -v -p /tmp/$GITHUB_RUN_ID/
@@ -86,13 +90,12 @@ jobs:
       uses: docker/setup-qemu-action@v3
 
     - name: build debs
-      run: docker run --platform linux/${{inputs.PLATFORM}} --rm --entrypoint="/usr/local/bin/run.sh" -w /root -v $(pwd):/root -v /tmp/${GITHUB_RUN_ID}/run.sh:/usr/local/bin/run.sh ${{inputs.BASE_IMAGE}}
+      run: docker run --platform linux/${{ inputs.PLATFORM }} --rm --entrypoint="/usr/local/bin/run.sh" -w /root -v $(pwd):/root -v /tmp/${GITHUB_RUN_ID}/run.sh:/usr/local/bin/run.sh ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }}
 
     - name: Set custom variables
       shell: sh
       run: |
-        codename=$(echo ${{inputs.BASE_IMAGE}} | awk -F ':' '{print $2}')
-        echo "IMAGE_TAG=$codename-${{inputs.PLATFORM}}" >> $GITHUB_ENV
+        echo "IMAGE_TAG=${{ inputs.DISTRO_CODENAME }}-${{ inputs.PLATFORM }}" >> $GITHUB_ENV
 
     - name: Copy git hash
       shell: sh
