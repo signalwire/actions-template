@@ -61,7 +61,7 @@ jobs:
   sync:
 
     runs-on: ${{ inputs.RUNNER }}
-    name: Sync metadata for ${{inputs.LIB_NAME}} at ${{inputs.FILE_PATH}}/${{inputs.ARTIFACT_NAME}}
+    name: Sync metadata for ${{ inputs.LIB_NAME }} at ${{ inputs.FILE_PATH }}/${{ inputs.ARTIFACT_NAME }}
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
@@ -71,7 +71,7 @@ jobs:
         id: metabranch
         with:
           repository: ${{ inputs.TARGET_REPO }}
-          ref: ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{inputs.TARGET_PLATFORM}}
+          ref: ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
           ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
           token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
       
@@ -86,8 +86,8 @@ jobs:
       - name: Create remote
         continue-on-error: true
         run: |
-          git checkout -b ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{inputs.TARGET_PLATFORM}}
-          git push --set-upstream origin ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{inputs.TARGET_PLATFORM}}
+          git checkout -b ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
+          git push --set-upstream origin ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
 
       - name: Download Artifacts
         uses: actions/download-artifact@v4
@@ -95,9 +95,11 @@ jobs:
           name: ${{ inputs.ARTIFACT_NAME }}
 
       - name: Sync changes
+        shell: sh
         run: |
-          git checkout ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{inputs.TARGET_PLATFORM}}
+          git checkout ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
           git pull
+          git status --porcelain && exit 0
           git add metafile.txt
           git config --global user.email "github-actions@github.com"
           git config --global user.name "github-actions"

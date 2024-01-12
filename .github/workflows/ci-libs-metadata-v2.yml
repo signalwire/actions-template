@@ -15,18 +15,18 @@ on:
         type: string
         description: A GitHub runner type
       ARTIFACT_NAME:
-        required: false
+        required: true
         default: ''
         description: The artifact name to pull from a previous step
         type: string
       FILE_PATH_PREFIX:
-        required: false
+        required: true
         default: ''
         description: A prefix to append to meta file.
         type: string
       OS_PLATFORM:
-        required: false
-        description: Default OS/Arch
+        required: true
+        description: OS/Codename/Arch
         default: amd64
         type: string
     outputs:
@@ -38,7 +38,7 @@ jobs:
   meta:
 
     runs-on: ${{ inputs.RUNNER }}
-    name: Generate metadata for ${{inputs.LIB_NAME}}
+    name: Generate metadata for ${{ inputs.LIB_NAME }}
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
@@ -60,6 +60,6 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{inputs.OS_PLATFORM}}-meta
+          name: ${{ inputs.OS_PLATFORM }}-meta
           path: |
             metafile.txt
