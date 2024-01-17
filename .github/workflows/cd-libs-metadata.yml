@@ -67,7 +67,7 @@ jobs:
     steps:
       - name: Checkout metadatarepo
         uses: actions/checkout@v4
-        continue-on-error: true
+        continue-on-error: false
         id: metabranch
         with:
           repository: ${{ inputs.TARGET_REPO }}
@@ -97,11 +97,9 @@ jobs:
       - name: Sync changes
         shell: sh
         run: |
-          git checkout ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
-          git pull
-          git status --porcelain && exit 0
-          git add metafile.txt
+          git status --porcelain | grep -q . || exit 0
           git config --global user.email "github-actions@github.com"
           git config --global user.name "github-actions"
-          git commit -m "update metadata"
-          git push
+          git add -v metafile.txt
+          git commit --branch -m "update metadata"
+          git push --atomic -v
