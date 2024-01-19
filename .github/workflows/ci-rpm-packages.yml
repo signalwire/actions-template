@@ -54,7 +54,7 @@ jobs:
         fetch-depth: 0
 
     - name: Build RPM Packages
-      uses: signalwire/build-rpm-packages-action@dev
+      uses: signalwire/build-rpm-packages-action@main
       with:
         project_name: ${{inputs.PROJECT_NAME}}
         packager: ${{inputs.PACKAGER}}
