@@ -86,7 +86,7 @@ jobs:
       uses: filipstefansson/uuid-action@v1
 
     - name: Sign RPM
-      uses: signalwire/sign-rpm-packages-action@dev
+      uses: signalwire/sign-rpm-packages-action@main
       with:
         gpgkey_file: ${{ steps.gpg-key-secret.outputs.file }}
         gpgcert_file: ${{ steps.gpg-cert-secret.outputs.file }}
