@@ -33,6 +33,21 @@ on:
         description: Default OS/Arch
         default: linux/amd64
         type: string
+      USE_CMAKE:
+        required: false
+        type: boolean
+        default: false
+        description: Use CMAKE for building
+      CMAKE_BUILD_TYPE:
+        required: false
+        type: string
+        default: 'Release'
+        description: Set СMAKE_BUILD_TYPE variable
+      CMAKE_INSTALL_PREFIX:
+        required: false
+        type: string
+        default: '/usr'
+        description: Set CMAKE_INSTALL_PREFIX variable
     # outputs:
     #   ARTIFACT_NAME:
     #     value: deb-${{env.IMAGE_TAG}}-${{env.PLATFORM}}-artifact
@@ -48,7 +63,8 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: General debs based on ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }} for ${{ inputs.PLATFORM }}
+    - name: Generate DEBs based on ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }} for ${{ inputs.PLATFORM }}
+      if: ${{ inputs.USE_CMAKE == false }}
       shell: sh
       run: |
         mkdir -v -p /tmp/$GITHUB_RUN_ID/
@@ -57,6 +73,9 @@ jobs:
         #!/bin/bash
 
         set -o pipefail
+
+        # tweak git config inside builder
+        git config --global --add safe.directory '*' || true
 
         # eval inside builder image
         version=\$(dpkg-parsechangelog --show-field Version | cut -f1 -d"-")
@@ -85,12 +104,34 @@ jobs:
         EOF
 
         chmod -v +x /tmp/$GITHUB_RUN_ID/run.sh
-    
+
+    - name: Generate DEBs (CMAKE) based on ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }} for ${{ inputs.PLATFORM }}
+      if: ${{ inputs.USE_CMAKE == true }}
+      shell: sh
+      run: |
+        mkdir -v -p /tmp/$GITHUB_RUN_ID/
+
+        cat << EOF | tee /tmp/$GITHUB_RUN_ID/run.sh
+        #!/bin/bash
+
+        set -o pipefail
+
+        # tweak git config inside builder
+        git config --global --add safe.directory '*' || true
+
+        PACKAGE_RELEASE="$GITHUB_RUN_ID" cmake . -DCMAKE_BUILD_TYPE=${{ inputs.CMAKE_BUILD_TYPE }} -DCMAKE_INSTALL_PREFIX=${{ inputs.CMAKE_INSTALL_PREFIX }} && make package
+
+        EOF
+
+        chmod -v +x /tmp/$GITHUB_RUN_ID/run.sh
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
 
     - name: build debs
-      run: docker run --platform linux/${{ inputs.PLATFORM }} --rm --entrypoint="/usr/local/bin/run.sh" -w /root -v $(pwd):/root -v /tmp/${GITHUB_RUN_ID}/run.sh:/usr/local/bin/run.sh ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }}
+      shell: sh
+      run: |
+        docker run --platform linux/${{ inputs.PLATFORM }} --rm --entrypoint="/usr/local/bin/run.sh" -w /root -v $(pwd):/root -v /tmp/${GITHUB_RUN_ID}/run.sh:/usr/local/bin/run.sh ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }}
 
     - name: Set custom variables
       shell: sh
@@ -123,6 +164,7 @@ jobs:
         if-no-files-found: error
 
     - uses: actions/upload-artifact@v4
+      if: ${{ inputs.USE_CMAKE == false }}
       with:
         name: deb-${{ env.IMAGE_TAG }}-changelog-artifact
         path: |
