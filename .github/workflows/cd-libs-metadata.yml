@@ -29,6 +29,11 @@ on:
         default: ''
         description: Target repo to sync changes.
         type: string
+      TARGET_REPO_DEFAULT_BRANCH:
+        required: false
+        default: 'main'
+        description: Target repo default branch name.
+        type: string
       TARGET_OS:
         required: true
         default: ''
@@ -65,9 +70,9 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
-      - name: Checkout metadatarepo
+      - name: Checkout metadatarepo (${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }})
         uses: actions/checkout@v4
-        continue-on-error: false
+        continue-on-error: true
         id: metabranch
         with:
           repository: ${{ inputs.TARGET_REPO }}
@@ -75,16 +80,18 @@ jobs:
           ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
           token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
       
-      - name: Checkout metadatarepo
+      - name: Checkout metadatarepo (${{ inputs.TARGET_REPO_DEFAULT_BRANCH }})
         uses: actions/checkout@v4
         if: steps.metabranch.outcome != 'success'
         with:
           repository: ${{ inputs.TARGET_REPO }}
+          ref: ${{ inputs.TARGET_REPO_DEFAULT_BRANCH }}
           ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
           token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
+          clean: true
       
       - name: Create remote
-        continue-on-error: true
+        if: steps.metabranch.outcome != 'success'
         run: |
           git checkout -b ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
           git push --set-upstream origin ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
