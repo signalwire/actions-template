@@ -77,7 +77,7 @@ jobs:
         with:
           repository: ${{ inputs.TARGET_REPO }}
           ref: ${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
-          ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+          # ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
           token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
       
       - name: Checkout metadatarepo (${{ inputs.TARGET_REPO_DEFAULT_BRANCH }})
@@ -86,7 +86,7 @@ jobs:
         with:
           repository: ${{ inputs.TARGET_REPO }}
           ref: ${{ inputs.TARGET_REPO_DEFAULT_BRANCH }}
-          ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+          # ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
           token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
           clean: true
       
