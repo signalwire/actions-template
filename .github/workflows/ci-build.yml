@@ -112,6 +112,22 @@ on:
         default: 'type=gha,mode=max'
         description: 'Cache to.'
         required: false
+      ## Vault Secrets
+      VAULT_SECRETS:
+        type: string
+        default: ''
+        description: 'A comma separated list of secrets to fetch from Vault.'
+        required: false
+      TELEPORT_APP:
+        type: string
+        default: ''
+        description: 'The Teleport app to use.'
+        required: false
+      TELEPORT_PROXY_URL:
+        type: string
+        default: ''
+        description: 'The Teleport proxy URL to use.'
+        required: false
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -140,6 +156,13 @@ on:
       BUILD_ARGS:
         required: false
         description: Whenever we wanna use secrets and mount them as env
+      # Vault Secrets
+      VAULT_TOKEN:
+        required: false
+        description: 'Vault token.'
+      TELEPORT_TOKEN:
+        required: false
+        description: 'Teleport token.'
     outputs:
       IMAGE_TAG: 
         value: ${{ jobs.build.outputs.IMAGE_TAG }}
@@ -218,6 +241,17 @@ jobs:
     #   env:
     #     GCP_WIP: ${{ secrets.GCP_WIP }}
     #     GCP_SA: ${{ secrets.GCP_SA }}
+
+    - name: Retrieve Secrets from HashiCorp Vault
+      uses: ./actions/.github/actions/vault-secrets
+      if: ${{ inputs.VAULT_SECRETS != '' }}
+      env:
+        VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+        VAULT_ADDR: https://${{ inputs.TELEPORT_PROXY_URL }}
+        TELEPORT_TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+        TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+        TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+        SECRETS: ${{ inputs.VAULT_SECRETS }}
 
     - uses: ./actions/.github/actions/docker
       name: Docker build

@@ -143,6 +143,22 @@ on:
         default: .
         description: Whenever the WF requires a different path than . for the revision file
         required: false
+      ## Vault Secrets
+      VAULT_SECRETS:
+        type: string
+        default: ''
+        description: 'A comma separated list of secrets to fetch from Vault.'
+        required: false
+      TELEPORT_APP:
+        type: string
+        default: ''
+        description: 'The Teleport app to use.'
+        required: false
+      TELEPORT_PROXY_URL:
+        type: string
+        default: ''
+        description: 'The Teleport proxy URL to use.'
+        required: false
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -167,6 +183,13 @@ on:
       BUILD_ARGS:
         required: false
         description: Whenever we wanna use secrets and mount them as env
+      # Vault Secrets
+      VAULT_TOKEN:
+        required: false
+        description: 'Vault token.'
+      TELEPORT_TOKEN:
+        required: false
+        description: 'Teleport token.'
     outputs:
       IMAGE_TAG: 
         value: ${{ jobs.BUILD.outputs.IMAGE_TAG }}
@@ -228,10 +251,15 @@ jobs:
       BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
       OUTPUT_TAG_INDEX: ${{ inputs.OUTPUT_TAG_INDEX }}
       REVISION_PATH: ${{ inputs.REVISION_PATH }}
+      VAULT_SECRETS: ${{ inputs.VAULT_SECRETS }}
+      TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+      TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       DOCKER_SECRETS: ${{ secrets.DOCKER_SECRETS }}
       BUILD_ARGS: ${{ secrets.BUILD_ARGS }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      TELEPORT_TOKEN: ${{ secrets.TELEPORT_TOKEN }}
 
