@@ -71,7 +71,7 @@ jobs:
         uses: ./actions/.github/actions/vault-secrets
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
-          VAULT_ADDR: ${{ inputs.TELEPORT_PROXY_URL }}
+          VAULT_ADDR: https://${{ inputs.TELEPORT_PROXY_URL }}
           VAULT_CA_CERT: ${{ steps.teleportapp.outputs.certificate-file }}
           VAULT_CLIENT_KEY: ${{ steps.teleportapp.outputs.key-file }}
           SECRETS: ${{ inputs.VAULT_SECRETS }}
