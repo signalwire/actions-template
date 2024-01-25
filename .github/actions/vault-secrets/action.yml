@@ -10,6 +10,6 @@ runs:
       with:
         url: ${{ env.VAULT_ADDR }}
         token: ${{ env.VAULT_TOKEN }}
-        caCertificate: ${{ env.VAULT_CA_CERT }}
+        clientCertificate: ${{ env.VAULT_CLIENT_CERTIFICATE }}
         clientKey: ${{ env.VAULT_CLIENT_KEY }}
         secrets: ${{ env.SECRETS }}

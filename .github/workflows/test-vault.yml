@@ -60,7 +60,7 @@ jobs:
       #     echo VAULT_CLIENT_KEY=$(echo ${{ steps.teleportapp.outputs.key-file }} | base64) >> $GITHUB_ENV
       
       - uses: frostebite/File-To-Base64@master
-        id: cab64
+        id: crtb64
         with:
           filePath: ${{ steps.teleportapp.outputs.certificate-file }}
                 
@@ -74,7 +74,7 @@ jobs:
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
           VAULT_ADDR: https://${{ inputs.TELEPORT_PROXY_URL }}
-          VAULT_CA_CERT: ${{ steps.cab64.outputs.base64 }}
+          VAULT_CLIENT_CERTIFICATE: ${{ steps.crtb64.outputs.base64 }}
           VAULT_CLIENT_KEY: ${{ steps.keyb64.outputs.base64 }}
           SECRETS: ${{ inputs.VAULT_SECRETS }}
       
