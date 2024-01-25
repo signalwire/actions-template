@@ -1,0 +1,15 @@
+name: Vault Secrets
+description: Retrieve Hashicorp Vault secrets
+
+runs:
+  using: "composite"
+  steps:
+    - name: Import Secrets
+      id: import-secrets
+      uses: hashicorp/vault-action@v2
+      with:
+        url: ${{ env.VAULT_ADDR }}}
+        token: ${{ env.VAULT_TOKEN }}
+        caCertificate: ${{ env.VAULT_CA_CERT }}
+        clientKey: ${{ env.VAULT_CLIENT_KEY }}
+        secrets: ${{ env.SECRETS }}
