@@ -53,13 +53,19 @@ jobs:
         with:
           TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
             
+      - name: Configure Vault
+        if: inputs.TELEPORT_APP != ''
+        run: |
+          echo VAULT_CA_CERT=$(echo ${{ steps.teleportapp.outputs.certificate-file }} | base64) >> $GITHUB_ENV
+          echo VAULT_CLIENT_KEY=$(echo ${{ steps.teleportapp.outputs.key-file }} | base64) >> $GITHUB_ENV
+                
       - name: vault secrets 
         uses: ./actions/.github/actions/vault-secrets
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
           VAULT_ADDR: https://${{ inputs.TELEPORT_PROXY_URL }}
-          VAULT_CA_CERT: ${{ steps.teleportapp.outputs.certificate-file }}
-          VAULT_CLIENT_KEY: ${{ steps.teleportapp.outputs.key-file }}
+          VAULT_CA_CERT: ${{ env.VAULT_CA_CERT}}
+          VAULT_CLIENT_KEY: ${{ env.VAULT_CLIENT_KEY}}
           SECRETS: ${{ inputs.VAULT_SECRETS }}
       
       - run: printenv
