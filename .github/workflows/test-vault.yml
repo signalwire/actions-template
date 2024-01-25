@@ -13,6 +13,11 @@ on:
         type: string
         default: ''
         description: An app registered on teleport to authenticate using proxy
+      VAULT_SECRETS:
+        required: false
+        type: string
+        default: ''
+        description: A new line list of vault secrets to be fetched
     secrets:
       TELEPORT_TOKEN:
         required: false
@@ -69,5 +74,6 @@ jobs:
           VAULT_ADDR: ${{ inputs.TELEPORT_PROXY_URL }}
           VAULT_CA_CERT: ${{ steps.teleportapp.outputs.certificate-file }}
           VAULT_CLIENT_KEY: ${{ steps.teleportapp.outputs.key-file }}
+          SECRETS: ${{ inputs.VAULT_SECRETS }}
       
       - run: printenv
