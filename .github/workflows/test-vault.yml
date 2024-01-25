@@ -53,19 +53,29 @@ jobs:
         with:
           TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
             
-      - name: Configure Vault
-        if: inputs.TELEPORT_APP != ''
-        run: |
-          echo VAULT_CA_CERT=$(echo ${{ steps.teleportapp.outputs.certificate-file }} | base64) >> $GITHUB_ENV
-          echo VAULT_CLIENT_KEY=$(echo ${{ steps.teleportapp.outputs.key-file }} | base64) >> $GITHUB_ENV
+      # - name: Configure Vault
+      #   if: inputs.TELEPORT_APP != ''
+      #   run: |
+      #     echo VAULT_CA_CERT=$(echo ${{ steps.teleportapp.outputs.certificate-file }} | base64) >> $GITHUB_ENV
+      #     echo VAULT_CLIENT_KEY=$(echo ${{ steps.teleportapp.outputs.key-file }} | base64) >> $GITHUB_ENV
+      
+      - uses: frostebite/File-To-Base64@master
+        id: cab64
+        with:
+          filePath: ${{ steps.teleportapp.outputs.certificate-file }}
+                
+      - uses: frostebite/File-To-Base64@master
+        id: keyb64
+        with:
+          filePath: ${{ steps.teleportapp.outputs.key-file }}
                 
       - name: vault secrets 
         uses: ./actions/.github/actions/vault-secrets
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
           VAULT_ADDR: https://${{ inputs.TELEPORT_PROXY_URL }}
-          VAULT_CA_CERT: ${{ env.VAULT_CA_CERT}}
-          VAULT_CLIENT_KEY: ${{ env.VAULT_CLIENT_KEY}}
+          VAULT_CA_CERT: ${{ steps.cab64.outputs.base64 }}
+          VAULT_CLIENT_KEY: ${{ steps.keyb64.outputs.base64 }}
           SECRETS: ${{ inputs.VAULT_SECRETS }}
       
       - run: printenv
