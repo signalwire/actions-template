@@ -1,15 +1,35 @@
-name: Vault Secrets
+name: Vault Secrets Using Teleport
 description: Retrieve Hashicorp Vault secrets
 
 runs:
   using: "composite"
   steps:
+    - name: Authenticate against Teleport to use Vault
+
+      id: teleportapp
+      uses: ./actions/.github/actions/teleport
+      env:
+        TOKEN: ${{ env.TELEPORT_TOKEN }}
+        PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+      with:
+        TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+    
+    - uses: frostebite/File-To-Base64@master
+      id: crtb64
+      with:
+        filePath: ${{ steps.teleportapp.outputs.certificate-file }}
+              
+    - uses: frostebite/File-To-Base64@master
+      id: keyb64
+      with:
+        filePath: ${{ steps.teleportapp.outputs.key-file }}
+
     - name: Import Secrets
       id: import-secrets
       uses: hashicorp/vault-action@v2
       with:
         url: ${{ env.VAULT_ADDR }}
         token: ${{ env.VAULT_TOKEN }}
-        clientCertificate: ${{ env.VAULT_CLIENT_CERTIFICATE }}
-        clientKey: ${{ env.VAULT_CLIENT_KEY }}
+        clientCertificate: ${{ steps.crtb64.outputs.base64 }}
+        clientKey: ${{ steps.keyb64.outputs.base64 }}
         secrets: ${{ env.SECRETS }}
