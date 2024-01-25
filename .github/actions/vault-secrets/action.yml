@@ -5,14 +5,13 @@ runs:
   using: "composite"
   steps:
     - name: Authenticate against Teleport to use Vault
-
       id: teleportapp
       uses: ./actions/.github/actions/teleport
       env:
         TOKEN: ${{ env.TELEPORT_TOKEN }}
-        PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+        PROXY_URL: ${{ env.TELEPORT_PROXY_URL }}
       with:
-        TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+        TELEPORT_APP: ${{ env.TELEPORT_APP }}
     
     - uses: frostebite/File-To-Base64@master
       id: crtb64
