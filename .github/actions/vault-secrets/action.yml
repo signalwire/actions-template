@@ -8,7 +8,7 @@ runs:
       id: import-secrets
       uses: hashicorp/vault-action@v2
       with:
-        url: ${{ env.VAULT_ADDR }}}
+        url: ${{ env.VAULT_ADDR }}
         token: ${{ env.VAULT_TOKEN }}
         caCertificate: ${{ env.VAULT_CA_CERT }}
         clientKey: ${{ env.VAULT_CLIENT_KEY }}
