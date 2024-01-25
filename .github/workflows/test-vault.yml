@@ -48,6 +48,8 @@ jobs:
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
           VAULT_ADDR: https://${{ inputs.TELEPORT_PROXY_URL }}
+          TELEPORT_TOKEN: ${{ secrets.TELEPORT_TOKEN }}
           TELEPORT_APP: vault
+          TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
           SECRETS: ${{ inputs.VAULT_SECRETS }}
       
