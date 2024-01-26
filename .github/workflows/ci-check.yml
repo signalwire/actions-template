@@ -82,6 +82,22 @@ on:
         required: false
         default: '/usr/share/dotnet'
         description: Set a custom .NET install dir
+      ## Vault Secrets
+      VAULT_SECRETS:
+        type: string
+        default: ''
+        description: 'A comma separated list of secrets to fetch from Vault.'
+        required: false
+      TELEPORT_APP:
+        type: string
+        default: ''
+        description: 'The Teleport app to use.'
+        required: false
+      TELEPORT_PROXY_URL:
+        type: string
+        default: ''
+        description: 'The Teleport proxy URL to use.'
+        required: false
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -98,6 +114,13 @@ on:
       CONTRIBSYS_CREDENTIALS:
         required: false
         description: Contribsys credentials used for ruby gems
+      # Vault Secrets
+      VAULT_TOKEN:
+        required: false
+        description: 'Vault token.'
+      TELEPORT_TOKEN:
+        required: false
+        description: 'Teleport token.'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -126,6 +149,17 @@ jobs:
         ref: main
         path: actions
 
+    - name: Retrieve Secrets from HashiCorp Vault
+      uses: ./actions/.github/actions/vault-secrets
+      if: ${{ inputs.VAULT_SECRETS != '' }}
+      env:
+        VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+        VAULT_ADDR: https://${{ inputs.TELEPORT_PROXY_URL }}
+        TELEPORT_TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+        TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+        TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+        SECRETS: ${{ inputs.VAULT_SECRETS }}
+        
     - name: Up Test dependencies
       if: ${{ inputs.TEST_DEPENDENCIES == true}}
       uses: ./actions/.github/actions/docker-compose
