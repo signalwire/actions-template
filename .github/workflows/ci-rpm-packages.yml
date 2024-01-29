@@ -35,6 +35,21 @@ on:
         description: Artifact name.
         default: centos
         type: string
+      USE_CMAKE:
+        required: false
+        type: boolean
+        default: false
+        description: Use CMAKE for building
+      CMAKE_BUILD_TYPE:
+        required: false
+        type: string
+        default: 'Release'
+        description: Set СMAKE_BUILD_TYPE variable
+      CMAKE_INSTALL_PREFIX:
+        required: false
+        type: string
+        default: '/usr'
+        description: Set CMAKE_INSTALL_PREFIX variable
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -58,7 +73,10 @@ jobs:
       with:
         project_name: ${{inputs.PROJECT_NAME}}
         packager: ${{inputs.PACKAGER}}
-    
+        use_cmake: ${{ inputs.USE_CMAKE }}
+        cmake_build_type: ${{ inputs.CMAKE_BUILD_TYPE }}
+        cmake_install_prefix: ${{ inputs.CMAKE_INSTALL_PREFIX }}
+
     - name: Generate hash file
       run: echo $GITHUB_SHA > hash.txt
       env:
@@ -66,15 +84,15 @@ jobs:
 
     - name: Compress files
       run: |
-        tar -czvf ${{inputs.TARGET_ARTIFACT_NAME}}.tar.gz $(ls | grep '.rpm\|hash.txt')
+        tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz $(ls | grep '.rpm\|hash.txt')
 
     - name: Generate SHA checksum
       run: |
-        sha512sum ${{inputs.TARGET_ARTIFACT_NAME}}.tar.gz > ${{inputs.TARGET_ARTIFACT_NAME}}.sha1
+        sha512sum ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz > ${{ inputs.TARGET_ARTIFACT_NAME }}.sha1
       
     - uses: actions/upload-artifact@v4
       with:
-        name: rpm-${{inputs.PLATFORM}}-artifact
+        name: rpm-${{ inputs.PLATFORM }}-artifact
         path: |
           *.tar.gz
           *.sha1

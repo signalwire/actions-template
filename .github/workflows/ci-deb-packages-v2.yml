@@ -72,7 +72,7 @@ jobs:
         cat << EOF | tee /tmp/$GITHUB_RUN_ID/run.sh
         #!/bin/bash
 
-        set -o pipefail
+        set -euo pipefail
 
         # tweak git config inside builder
         git config --global --add safe.directory '*' || true
@@ -114,12 +114,15 @@ jobs:
         cat << EOF | tee /tmp/$GITHUB_RUN_ID/run.sh
         #!/bin/bash
 
-        set -o pipefail
+        set -euo pipefail
 
         # tweak git config inside builder
         git config --global --add safe.directory '*' || true
 
-        PACKAGE_RELEASE="$GITHUB_RUN_ID" cmake . -DCMAKE_BUILD_TYPE=${{ inputs.CMAKE_BUILD_TYPE }} -DCMAKE_INSTALL_PREFIX=${{ inputs.CMAKE_INSTALL_PREFIX }} && make package
+        # eval inside runner
+        hash=$(echo $GITHUB_SHA | cut -c1-10)
+
+        PACKAGE_RELEASE="$GITHUB_RUN_ID.\${hash}" cmake . -DCMAKE_BUILD_TYPE=${{ inputs.CMAKE_BUILD_TYPE }} -DCMAKE_INSTALL_PREFIX=${{ inputs.CMAKE_INSTALL_PREFIX }} && make package
 
         EOF
 
