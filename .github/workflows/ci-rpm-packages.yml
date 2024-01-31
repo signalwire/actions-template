@@ -84,7 +84,7 @@ jobs:
 
     - name: Compress files
       run: |
-        tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz $(ls | grep '.rpm\|hash.txt')
+        tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz $(ls -1 | grep -E '(.rpm|hash.txt)$' | tr -s '\n' ' ')
 
     - name: Generate SHA checksum
       run: |
