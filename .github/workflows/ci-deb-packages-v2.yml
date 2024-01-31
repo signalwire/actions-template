@@ -151,7 +151,7 @@ jobs:
     - name: Compress files
       shell: sh
       run: |
-        tar -czvf ${{ env.IMAGE_TAG }}.tar.gz $(ls -1 | grep '.deb\|hash.txt')
+        tar -czvf ${{ env.IMAGE_TAG }}.tar.gz $(ls -1 | grep -E '(.deb|hash.txt)$' | tr -s '\n' ' ')
 
     - name: Generate SHA checksum
       shell: sh
