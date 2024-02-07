@@ -161,7 +161,7 @@ jobs:
 
       - name: Init
         id: init
-        uses: gruntwork-io/terragrunt-action@v2.0.0
+        uses: lucasmellos/terragrunt-action@main
         with:
           tf_version: 1.5.7
           tg_version: 0.54.12
@@ -176,7 +176,7 @@ jobs:
             git config --global --list
       
       - name: Validate
-        uses: gruntwork-io/terragrunt-action@v2.0.0
+        uses: lucasmellos/terragrunt-action@main
         id: validate
         with:
           tf_version: 1.5.7
@@ -187,7 +187,7 @@ jobs:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
       
       - name: Plan
-        uses: gruntwork-io/terragrunt-action@v2.0.0
+        uses: lucasmellos/terragrunt-action@main
         id: plan
         with:
           tf_version: 1.5.7
@@ -237,7 +237,7 @@ jobs:
 
       - name: Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: gruntwork-io/terragrunt-action@v2.0.0
+        uses: lucasmellos/terragrunt-action@main
         id: apply
         with:
           tf_version: 1.5.7
