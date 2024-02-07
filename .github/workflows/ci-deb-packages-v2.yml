@@ -92,7 +92,7 @@ jobs:
         hash=$(echo $GITHUB_SHA | cut -c1-10)
 
         # deb package version
-        dch_version=\${version}-${GITHUB_RUN_ID}~\${hash}~\${lsb}
+        dch_version=\${version}-${GITHUB_RUN_ID}-\${hash}~\${lsb}
         echo "dch_version: \${dch_version}"
 
         dch -b -M -v "\${dch_version}" --force-distribution -D "\${lsb}" "Nightly build, \${hash}"
