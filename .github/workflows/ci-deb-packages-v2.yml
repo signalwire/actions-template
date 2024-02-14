@@ -33,6 +33,26 @@ on:
         description: Default OS/Arch
         default: linux/amd64
         type: string
+      BOOTSTRAP_SCRIPT:
+        required: false
+        type: string
+        default: 'echo "No custom bootstrap script was provided"'
+        description: Custom `sh` bootstrap script
+      INSTALL_DEPENDENCIES:
+        required: false
+        type: boolean
+        default: false
+        description: Install build dependencies from `debian/control`
+      DEB_BUILD_OPTIONS:
+        required: false
+        type: string
+        default: ''
+        description: Set DEB_BUILD_OPTIONS variable
+      VERSION_OVERRIDE_FROM_FILE:
+        required: false
+        type: string
+        default: ''
+        description: Override Version variable (`dpkg-parsechangelog --show-field Version`) with data from file
       USE_CMAKE:
         required: false
         type: boolean
@@ -63,9 +83,17 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Run custom bootstrap script
+      shell: sh
+      run: eval "${{ inputs.BOOTSTRAP_SCRIPT }}"
+
     - name: Generate DEBs based on ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }} for ${{ inputs.PLATFORM }}
       if: ${{ inputs.USE_CMAKE == false }}
       shell: sh
+      env:
+        INSTALL_DEPENDENCIES: ${{ inputs.INSTALL_DEPENDENCIES }}
+        DEB_BUILD_OPTIONS_CONFIG: ${{ inputs.DEB_BUILD_OPTIONS }}
+        VERSION_OVERRIDE_FROM_FILE: ${{ inputs.VERSION_OVERRIDE_FROM_FILE }}
       run: |
         mkdir -v -p /tmp/$GITHUB_RUN_ID/
 
@@ -83,6 +111,16 @@ jobs:
           exit 1
         fi
 
+        if [ -n "${VERSION_OVERRIDE_FROM_FILE}" ]; then
+          if [ -f "${VERSION_OVERRIDE_FROM_FILE}" ]; then
+            version=$(awk 'NF {gsub(/^[ \t]+|[ \t]+$/, ""); print; exit}' "${VERSION_OVERRIDE_FROM_FILE}")
+            echo "Overriding Version value to: \${version}"
+          else
+            echo "File '${VERSION_OVERRIDE_FROM_FILE}' not found."
+            exit 1
+          fi
+        fi
+
         lsb=\$(lsb_release -cs)
         if [ $? -ne 0 ]; then
           exit 1
@@ -91,6 +129,12 @@ jobs:
         # eval inside runner
         hash=$(echo $GITHUB_SHA | cut -c1-10)
 
+        if [ "${INSTALL_DEPENDENCIES}" = "true" ]; then
+          apt-get -q update && \
+            mk-build-deps --install --remove debian/control --tool "apt-get -y --no-install-recommends" && \
+              apt-get -y -f install
+        fi
+
         # deb package version
         dch_version=\${version}-${GITHUB_RUN_ID}-\${hash}~\${lsb}
         echo "dch_version: \${dch_version}"
@@ -98,6 +142,12 @@ jobs:
         dch -b -M -v "\${dch_version}" --force-distribution -D "\${lsb}" "Nightly build, \${hash}"
         if [ $? -ne 0 ]; then
           exit 1
+        fi
+
+        if [ -n "${DEB_BUILD_OPTIONS_CONFIG}" ]; then
+          export DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_CONFIG}"
+          echo "Environment value of DEB_BUILD_OPTIONS is set to:"
+          printenv DEB_BUILD_OPTIONS
         fi
 
         debuild -b -us -uc && mv -v ../*.deb .
