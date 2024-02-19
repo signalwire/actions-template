@@ -172,7 +172,7 @@ jobs:
         # eval inside runner
         hash=$(echo $GITHUB_SHA | cut -c1-10)
 
-        PACKAGE_RELEASE="$GITHUB_RUN_ID.\${hash}" cmake . -DCMAKE_BUILD_TYPE=${{ inputs.CMAKE_BUILD_TYPE }} -DCMAKE_INSTALL_PREFIX=${{ inputs.CMAKE_INSTALL_PREFIX }} && make package
+        PACKAGE_RELEASE="$GITHUB_RUN_ID-\${hash}" cmake . -DCMAKE_BUILD_TYPE=${{ inputs.CMAKE_BUILD_TYPE }} -DCMAKE_INSTALL_PREFIX=${{ inputs.CMAKE_INSTALL_PREFIX }} && make package
 
         EOF
 
