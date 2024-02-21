@@ -38,6 +38,11 @@ on:
         type: string
         default: 'echo "No custom bootstrap script was provided"'
         description: Custom `sh` bootstrap script
+      PREBUILD_SCRIPT:
+        required: false
+        type: string
+        default: 'echo "No custom prebuild script was provided"'
+        description: Custom `sh` prebuild script
       INSTALL_DEPENDENCIES:
         required: false
         type: boolean
@@ -129,6 +134,8 @@ jobs:
         # eval inside runner
         hash=$(echo $GITHUB_SHA | cut -c1-10)
 
+        eval "${{ inputs.PREBUILD_SCRIPT }}"
+
         if [ "${INSTALL_DEPENDENCIES}" = "true" ]; then
           apt-get -q update && \
             mk-build-deps --install --remove debian/control --tool "apt-get -y --no-install-recommends" && \
@@ -172,6 +179,8 @@ jobs:
         # eval inside runner
         hash=$(echo $GITHUB_SHA | cut -c1-10)
 
+        eval "${{ inputs.PREBUILD_SCRIPT }}"
+
         PACKAGE_RELEASE="$GITHUB_RUN_ID.\${hash}" cmake . -DCMAKE_BUILD_TYPE=${{ inputs.CMAKE_BUILD_TYPE }} -DCMAKE_INSTALL_PREFIX=${{ inputs.CMAKE_INSTALL_PREFIX }} && make package
 
         EOF
@@ -181,7 +190,7 @@ jobs:
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
 
-    - name: build debs
+    - name: Build debs in Docker
       shell: sh
       run: |
         docker run --platform linux/${{ inputs.PLATFORM }} --rm --entrypoint="/usr/local/bin/run.sh" -w /root -v $(pwd):/root -v /tmp/${GITHUB_RUN_ID}/run.sh:/usr/local/bin/run.sh ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }}
