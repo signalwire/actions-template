@@ -50,10 +50,19 @@ on:
         type: string
         default: '/usr'
         description: Set CMAKE_INSTALL_PREFIX variable
+      ADDITIONAL_PACKAGES:
+        required: false
+        type: string
+        default: ''
+        description: 'Additional packages to install (space delimited)'
     secrets:
       DOCKERHUB_USERNAME:
         required: false
       DOCKERHUB_TOKEN:
+        required: false
+      SIGNALWIRE_USERNAME:
+        required: false
+      SIGNALWIRE_TOKEN:
         required: false
 
 jobs:
@@ -71,11 +80,14 @@ jobs:
     - name: Build RPM Packages
       uses: signalwire/build-rpm-packages-action@main
       with:
-        project_name: ${{inputs.PROJECT_NAME}}
-        packager: ${{inputs.PACKAGER}}
+        project_name: ${{ inputs.PROJECT_NAME }}
+        packager: ${{ inputs.PACKAGER }}
         use_cmake: ${{ inputs.USE_CMAKE }}
         cmake_build_type: ${{ inputs.CMAKE_BUILD_TYPE }}
         cmake_install_prefix: ${{ inputs.CMAKE_INSTALL_PREFIX }}
+        additional_packages: ${{ inputs.ADDITIONAL_PACKAGES }}
+        signalwire_username: ${{ secrets.SIGNALWIRE_USERNAME }}
+        signalwire_token: ${{ secrets.SIGNALWIRE_TOKEN }}
 
     - name: Generate hash file
       run: echo $GITHUB_SHA > hash.txt
