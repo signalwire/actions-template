@@ -91,6 +91,9 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
     - name: Run custom bootstrap script
       shell: sh
       run: |
@@ -211,9 +214,6 @@ jobs:
         EOF
 
         chmod -v +x /tmp/$GITHUB_RUN_ID/run.sh
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
 
     - name: Set custom variables
       shell: sh
