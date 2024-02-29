@@ -207,8 +207,8 @@ jobs:
           --platform linux/${{ inputs.PLATFORM }} \
           --rm \
           --entrypoint="/usr/local/bin/run.sh" \
-          -w /root \
-          -v $(pwd):/root \
+          -w /usr/src/$(basename $(pwd)) \
+          -v $(pwd):/usr/src/$(basename $(pwd)) \
           -v /tmp/${GITHUB_RUN_ID}/run.sh:/usr/local/bin/run.sh:ro \
           -e GENERIC_TOKEN="${GENERIC_TOKEN}" \
         ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }} 2>&1 | \
