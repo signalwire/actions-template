@@ -93,7 +93,29 @@ jobs:
 
     - name: Run custom bootstrap script
       shell: sh
-      run: eval "${{ inputs.BOOTSTRAP_SCRIPT }}"
+      run: |
+        mkdir -v -p /tmp/$GITHUB_RUN_ID/
+
+        cat << EOF | tee /tmp/$GITHUB_RUN_ID/run.sh
+        #!/bin/bash
+
+        set -euo pipefail
+
+        ${{ inputs.BOOTSTRAP_SCRIPT }}
+
+        EOF
+
+        chmod -v +x /tmp/$GITHUB_RUN_ID/run.sh
+
+        docker run \
+          --platform linux/${{ inputs.PLATFORM }} \
+          --rm \
+          --entrypoint="/usr/local/bin/run.sh" \
+          -w /usr/src/$(basename $(pwd)) \
+          -v $(pwd):/usr/src/$(basename $(pwd)) \
+          -v /tmp/${GITHUB_RUN_ID}/run.sh:/usr/local/bin/run.sh:ro \
+        ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }} 2>&1 | \
+          tee deb-${{ env.IMAGE_TAG }}-bootstrap.log
 
     - name: Generate DEBs based on ${{ inputs.BASE_IMAGE }}:${{ inputs.DISTRO_CODENAME }} for ${{ inputs.PLATFORM }}
       if: ${{ inputs.USE_CMAKE == false }}
@@ -219,6 +241,7 @@ jobs:
         name: deb-${{ env.IMAGE_TAG }}-build-log-artifact
         path: |
           deb-*-build.log
+          deb-*-bootstrap.log
         if-no-files-found: warn
 
     - name: Copy git hash
