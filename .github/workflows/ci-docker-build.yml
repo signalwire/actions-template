@@ -1,0 +1,140 @@
+name: Build via Docker
+
+on:
+  workflow_call:
+    inputs:
+      REPO_DOMAIN:
+        required: true
+        description: Domain name of repository
+        type: string
+      PLATFORM:
+        required: true
+        description: Default Linux Arch (amd64/armhf/...)
+        type: string
+      DOCKERFILE:
+        required: true
+        description: Path to Dockerfile
+        type: string
+      ARTIFACTS_PATTERN:
+        required: false
+        default: '.*\.(deb|rpm)$'
+        description: Regexp that matches artifacts
+        type: string
+      TARGET_ARTIFACT_NAME:
+        required: true
+        description: Artifact name
+        type: string
+      MAINTAINER:
+        required: true
+        description: Package maintainer
+        type: string
+    secrets:
+      REPO_USERNAME:
+        required: true
+      REPO_PASSWORD:
+        required: true
+
+jobs:
+  build-docker:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up QEMU for Docker
+      uses: docker/setup-qemu-action@v3
+
+    - name: Build Docker image
+      shell: bash
+      run: |
+        env REPO_PASSWORD='${{ secrets.REPO_PASSWORD }}' docker build \
+          --build-arg BUILD_NUMBER="${GITHUB_RUN_ID}" \
+          --build-arg GIT_SHA="$(echo ${GITHUB_SHA} | cut -c1-10)" \
+          --build-arg MAINTAINER="${{ inputs.MAINTAINER }}" \
+          --build-arg REPO_DOMAIN="${{ inputs.REPO_DOMAIN }}" \
+          --build-arg REPO_USERNAME="${{ secrets.REPO_USERNAME }}" \
+          --file "${{ inputs.DOCKERFILE }}" \
+          --no-cache \
+          --platform linux/${{ inputs.PLATFORM }} \
+          --progress=plain \
+          --secret id=REPO_PASSWORD,env=REPO_PASSWORD \
+          --tag artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} \
+          --ulimit nofile=1024000:1024000 \
+        . 2>&1 | tee artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.log
+
+    - name: Extract artifacts from image
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        export ARTIFACTS_DIR="./out"
+        echo "ARTIFACTS_DIR=${ARTIFACTS_DIR}" | tee -a "${GITHUB_ENV}"
+
+        export TEMP_DIR=$(mktemp -d)
+
+        # dump Docker image blobs
+        docker save artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} --output "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar" && \
+        tar -xf "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar" -C "${TEMP_DIR}" && \
+        rm -f "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar"
+
+        # extract blobs content
+        mkdir -p "${ARTIFACTS_DIR}" && find "${TEMP_DIR}/" -type f -exec file {} + \
+        | grep -E ":.*tar archive" \
+        | cut -d: -f1 \
+        | xargs -rI{} tar --keep-newer-files -xf {} -C "${ARTIFACTS_DIR}"
+
+        # cleanup
+        docker image rm artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} && \
+        rm -rf "${TEMP_DIR}"
+
+        if [ "$(find "${ARTIFACTS_DIR}" -type f | wc -l)" -lt 1 ]; then
+            echo "No files found in ${ARTIFACTS_DIR}."
+            exit 1
+        fi
+
+    - name: Filter artifacts by pattern
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        export TEMP_DIR=$(mktemp -d)
+
+        find "${ARTIFACTS_DIR}" \
+          -type f \
+          -regextype posix-extended \
+          -regex "${{ inputs.ARTIFACTS_PATTERN || env.ARTIFACTS_PATTERN }}" \
+          -exec sh -c 'mv -vf "$1" "${TEMP_DIR}/$(basename "$1")"' _ {} \; && \
+        rm -rvf "${ARTIFACTS_DIR}" && \
+        mv -v "${TEMP_DIR}" "${ARTIFACTS_DIR}"
+
+        if [ "$(find "${ARTIFACTS_DIR}" -type f | wc -l)" -lt 1 ]; then
+            echo "No files found in ${ARTIFACTS_DIR}."
+            exit 1
+        fi
+
+        printf ${GITHUB_SHA} | tee "${ARTIFACTS_DIR}/hash.txt"
+
+    - name: Upload logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.TARGET_ARTIFACT_NAME }}.log
+        path: artifacts-*.log
+        if-no-files-found: warn
+
+    - name: Compress artifacts
+      shell: bash
+      run: |
+        tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz -C "${ARTIFACTS_DIR}" $(ls -1 "${ARTIFACTS_DIR}")
+        sha512sum ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz | tee ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz.sha512
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.TARGET_ARTIFACT_NAME }}
+        path: |
+          *.tar.gz
+          *.sha512
+        if-no-files-found: error
