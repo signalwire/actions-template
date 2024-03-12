@@ -55,6 +55,12 @@ on:
         type: string
         default: ''
         description: 'Additional packages to install (space delimited)'
+      UPLOAD_ARTIFACTS:
+        required: false
+        type: boolean
+        default: true
+        description: 'Enable upload artifacts related steps'
+
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -90,19 +96,23 @@ jobs:
         signalwire_token: ${{ secrets.SIGNALWIRE_TOKEN }}
 
     - name: Generate hash file
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
       run: echo $GITHUB_SHA > hash.txt
       env:
         GITHUB_SHA: ${{ github.sha }}
 
     - name: Compress files
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
       run: |
         tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz $(ls -1 | grep -E '(.rpm|hash.txt)$' | tr -s '\n' ' ')
 
     - name: Generate SHA checksum
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
       run: |
         sha512sum ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz > ${{ inputs.TARGET_ARTIFACT_NAME }}.sha1
       
     - uses: actions/upload-artifact@v4
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
       with:
         name: rpm-${{ inputs.PLATFORM }}-artifact
         path: |
