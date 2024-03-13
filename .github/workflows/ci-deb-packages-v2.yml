@@ -73,6 +73,11 @@ on:
         type: string
         default: '/usr'
         description: Set CMAKE_INSTALL_PREFIX variable
+      UPLOAD_ARTIFACTS:
+        required: false
+        type: boolean
+        default: true
+        description: 'Enable upload artifacts related steps'
     # outputs:
     #   ARTIFACT_NAME:
     #     value: deb-${{env.IMAGE_TAG}}-${{env.PLATFORM}}-artifact
@@ -245,6 +250,7 @@ jobs:
         if-no-files-found: warn
 
     - name: Copy git hash
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
       shell: sh
       env:
         GITHUB_SHA: ${{ github.sha }}
@@ -257,27 +263,22 @@ jobs:
         echo $GITHUB_SHA > hash.txt
 
     - name: Compress files
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
       shell: sh
       run: |
         tar -czvf ${{ env.IMAGE_TAG }}.tar.gz $(ls -1 | grep -E '(.deb|hash.txt)$' | tr -s '\n' ' ')
 
     - name: Generate SHA checksum
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
       shell: sh
       run: |
         sha512sum ${{ env.IMAGE_TAG }}.tar.gz > ${{ env.IMAGE_TAG }}.sha1
       
     - uses: actions/upload-artifact@v4
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
       with:
         name: deb-${{ env.IMAGE_TAG }}-artifact
         path: |
           *.tar.gz
           *.sha1
-        if-no-files-found: error
-
-    - uses: actions/upload-artifact@v4
-      if: ${{ inputs.USE_CMAKE == false }}
-      with:
-        name: deb-${{ env.IMAGE_TAG }}-changelog-artifact
-        path: |
-          ./debian/changelog
         if-no-files-found: error
