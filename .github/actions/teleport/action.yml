@@ -45,7 +45,7 @@ runs:
 
     - name: Fetch credentials using Machine ID
       id: auth
-      uses: teleport-actions/auth@v1
+      uses: teleport-actions/auth@v2
       if: env.HOSTNAME != ''
       with:
         # Use the address of the auth/proxy server for your own cluster.
@@ -72,7 +72,7 @@ runs:
     - name: Authorize against Teleport
       id: auth-k8s
       if: inputs.K8S_CLUSTER_NAME != ''
-      uses: teleport-actions/auth-k8s@v1.1.4
+      uses: teleport-actions/auth-k8s@v2
       with:
         # Specify the publically accessible address of your Teleport proxy.
         proxy: ${{ env.PROXY_URL }}
