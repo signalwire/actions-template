@@ -22,6 +22,9 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Install dependencies
+      run: sudo apt update ; sudo apt install curl -yq
+      shell: bash
     - name: Deploy to Swarm
       id: deploy
       shell: bash
