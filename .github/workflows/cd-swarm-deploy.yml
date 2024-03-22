@@ -37,6 +37,11 @@ on:
         type: string
         description: Another option to set ENDPOINT_ID.
         default: ''
+      PORTAINER_DOMAIN:
+        required: true
+        type: string
+        description: Portainer Domain
+        default: deploy.signalwire.cloud
     secrets:
       ENDPOINT_ID:
         required: false
@@ -102,6 +107,7 @@ jobs:
       with:
         STACK_NAME: ${{ inputs.STACK_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+        PORTAINER_DOMAIN: ${{ inputs.PORTAINER_DOMAIN }}
 
     - uses: ./actions/.github/actions/slack
       if: always()
