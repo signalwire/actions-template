@@ -3,8 +3,17 @@ name: Build via Docker
 on:
   workflow_call:
     inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: Environment where the variables and secrets are scoped to
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        description: A GitHub runner type
+        type: string
       REPO_DOMAIN:
-        required: true
+        required: false
         description: Domain name of repository
         type: string
       PLATFORM:
@@ -15,6 +24,10 @@ on:
         required: true
         description: Path to Dockerfile
         type: string
+      MAINTAINER:
+        required: true
+        description: Package maintainer
+        type: string
       ARTIFACTS_PATTERN:
         required: false
         default: '.*\.(deb|rpm)$'
@@ -24,15 +37,21 @@ on:
         required: true
         description: Artifact name
         type: string
-      MAINTAINER:
-        required: true
-        description: Package maintainer
-        type: string
-      UPLOAD_ARTIFACTS:
+      UPLOAD_BUILD_ARTIFACTS:
         required: false
         type: boolean
         default: true
-        description: 'Enable upload artifacts related steps'
+        description: Enable upload build artifacts related steps
+      ARTIFACT_RETENTION_DAYS:
+        required: false
+        type: number
+        default: 1
+        description: Number of days to keep build artifacts
+      LOG_RETENTION_DAYS:
+        required: false
+        type: number
+        default: 7
+        description: Number of days to keep build log artifacts
     secrets:
       REPO_USERNAME:
         required: true
@@ -41,7 +60,8 @@ on:
 
 jobs:
   build-docker:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.RUNNER }}
+    environment: ${{ inputs.ENVIRONMENT }}
     steps:
 
     - name: Checkout code
@@ -122,22 +142,23 @@ jobs:
 
         printf ${GITHUB_SHA} | tee "${ARTIFACTS_DIR}/hash.txt"
 
-    - name: Upload logs
+    - name: Upload build logs
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.TARGET_ARTIFACT_NAME }}.log
         path: artifacts-*.log
         if-no-files-found: warn
+        retention-days: ${{ inputs.LOG_RETENTION_DAYS }}
 
-    - name: Compress artifacts
-      if: ${{ inputs.UPLOAD_ARTIFACTS }}
+    - name: Compress build artifacts
+      if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
       shell: bash
       run: |
         tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz -C "${ARTIFACTS_DIR}" $(ls -1 "${ARTIFACTS_DIR}")
         sha512sum ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz | tee ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz.sha512
 
-    - name: Upload artifacts
-      if: ${{ inputs.UPLOAD_ARTIFACTS }}
+    - name: Upload build artifacts
+      if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.TARGET_ARTIFACT_NAME }}
@@ -145,3 +166,4 @@ jobs:
           *.tar.gz
           *.sha512
         if-no-files-found: error
+        retention-days: ${{ inputs.ARTIFACT_RETENTION_DAYS }}
