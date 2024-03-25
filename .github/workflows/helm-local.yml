@@ -55,7 +55,7 @@ jobs:
         run: helm dependency update ./${{ inputs.CHART_PATH }}
         shell: bash
       - name: Deploy
-        uses: WyriHaximus/github-action-helm3@v3
+        uses: WyriHaximus/github-action-helm3@v4
         with:
           exec: helm upgrade '${{ inputs.APP_NAME }}' ${{ inputs.CHART_PATH }} --install --create-namespace --namespace=${{ inputs.NAMESPACE }} -f=${{ inputs.CHART_PATH }}/values/${{ inputs.ENVIRONMENT }}/${{ inputs.CLOUD_PROVIDER }}/values_${{ inputs.REGION }}_${{ inputs.CLUSTER_NAME }}.yaml
           kubeconfig: '${{ secrets.KUBECONFIG }}'
