@@ -31,7 +31,7 @@ runs:
       path: container_scan.txt 
 
   - name: Create Issue on container scan
-    uses: dacbd/create-issue-action@v1
+    uses: dacbd/create-issue-action@v2
     id: initialIssue
     if: steps.scanCritical.outcome != 'success'
     with:
@@ -93,7 +93,7 @@ runs:
       reactions: '+1'
 
   - name: Create Issue for HIGH Vulnerabilities
-    uses: dacbd/create-issue-action@v1
+    uses: dacbd/create-issue-action@v2
     if: steps.scanHigh.outcome != 'success' && steps.initialIssue.conclusion != 'sucess'
     with:
       title: HIGH Vulnerability Detected ${{inputs.IMAGE_TAG}}
