@@ -18,7 +18,7 @@ on:
         type: string
       PLATFORM:
         required: true
-        description: Default Linux Arch (amd64/armhf/...)
+        description: Default Linux Arch (amd64/arm32v7/...)
         type: string
       DOCKERFILE:
         required: true
