@@ -104,7 +104,7 @@ jobs:
     runs-on: ${{ inputs.RUNNER }}
     permissions:
       contents: read
-      id-token: read
+      id-token: write
     environment: ${{ inputs.ENVIRONMENT }}
     steps:
 
