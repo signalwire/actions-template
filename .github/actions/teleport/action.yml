@@ -13,9 +13,12 @@ inputs:
   K8S_CLUSTER_NAME:
     required: false
     description: 'kubernetes cluster name to connect'
+  EXEC_COMMANDS_PRE:
+    required: false
+    description: 'whenever you would like to execute commands on remote before files copy'
   EXEC_COMMANDS:
     required: false
-    description: 'whenever you would like to execute commands on remote'
+    description: 'whenever you would like to execute commands on remote after files copy'
   FILES:
     required: false
     description: 'Files to move to remote host'
@@ -83,14 +86,20 @@ runs:
         certificate-ttl: 1h
 
         kubernetes-cluster: ${{ inputs.K8S_CLUSTER_NAME }}
-    
+
+    - name: Execute commands on remote before files copy
+      if: inputs.EXEC_COMMANDS_PRE != ''
+      run: >
+        tsh -i ${{ steps.auth.outputs.identity-file }} --login=${{env.USERNAME}} ssh ${{ env.HOSTNAME }} '${{ inputs.EXEC_COMMANDS_PRE }}'
+      shell: bash
+
     - name: Copy files to remote
       if: inputs.FILES != ''
       run: >
         tsh scp -i ${{ steps.auth.outputs.identity-file }} --login=${{env.USERNAME}} ${{ inputs.FILES }} ${{ env.HOSTNAME }}:${{ inputs.FILES_FOLDER }}
       shell: bash
     
-    - name: Execute commands on remote
+    - name: Execute commands on remote after files copy
       if: inputs.EXEC_COMMANDS != ''
       run: >
         tsh -i ${{ steps.auth.outputs.identity-file }} --login=${{env.USERNAME}} ssh ${{ env.HOSTNAME }} '${{ inputs.EXEC_COMMANDS }}'

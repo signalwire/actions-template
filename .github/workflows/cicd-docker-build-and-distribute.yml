@@ -42,21 +42,6 @@ on:
         type: boolean
         default: true
         description: Enable upload build artifacts related steps
-      CLEAN_BUILD_ARTIFACTS:
-        required: false
-        type: boolean
-        default: true
-        description: Remove build artifacts after publish
-      CREATE_DESTINATION_FOLDERS:
-        required: false
-        type: boolean
-        default: true
-        description: Create folder on destination
-      BUILD_ARTIFACT_RETENTION_DAYS:
-        required: false
-        type: number
-        default: 1
-        description: Number of days to keep build artifacts
       LOG_RETENTION_DAYS:
         required: false
         type: number
@@ -82,6 +67,16 @@ on:
         type: string
         default: 'main'
         description: Target meta repo default branch name
+      CODE_WORKING_DIRECTORY:
+        required: false
+        type: string
+        default: 'code'
+        description: Working directory to place code into
+      ARTIFACTS_DIR:
+        required: false
+        type: string
+        default: 'build'
+        description: Directory to place produced artifacts into (will be inside CODE_WORKING_DIRECTORY)
 
     secrets:
       HOSTNAME:
@@ -100,7 +95,7 @@ on:
         required: true
 
 jobs:
-  build:
+  build-and-distribute:
     runs-on: ${{ inputs.RUNNER }}
     permissions:
       contents: read
@@ -112,120 +107,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          path: code
-
-      - name: Set up QEMU for Docker
-        uses: docker/setup-qemu-action@v3
-
-      - name: Build Docker image
-        shell: bash
-        working-directory: code
-        run: |
-          env REPO_PASSWORD='${{ secrets.REPO_PASSWORD }}' docker build \
-            --build-arg BUILD_NUMBER="${GITHUB_RUN_ID}" \
-            --build-arg GIT_SHA="$(echo ${GITHUB_SHA} | cut -c1-10)" \
-            --build-arg MAINTAINER="${{ inputs.MAINTAINER }}" \
-            --build-arg REPO_DOMAIN="${{ inputs.REPO_DOMAIN }}" \
-            --build-arg REPO_USERNAME="${{ secrets.REPO_USERNAME }}" \
-            --file "${{ inputs.DOCKERFILE }}" \
-            --no-cache \
-            --platform linux/${{ inputs.PLATFORM }} \
-            --progress=plain \
-            --secret id=REPO_PASSWORD,env=REPO_PASSWORD \
-            --tag artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} \
-            --ulimit nofile=1024000:1024000 \
-          . 2>&1 | tee artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.log
-
-      - name: Extract artifacts from image
-        shell: bash
-        working-directory: code
-        run: |
-          set -euo pipefail
-
-          export ARTIFACTS_DIR="./out"
-          echo "ARTIFACTS_DIR=${ARTIFACTS_DIR}" | tee -a "${GITHUB_ENV}"
-
-          export TEMP_DIR=$(mktemp -d)
-
-          # dump Docker image blobs
-          docker save artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} --output "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar" && \
-          tar -xf "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar" -C "${TEMP_DIR}" && \
-          rm -f "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar"
-
-          # extract blobs content
-          mkdir -p "${ARTIFACTS_DIR}" && find "${TEMP_DIR}/" -type f -exec file {} + \
-          | grep -E ":.*tar archive" \
-          | cut -d: -f1 \
-          | xargs -rI{} tar --keep-newer-files -xf {} -C "${ARTIFACTS_DIR}"
-
-          # cleanup
-          docker image rm artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} && \
-          rm -rf "${TEMP_DIR}"
-
-          if [ "$(find "${ARTIFACTS_DIR}" -type f | wc -l)" -lt 1 ]; then
-              echo "No files found in ${ARTIFACTS_DIR}."
-              exit 1
-          fi
-
-      - name: Filter artifacts by pattern
-        shell: bash
-        working-directory: code
-        run: |
-          set -euo pipefail
-
-          export TEMP_DIR=$(mktemp -d)
-
-          find "${ARTIFACTS_DIR}" \
-            -type f \
-            -regextype posix-extended \
-            -regex "${{ inputs.ARTIFACTS_PATTERN || env.ARTIFACTS_PATTERN }}" \
-            -exec sh -c 'mv -vf "$1" "${TEMP_DIR}/$(basename "$1")"' _ {} \; && \
-          rm -rvf "${ARTIFACTS_DIR}" && \
-          mv -v "${TEMP_DIR}" "${ARTIFACTS_DIR}"
-
-          if [ "$(find "${ARTIFACTS_DIR}" -type f | wc -l)" -lt 1 ]; then
-              echo "No files found in ${ARTIFACTS_DIR}."
-              exit 1
-          fi
-
-          printf ${GITHUB_SHA} | tee "${ARTIFACTS_DIR}/hash.txt"
-
-      - name: Upload build logs
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.TARGET_ARTIFACT_NAME }}.log
-          path: code/artifacts-*.log
-          if-no-files-found: warn
-          retention-days: ${{ inputs.LOG_RETENTION_DAYS }}
-
-      - name: Compress build artifacts
-        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
-        shell: bash
-        working-directory: code
-        run: |
-          tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz -C "${ARTIFACTS_DIR}" $(ls -1 "${ARTIFACTS_DIR}")
-          sha512sum ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz | tee ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz.sha512
-
-      - name: Upload build artifacts
-        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.TARGET_ARTIFACT_NAME }}
-          path: |
-            code/*.tar.gz
-            code/*.sha512
-          if-no-files-found: error
-          retention-days: ${{ inputs.BUILD_ARTIFACT_RETENTION_DAYS }}
-
-  distribute:
-    runs-on: ${{ inputs.RUNNER }}
-    if: (github.ref_type == 'branch' && github.base_ref == '' && inputs.UPLOAD_BUILD_ARTIFACTS)
-    needs: build
-    permissions:
-      id-token: write
-      contents: read
-    environment: ${{ inputs.ENVIRONMENT }}
-    steps:
+          path: ${{ inputs.CODE_WORKING_DIRECTORY }}
 
       - name: Checkout reusable actions
         uses: actions/checkout@v4
@@ -236,28 +118,52 @@ jobs:
           path: actions
           sparse-checkout: |
             .github/actions/teleport/action.yml
+            .github/actions/docker-build-artifacts/action.yml
           sparse-checkout-cone-mode: false
 
-      - name: Create destination folder on remote host
-        if: ${{ inputs.CREATE_DESTINATION_FOLDERS }}
-        uses: ./actions/.github/actions/teleport
+      - name: Build artifacts via Docker
+        uses: ./actions/.github/actions/docker-build-artifacts
         with:
-          EXEC_COMMANDS: mkdir -p ${{ inputs.META_FILE_PATH_PREFIX }}
+          REPO_DOMAIN: ${{ inputs.REPO_DOMAIN }}
+          PLATFORM: ${{ inputs.PLATFORM }}
+          DOCKERFILE: ${{ inputs.DOCKERFILE }}
+          MAINTAINER: ${{ inputs.MAINTAINER }}
+          WORKING_DIRECTORY: ${{ inputs.CODE_WORKING_DIRECTORY }}
+          ARTIFACTS_PATTERN: ${{ inputs.ARTIFACTS_PATTERN }}
+          ARTIFACTS_DIR: ${{ inputs.ARTIFACTS_DIR }}
+          BUILD_LOG_FILENAME: 'artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.log'
         env:
-          HOSTNAME: ${{ secrets.HOSTNAME }}
-          PROXY_URL: ${{ secrets.PROXY_URL }}
-          TOKEN: ${{ secrets.TELEPORT_TOKEN }}
-          USERNAME: ${{ secrets.USERNAME }}
+          REPO_USERNAME: ${{ secrets.REPO_USERNAME }}
+          REPO_PASSWORD: ${{ secrets.REPO_PASSWORD }}
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
+      - name: Upload build logs
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.TARGET_ARTIFACT_NAME }}
+          name: ${{ inputs.TARGET_ARTIFACT_NAME }}.log
+          path: ${{ inputs.CODE_WORKING_DIRECTORY }}/artifacts-*.log
+          if-no-files-found: warn
+          retention-days: ${{ inputs.LOG_RETENTION_DAYS }}
 
-      - name: Copy build artifacts to remote host
+      - name: Compress build artifacts
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
+        shell: bash
+        working-directory: ${{ inputs.CODE_WORKING_DIRECTORY }}
+        env:
+          ARTIFACTS_DIR: ${{ inputs.ARTIFACTS_DIR }}
+        run: |
+          tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz -C "${ARTIFACTS_DIR}" $(ls -1 "${ARTIFACTS_DIR}")
+          sha512sum ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz | tee ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz.sha512
+
+          tar -czvf temp_${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz.sha512
+          rm -v ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz.sha512 && \
+            mv -v temp_${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz
+
+      - name: Copy/Exec artifacts/commands to/on remote host
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
         uses: ./actions/.github/actions/teleport
         with:
-          FILES: '*.tar.gz'
+          EXEC_COMMANDS_PRE: 'mkdir -p ${{ inputs.META_FILE_PATH_PREFIX }}'
+          FILES: './${{ inputs.CODE_WORKING_DIRECTORY }}/*.tar.gz'
           EXEC_COMMANDS: 'echo "${{ github.sha }}" > ${{ inputs.META_FILE_PATH_PREFIX }}/hash.txt'
           FILES_FOLDER: ${{ inputs.META_FILE_PATH_PREFIX }}
         env:
@@ -266,19 +172,11 @@ jobs:
           TOKEN: ${{ secrets.TELEPORT_TOKEN }}
           USERNAME: ${{ secrets.USERNAME }}
 
-      - name: Delete build artifact
-        if: ${{ inputs.CLEAN_BUILD_ARTIFACTS }}
-        uses: geekyeggo/delete-artifact@v5
-        with:
-          name: ${{ inputs.TARGET_ARTIFACT_NAME }}
-          failOnError: false
-
   meta-repo:
     runs-on: ${{ inputs.RUNNER }}
-    if: (github.ref_type == 'branch' && github.base_ref == '' && inputs.UPLOAD_BUILD_ARTIFACTS)
+    if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
     needs:
-      - build
-      - distribute
+      - build-and-distribute
     permissions:
       id-token: write
       contents: read

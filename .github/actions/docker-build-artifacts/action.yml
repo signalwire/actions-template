@@ -1,0 +1,110 @@
+name: Build artifacts using Dockerfile
+
+inputs:
+  REPO_DOMAIN:
+    required: false
+    description: Domain name of repository
+  PLATFORM:
+    required: true
+    description: Default Linux Arch (amd64/arm32v7/...)
+  DOCKERFILE:
+    required: true
+    description: Path to Dockerfile
+  MAINTAINER:
+    required: true
+    description: Package maintainer
+  WORKING_DIRECTORY:
+    required: true
+    default: '.'
+    description: Working directory
+  ARTIFACTS_PATTERN:
+    required: false
+    default: '.*\.(deb|rpm)$'
+    description: Regexp that matches artifacts
+  ARTIFACTS_DIR:
+    required: false
+    default: 'BUILD'
+    description: Output directory for artifacts
+  BUILD_LOG_FILENAME:
+    required: false
+    default: 'build.log'
+    description: Build log filename
+
+runs:
+  using: "composite"
+  steps:
+
+    - name: Set up QEMU for Docker
+      uses: docker/setup-qemu-action@v3
+
+    - name: Build Docker image
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIRECTORY }}
+      env:
+        REPO_PASSWORD: ${{ env.REPO_PASSWORD }}
+      run: |
+        docker build \
+          --build-arg BUILD_NUMBER="${GITHUB_RUN_ID}" \
+          --build-arg GIT_SHA="$(echo ${GITHUB_SHA} | cut -c1-10)" \
+          --build-arg MAINTAINER="${{ inputs.MAINTAINER }}" \
+          --build-arg REPO_DOMAIN="${{ inputs.REPO_DOMAIN }}" \
+          --build-arg REPO_USERNAME="${{ env.REPO_USERNAME }}" \
+          --file "${{ inputs.DOCKERFILE }}" \
+          --no-cache \
+          --platform linux/${{ inputs.PLATFORM }} \
+          --progress=plain \
+          --secret id=REPO_PASSWORD,env=REPO_PASSWORD \
+          --tag artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} \
+          --ulimit nofile=1024000:1024000 \
+        . 2>&1 | tee -a ${{ inputs.BUILD_LOG_FILENAME }}
+
+    - name: Extract artifacts from image
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIRECTORY }}
+      run: |
+        set -euo pipefail
+
+        export TEMP_DIR=$(mktemp -d)
+
+        # dump Docker image blobs
+        docker save artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} --output "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar" && \
+        tar -xf "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar" -C "${TEMP_DIR}" && \
+        rm -f "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar"
+
+        # extract blobs content
+        mkdir -p "${{ inputs.ARTIFACTS_DIR }}" && find "${TEMP_DIR}/" -type f -exec file {} + \
+        | grep -E ":.*tar archive" \
+        | cut -d: -f1 \
+        | xargs -rI{} tar --keep-newer-files -xf {} -C "${{ inputs.ARTIFACTS_DIR }}"
+
+        # cleanup
+        docker image rm artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} && \
+        rm -rf "${TEMP_DIR}"
+
+        if [ "$(find "${{ inputs.ARTIFACTS_DIR }}" -type f | wc -l)" -lt 1 ]; then
+            echo "No files found in ${{ inputs.ARTIFACTS_DIR }}."
+            exit 1
+        fi
+
+    - name: Filter artifacts by pattern
+      shell: bash
+      working-directory: ${{ inputs.WORKING_DIRECTORY }}
+      run: |
+        set -euo pipefail
+
+        export TEMP_DIR=$(mktemp -d)
+
+        find "${{ inputs.ARTIFACTS_DIR }}" \
+          -type f \
+          -regextype posix-extended \
+          -regex "${{ inputs.ARTIFACTS_PATTERN }}" \
+          -exec sh -c 'mv -vf "$1" "${TEMP_DIR}/$(basename "$1")"' _ {} \; && \
+        rm -rvf "${{ inputs.ARTIFACTS_DIR }}" && \
+        mv -v "${TEMP_DIR}" "${{ inputs.ARTIFACTS_DIR }}"
+
+        if [ "$(find "${{ inputs.ARTIFACTS_DIR }}" -type f | wc -l)" -lt 1 ]; then
+            echo "No files found in ${{ inputs.ARTIFACTS_DIR }}."
+            exit 1
+        fi
+
+        printf ${GITHUB_SHA} | tee "${{ inputs.ARTIFACTS_DIR }}/hash.txt"
