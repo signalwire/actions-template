@@ -1,0 +1,75 @@
+name: Push data to meta-repo
+
+inputs:
+  META_CONTENT:
+    required: true
+    default: ''
+    description: Data to put into `metafile.txt`
+  META_REPO:
+    required: true
+    default: ''
+    description: Target meta repo to sync metadata changes
+  META_REPO_BRANCH:
+    required: true
+    default: ''
+    description: Target meta repo branch name
+  META_REPO_DEFAULT_BRANCH:
+    required: false
+    default: 'main'
+    description: Target meta repo default branch name
+
+runs:
+  using: "composite"
+  steps:
+
+    - name: Encode '${{ inputs.META_REPO_BRANCH }}' and write to ENV
+      id: encode-meta-repo-branch
+      shell: bash
+      run: |
+        echo "META_REPO_BRANCH_B64=$(echo -n ${{ inputs.META_REPO_BRANCH }} | base64)" | tee -a "${GITHUB_ENV}"
+        echo "meta-repo-branch-b64=$(echo -n ${{ inputs.META_REPO_BRANCH }} | base64)" | tee -a "${GITHUB_OUTPUT}"
+
+    - name: Checkout metadata repo (${{ inputs.META_REPO_BRANCH }})
+      uses: actions/checkout@v4
+      id: meta-branch-exists
+      continue-on-error: true
+      with:
+        repository: ${{ inputs.META_REPO }}
+        ref: ${{ inputs.META_REPO_BRANCH }}
+        token: ${{ env.GH_BOT_DEPLOY_TOKEN || github.token }}
+        fetch-depth: 1
+        path: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
+
+    - name: Checkout metadata repo (${{ inputs.META_REPO_BRANCH }})
+      uses: actions/checkout@v4
+      if: steps.meta-branch-exists.outcome != 'success'
+      with:
+        repository: ${{ inputs.META_REPO }}
+        ref: ${{ inputs.META_REPO_DEFAULT_BRANCH }}
+        token: ${{ env.GH_BOT_DEPLOY_TOKEN || github.token }}
+        fetch-depth: 1
+        path: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
+        clean: true
+
+    - name: Create remote branch (${{ inputs.META_REPO_BRANCH }})
+      if: steps.meta-branch-exists.outcome != 'success'
+      shell: bash
+      working-directory: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
+      run: |
+        git checkout -b ${{ inputs.META_REPO_BRANCH }}
+        git push --set-upstream origin ${{ inputs.META_REPO_BRANCH }}
+
+    - name: Push changes
+      shell: bash
+      working-directory: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
+      run: |
+        git config --global user.email "github-actions@github.com" && \
+          git config --global user.name "github-actions"
+
+        echo "${{ inputs.META_CONTENT }}" | tee metafile.txt
+
+        git status --porcelain | grep -q . || exit 0
+
+        git add -v metafile.txt && \
+          git commit --branch -m "update metadata" && \
+            git push --atomic -v
