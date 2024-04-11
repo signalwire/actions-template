@@ -58,7 +58,7 @@ on:
         default: ''
         description: Target meta repo to sync metadata changes
       META_REPO_BRANCH:
-        required: true
+        required: false
         type: string
         default: ''
         description: Target meta repo branch name
@@ -177,7 +177,8 @@ jobs:
     if: >-
       ${{
         inputs.UPLOAD_BUILD_ARTIFACTS == 'true' &&
-        inputs.META_REPO != ''
+        inputs.META_REPO != '' &&
+        inputs.META_REPO_BRANCH != ''
       }}
     needs:
       - build-and-distribute
