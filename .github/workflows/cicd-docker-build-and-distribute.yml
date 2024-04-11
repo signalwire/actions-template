@@ -53,7 +53,7 @@ on:
         default: ''
         description: A prefix to append to meta file (also target folder where the files should be sent on remote)
       META_REPO:
-        required: true
+        required: false
         type: string
         default: ''
         description: Target meta repo to sync metadata changes
@@ -174,7 +174,11 @@ jobs:
 
   meta-repo:
     runs-on: ${{ inputs.RUNNER }}
-    if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
+    if: >-
+      ${{
+        inputs.UPLOAD_BUILD_ARTIFACTS == 'true' &&
+        inputs.META_REPO != ''
+      }}
     needs:
       - build-and-distribute
     permissions:
@@ -183,53 +187,23 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
     steps:
 
-      - name: Encode '${{ inputs.META_REPO_BRANCH }}' and write to ENV
-        id: encode-meta-repo-branch
-        shell: bash
-        run: |
-          echo "META_REPO_BRANCH_B64=$(echo -n ${{ inputs.META_REPO_BRANCH }} | base64)" | tee -a "${GITHUB_ENV}"
-          echo "meta-repo-branch-b64=$(echo -n ${{ inputs.META_REPO_BRANCH }} | base64)" | tee -a "${GITHUB_OUTPUT}"
-
-      - name: Checkout metadata repo (${{ inputs.META_REPO_BRANCH }})
+      - name: Checkout reusable actions
         uses: actions/checkout@v4
-        id: meta-branch-exists
-        continue-on-error: true
         with:
-          repository: ${{ inputs.META_REPO }}
-          ref: ${{ inputs.META_REPO_BRANCH }}
-          token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
+          repository: signalwire/actions-template
+          ref: master
           fetch-depth: 1
-          path: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
+          path: actions
+          sparse-checkout: |
+            .github/actions/meta-repo/action.yml
+          sparse-checkout-cone-mode: false
 
-      - name: Checkout metadata repo (${{ inputs.META_REPO_BRANCH }})
-        uses: actions/checkout@v4
-        if: steps.meta-branch-exists.outcome != 'success'
+      - name: Push build specific data to meta-repo
+        uses: ./actions/.github/actions/meta-repo
         with:
-          repository: ${{ inputs.META_REPO }}
-          ref: ${{ inputs.META_REPO_DEFAULT_BRANCH }}
-          token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
-          fetch-depth: 1
-          path: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
-          clean: true
-
-      - name: Create remote branch (${{ inputs.META_REPO_BRANCH }})
-        if: steps.meta-branch-exists.outcome != 'success'
-        working-directory: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
-        run: |
-          git checkout -b ${{ inputs.META_REPO_BRANCH }}
-          git push --set-upstream origin ${{ inputs.META_REPO_BRANCH }}
-
-      - name: Push changes
-        shell: bash
-        working-directory: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
-        run: |
-          git config --global user.email "github-actions@github.com" && \
-            git config --global user.name "github-actions"
-
-          echo "${{ inputs.META_FILE_PATH_PREFIX }}" | tee metafile.txt
-
-          git status --porcelain | grep -q . || exit 0
-
-          git add -v metafile.txt && \
-            git commit --branch -m "update metadata" && \
-              git push --atomic -v
+          META_CONTENT: ${{ inputs.META_FILE_PATH_PREFIX }}
+          META_REPO: ${{ inputs.META_REPO }}
+          META_REPO_BRANCH: ${{ inputs.META_REPO_BRANCH }}
+          META_REPO_DEFAULT_BRANCH: ${{ inputs.META_REPO_DEFAULT_BRANCH }}
+        env:
+          GH_BOT_DEPLOY_TOKEN: ${{ secrets.GH_BOT_DEPLOY_TOKEN }}

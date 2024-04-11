@@ -1,0 +1,68 @@
+name: Push data to meta-repo
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: Environment where the variables and secrets are scoped to
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        description: A GitHub runner type
+        type: string
+      META_CONTENT:
+        required: true
+        type: string
+        default: ''
+        description: Data to put into `metafile.txt`
+      META_REPO:
+        required: true
+        type: string
+        default: ''
+        description: Target meta repo to sync metadata changes
+      META_REPO_BRANCH:
+        required: true
+        type: string
+        default: ''
+        description: Target meta repo branch name
+      META_REPO_DEFAULT_BRANCH:
+        required: false
+        type: string
+        default: 'main'
+        description: Target meta repo default branch name
+
+    secrets:
+      GH_BOT_DEPLOY_TOKEN:
+        required: true
+
+jobs:
+  meta-repo-content-push:
+    runs-on: ${{ inputs.RUNNER }}
+    permissions:
+      contents: read
+      id-token: write
+    environment: ${{ inputs.ENVIRONMENT }}
+    steps:
+
+      - name: Checkout reusable actions
+        uses: actions/checkout@v4
+        with:
+          repository: signalwire/actions-template
+          ref: master
+          fetch-depth: 1
+          path: actions
+          sparse-checkout: |
+            .github/actions/meta-repo/action.yml
+          sparse-checkout-cone-mode: false
+
+      - name: Push build specific data to meta-repo
+        uses: ./actions/.github/actions/meta-repo
+        with:
+          META_CONTENT: ${{ inputs.META_CONTENT }}
+          META_REPO: ${{ inputs.META_REPO }}
+          META_REPO_BRANCH: ${{ inputs.META_REPO_BRANCH }}
+          META_REPO_DEFAULT_BRANCH: ${{ inputs.META_REPO_DEFAULT_BRANCH }}
+        env:
+          GH_BOT_DEPLOY_TOKEN: ${{ secrets.GH_BOT_DEPLOY_TOKEN }}
