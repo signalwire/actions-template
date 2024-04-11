@@ -49,6 +49,9 @@ on:
         type: string
         default: ''
         description: GCP Service Account
+      RUNNER:
+        required: true
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -95,7 +98,7 @@ on:
 jobs:
   terragrunt:
     name: 'Terragrunt ${{ inputs.WORKING_DIR}}'
-    runs-on: self-hosted
+    runs-on: ${{ inputs.RUNNER }}
     environment:
       name: ${{ inputs.ENVIRONMENT }}
     
