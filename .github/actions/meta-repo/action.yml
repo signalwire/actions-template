@@ -31,45 +31,36 @@ runs:
 
     - name: Checkout metadata repo (${{ inputs.META_REPO_BRANCH }})
       uses: actions/checkout@v4
-      id: meta-branch-exists
-      continue-on-error: true
-      with:
-        repository: ${{ inputs.META_REPO }}
-        ref: ${{ inputs.META_REPO_BRANCH }}
-        token: ${{ env.GH_BOT_DEPLOY_TOKEN || github.token }}
-        fetch-depth: 1
-        path: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
-
-    - name: Checkout metadata repo (${{ inputs.META_REPO_BRANCH }})
-      uses: actions/checkout@v4
-      if: steps.meta-branch-exists.outcome != 'success'
       with:
         repository: ${{ inputs.META_REPO }}
         ref: ${{ inputs.META_REPO_DEFAULT_BRANCH }}
         token: ${{ env.GH_BOT_DEPLOY_TOKEN || github.token }}
-        fetch-depth: 1
         path: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
         clean: true
 
-    - name: Create remote branch (${{ inputs.META_REPO_BRANCH }})
-      if: steps.meta-branch-exists.outcome != 'success'
+    - name: Push data to metadata repo (${{ inputs.META_REPO_BRANCH }})
       shell: bash
       working-directory: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
       run: |
-        git checkout -b ${{ inputs.META_REPO_BRANCH }}
-        git push --set-upstream origin ${{ inputs.META_REPO_BRANCH }}
+        git config user.email "github-actions@github.com" || exit 1
+        git config user.name "GitHub Actions" || exit 1
 
-    - name: Push changes
-      shell: bash
-      working-directory: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
-      run: |
-        git config --global user.email "github-actions@github.com" && \
-          git config --global user.name "github-actions"
+        git fetch --all
 
-        echo "${{ inputs.META_CONTENT }}" | tee metafile.txt
+        if git branch -a | grep -q "${{ inputs.META_REPO_BRANCH }}"; then
+            git checkout "${{ inputs.META_REPO_BRANCH }}" || exit 1
+            git pull origin "${{ inputs.META_REPO_BRANCH }}" || exit 1
+        else
+            git checkout -b "${{ inputs.META_REPO_BRANCH }}" || exit 1
+        fi
 
-        git status --porcelain | grep -q . || exit 0
+        echo "${{ inputs.META_CONTENT }}" | tee metafile.txt || exit 1
 
-        git add -v metafile.txt && \
-          git commit --branch -m "update metadata" && \
-            git push --atomic -v
+        git add metafile.txt || exit 1
+
+        if git status --porcelain | grep -q .; then
+            git commit -m "update metadata" || exit 1
+            git push --set-upstream origin "${{ inputs.META_REPO_BRANCH }}" --atomic -v || exit 1
+        else
+            echo "No changes to commit"
+        fi
