@@ -52,6 +52,7 @@ on:
       RUNNER:
         required: true
         type: string
+        default: ubuntu-latest
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
