@@ -131,6 +131,9 @@ jobs:
           workload_identity_provider: ${{ inputs.GCP_WIP }}
           project_id: ${{ inputs.PROJECT_ID }}
           service_account: ${{ inputs.GCP_SA }}
+
+      - name: Install dependencies
+        run: sudo apt update ; sudo apt install unzip -yq
       
       - name: Sops Binary Installer
         uses: mdgreenwald/mozilla-sops-action@v1.5.0
