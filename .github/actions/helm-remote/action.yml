@@ -32,11 +32,11 @@ runs:
   using: "composite"
   steps:
     - name: Add dependencies
-      uses: WyriHaximus/github-action-helm3@v3
+      uses: WyriHaximus/github-action-helm3@v4
       with:
         exec: helm repo add ${{ env.CHART_URL }}
     - name: Deploy
-      uses: WyriHaximus/github-action-helm3@v3
+      uses: WyriHaximus/github-action-helm3@v4
       with:
         exec: helm upgrade '${{ env.APP_NAME }}' ${{ env.CHART_NAME }} --install --create-namespace --namespace=${{ env.NAMESPACE }} -f=${{ env.APP_NAME }}/values/${{ inputs.CLOUD_PROVIDER }}/values_${{ inputs.REGION }}_${{ inputs.CLUSTER_NAME }}.yaml
         kubeconfig: '${{ secrets.KUBECONFIG }}'
