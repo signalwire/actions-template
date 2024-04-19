@@ -57,8 +57,8 @@ runs:
     - name: "Run ${{ inputs.RESOURCE_TYPE}} for ${{ inputs.RESOURCE_NAME}}"
       uses: fitbeard/action-trigger-awx@v24.2.0
       with:
-        tower_url: ${{ env.AWX_HOST }}
-        tower_token: ${{ env.AWX_OAUTH_TOKEN }}
+        controller_host: ${{ env.AWX_HOST }}
+        controller_oauth_token: ${{ env.AWX_OAUTH_TOKEN }}
         tower_verify_ssl: ${{ inputs.AWX_VERIFY_SSL }}
         resource_type: ${{ inputs.RESOURCE_TYPE }}
         resource_name: ${{ inputs.RESOURCE_NAME }}
