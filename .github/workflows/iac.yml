@@ -170,7 +170,7 @@ jobs:
                 
       - uses: opentofu/setup-opentofu@main
 
-      - run: apt update ; apt install git -yq ; git config --global --add safe.directory '*'
+      - run: sudo apt update ; sudo apt install git -yq ; git config --global --add safe.directory '*'
 
       - name: Init
         id: init
