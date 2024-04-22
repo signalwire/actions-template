@@ -152,11 +152,6 @@ jobs:
           ARTIFACTS_DIR: ${{ inputs.ARTIFACTS_DIR }}
         run: |
           tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz -C "${ARTIFACTS_DIR}" $(ls -1 "${ARTIFACTS_DIR}")
-          sha512sum ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz | tee ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz.sha512
-
-          tar -czvf temp_${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz.sha512
-          rm -v ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz.sha512 && \
-            mv -v temp_${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz
 
       - name: Copy/Exec artifacts/commands to/on remote host
         if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
