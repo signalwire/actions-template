@@ -168,7 +168,7 @@ jobs:
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
                 
-      - uses: opentofu/setup-opentofu@v1
+      - uses: opentofu/setup-opentofu@main
 
       - name: Init
         id: init
