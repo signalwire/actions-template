@@ -170,6 +170,8 @@ jobs:
                 
       - uses: opentofu/setup-opentofu@main
 
+      - run: git config --global --add safe.directory '*'
+      
       - name: Init
         id: init
         uses: gruntwork-io/terragrunt-action@v2
