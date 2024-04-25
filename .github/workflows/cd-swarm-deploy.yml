@@ -28,8 +28,12 @@ on:
         type: string
         default: ubuntu-latest
         description: The default runner.
+      NOTIFY_SLACK:
+        required: false
+        type: boolean
+        default: true
       SLACK_CHANNEL:
-        required: true
+        required: false
         type: string
         description: Default slack channel to post a message
       ENDPOINT_ID:
@@ -110,7 +114,7 @@ jobs:
         PORTAINER_DOMAIN: ${{ inputs.PORTAINER_DOMAIN }}
 
     - uses: ./actions/.github/actions/slack
-      if: always()
+      if: ${{ inputs.NOTIFY_SLACK  == true }}
       name: slack notification
       with:
         MESSAGE: 'Update Service - ${{ inputs.STACK_NAME }}!\n>GitHub Action result - ${{ github.event.pull_request.html_url || github.event.head_commit.url }}\n>*Previous Image:* ${{ steps.swarm-deploy.outputs.PREVIOUS_IMAGE }}\n>*New Image:* ${{ inputs.IMAGE_TAG }}'
