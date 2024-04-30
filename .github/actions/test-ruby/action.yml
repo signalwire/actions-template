@@ -26,10 +26,6 @@ inputs:
     required: false
     description: Reviewdog report
     default: 'false'
-  RUN_TESTS:
-    required: false
-    default: 'true'
-    description: Whenever you wanna run tests.
 
 runs:
   using: "composite"
@@ -123,7 +119,6 @@ runs:
       shell: bash
 
     - name: Run Tests
-      if: inputs.RUN_TESTS != 'false'
       run: |
         bundle exec rspec -f j -o tmp/rspec_results.json -f p
       shell: bash
