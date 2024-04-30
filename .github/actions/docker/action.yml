@@ -142,6 +142,8 @@ runs:
       id: test
       shell: bash
       run: |
+        docker images
+        echo "${{ steps.meta.outputs.tags }}"
         docker run -d --rm --name test ${{ fromJSON(steps.meta.outputs.json).tags[0] }} ${{ inputs.CONTAINER_TEST_COMMAND }}
         sleep 20
         docker logs test > logs.txt
