@@ -237,8 +237,9 @@ jobs:
   BUILD:
     name: BUILD
     needs: CHECK
-    uses: signalwire/actions-template/.github/workflows/ci-build.yml@main
+    uses: signalwire/actions-template/.github/workflows/ci-build.yml@ryanwi/debug-container-test
     with:
+      REF: "ryanwi/debug-container-test"
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
       SUBMODULES_RECURSIVE: ${{ inputs.SUBMODULES_RECURSIVE }}
