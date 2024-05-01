@@ -138,6 +138,10 @@ runs:
         build-args: ${{ env.BUILD_ARGS }}
         secrets: ${{ env.DOCKER_SECRETS }}
 
+    - shell: bash
+      run: |
+        echo ${{ inputs.CONTAINER_TEST_COMMAND }}
+
     - name: Test
       if: github.event_name == 'pull_request' && inputs.CONTAINER_TEST == 'true' && inputs.TAG_ONLY == 'false'
       id: test
@@ -147,7 +151,10 @@ runs:
         echo "Starting container for image: ${{ steps.meta.outputs.tags }}"
         docker run -d --rm --name test ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
         sleep 20
-        ${{ inputs.CONTAINER_TEST_COMMAND }}
+        docker logs test
+        curl --fail --silent --location 'http://localhost:3000/healthcheck'
+
+      # ${{ inputs.CONTAINER_TEST_COMMAND }}
       # docker logs test
       # test > logs.txt
       # EXECUTIONLOG=$(cat logs.txt)
