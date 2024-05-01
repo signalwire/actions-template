@@ -148,8 +148,8 @@ runs:
         docker run -d --rm --name test ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
         sleep 20
         docker ps
+        docker logs test
         docker logs test > logs.txt
-        docker logs
         EXECUTIONLOG=$(cat logs.txt)
         EXECUTIONLOG="${EXECUTIONLOG//'%'/'%25'}"
         EXECUTIONLOG="${EXECUTIONLOG//$'\n'/'%0A'}"
