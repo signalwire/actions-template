@@ -144,15 +144,16 @@ runs:
       shell: bash
       run: |
         docker images
-        echo "${{ steps.meta.outputs.tags }}"
+        echo "Starting container for image: ${{ steps.meta.outputs.tags }}"
         docker run -d --rm --name test ${{ fromJSON(steps.meta.outputs.json).tags[0] }} ${{ inputs.CONTAINER_TEST_COMMAND }}
         sleep 20
-        docker logs test > logs.txt
-        EXECUTIONLOG=$(cat logs.txt)
-        EXECUTIONLOG="${EXECUTIONLOG//'%'/'%25'}"
-        EXECUTIONLOG="${EXECUTIONLOG//$'\n'/'%0A'}"
-        EXECUTIONLOG="${EXECUTIONLOG//$'\r'/'%0D'}"
-        echo "name=container-logs::$EXECUTIONLOG" >> $GITHUB_OUTPUT
+        docker logs
+      # test > logs.txt
+      # EXECUTIONLOG=$(cat logs.txt)
+      # EXECUTIONLOG="${EXECUTIONLOG//'%'/'%25'}"
+      # EXECUTIONLOG="${EXECUTIONLOG//$'\n'/'%0A'}"
+      # EXECUTIONLOG="${EXECUTIONLOG//$'\r'/'%0D'}"
+      # echo "name=container-logs::$EXECUTIONLOG" >> $GITHUB_OUTPUT
     
     - name: Build and push
       if: inputs.PUSH == 'true' # && inputs.TAG_ONY == 'false'
