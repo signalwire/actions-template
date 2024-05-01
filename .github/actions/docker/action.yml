@@ -147,7 +147,7 @@ runs:
         echo "Starting container for image: ${{ steps.meta.outputs.tags }}"
         docker run -d --rm --name test ${{ fromJSON(steps.meta.outputs.json).tags[0] }} ${{ inputs.CONTAINER_TEST_COMMAND }}
         sleep 20
-        docker logs
+        docker logs test
       # test > logs.txt
       # EXECUTIONLOG=$(cat logs.txt)
       # EXECUTIONLOG="${EXECUTIONLOG//'%'/'%25'}"
