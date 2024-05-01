@@ -152,16 +152,13 @@ runs:
         docker run -d --rm --name test ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
         sleep 20
         docker ps
-        docker logs test
+        docker logs test > logs.txt
+        EXECUTIONLOG=$(cat logs.txt)
+        EXECUTIONLOG="${EXECUTIONLOG//'%'/'%25'}"
+        EXECUTIONLOG="${EXECUTIONLOG//$'\n'/'%0A'}"
+        EXECUTIONLOG="${EXECUTIONLOG//$'\r'/'%0D'}"
+        echo "name=container-logs::$EXECUTIONLOG" >> $GITHUB_OUTPUT
         ${{ inputs.CONTAINER_TEST_COMMAND }}
-
-      # docker logs test
-      # test > logs.txt
-      # EXECUTIONLOG=$(cat logs.txt)
-      # EXECUTIONLOG="${EXECUTIONLOG//'%'/'%25'}"
-      # EXECUTIONLOG="${EXECUTIONLOG//$'\n'/'%0A'}"
-      # EXECUTIONLOG="${EXECUTIONLOG//$'\r'/'%0D'}"
-      # echo "name=container-logs::$EXECUTIONLOG" >> $GITHUB_OUTPUT
     
     - name: Build and push
       if: inputs.PUSH == 'true' # && inputs.TAG_ONY == 'false'
