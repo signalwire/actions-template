@@ -133,7 +133,7 @@ runs:
         # cache-to: type=gha,mode=max
         file: ${{ inputs.FILE }}
         context: ${{ inputs.CONTEXT }}
-        platforms: ${{ inputs.PLATFORMS }}
+        platforms: linux/amd64
         build-args: ${{ env.BUILD_ARGS }}
         secrets: ${{ env.DOCKER_SECRETS }}
 
