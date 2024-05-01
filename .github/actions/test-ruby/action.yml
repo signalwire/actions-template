@@ -26,10 +26,6 @@ inputs:
     required: false
     description: Reviewdog report
     default: 'false'
-  RUN_TESTS:
-    required: false
-    default: 'true'
-    description: Whenever you wanna run tests.
 
 runs:
   using: "composite"
@@ -120,11 +116,6 @@ runs:
             $i
           fi
         done
-      shell: bash
-
-    - name: Run Tests
-      run: |
-        echo ${{ inputs.RUN_TESTS }}
       shell: bash
 
     # - name: Run Tests
