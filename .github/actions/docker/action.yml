@@ -138,10 +138,6 @@ runs:
         build-args: ${{ env.BUILD_ARGS }}
         secrets: ${{ env.DOCKER_SECRETS }}
 
-    - shell: bash
-      run: |
-        echo ${{ inputs.CONTAINER_TEST_COMMAND }}
-
     - name: Test
       if: github.event_name == 'pull_request' && inputs.CONTAINER_TEST == 'true' && inputs.TAG_ONLY == 'false'
       id: test
