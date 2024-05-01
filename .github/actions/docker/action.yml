@@ -129,8 +129,8 @@ runs:
         load: true
         tags: |
           ${{ steps.meta.outputs.tags }}
-        # cache-from: type=gha
-        # cache-to: type=gha,mode=max
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
         file: ${{ inputs.FILE }}
         context: ${{ inputs.CONTEXT }}
         # cannot use multiple platforms with `load`, build a single arch image for validation purposes in CI
