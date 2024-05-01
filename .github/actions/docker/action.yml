@@ -149,10 +149,12 @@ runs:
         sleep 20
         docker ps
         docker logs test > logs.txt
+        docker logs
         EXECUTIONLOG=$(cat logs.txt)
         EXECUTIONLOG="${EXECUTIONLOG//'%'/'%25'}"
         EXECUTIONLOG="${EXECUTIONLOG//$'\n'/'%0A'}"
         EXECUTIONLOG="${EXECUTIONLOG//$'\r'/'%0D'}"
+        echo "$EXECUTIONLOG"
         echo "name=container-logs::$EXECUTIONLOG" >> $GITHUB_OUTPUT
         ${{ inputs.CONTAINER_TEST_COMMAND }}
     
