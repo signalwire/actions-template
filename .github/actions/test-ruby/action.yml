@@ -122,6 +122,11 @@ runs:
         done
       shell: bash
 
+    - name: Run Tests
+      run: |
+        echo ${{ inputs.RUN_TESTS }}
+      shell: bash
+
     # - name: Run Tests
     #   if: inputs.RUN_TESTS != 'false'
     #   run: |
