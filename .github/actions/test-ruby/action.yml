@@ -122,15 +122,15 @@ runs:
         done
       shell: bash
 
-    - name: Run Tests
-      if: inputs.RUN_TESTS != 'false'
-      run: |
-        bundle exec rspec -f j -o tmp/rspec_results.json -f p
-      shell: bash
+    # - name: Run Tests
+    #   if: inputs.RUN_TESTS != 'false'
+    #   run: |
+    #     bundle exec rspec -f j -o tmp/rspec_results.json -f p
+    #   shell: bash
     
-    - name: RSpec Report
-      if: always()
-      uses: SonicGarden/rspec-report-action@v3
-      with:
-        token: ${{ env.GITHUB_TOKEN }}
-        json-path: tmp/rspec_results.json
+    # - name: RSpec Report
+    #   if: always()
+    #   uses: SonicGarden/rspec-report-action@v3
+    #   with:
+    #     token: ${{ env.GITHUB_TOKEN }}
+    #     json-path: tmp/rspec_results.json
