@@ -151,10 +151,10 @@ runs:
         echo "Starting container for image: ${{ steps.meta.outputs.tags }}"
         docker run -d --rm --name test ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
         sleep 20
+        docker ps
         docker logs test
-        curl --fail --silent --location 'http://localhost:3000/healthcheck'
+        ${{ inputs.CONTAINER_TEST_COMMAND }}
 
-      # ${{ inputs.CONTAINER_TEST_COMMAND }}
       # docker logs test
       # test > logs.txt
       # EXECUTIONLOG=$(cat logs.txt)
