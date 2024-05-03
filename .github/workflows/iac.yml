@@ -12,7 +12,7 @@ on:
       TG_VERSION: 
         required: false
         type: string
-        default: '0.57.5'
+        default: '0.58.2'
       TF_VERSION: 
         required: false
         type: string
