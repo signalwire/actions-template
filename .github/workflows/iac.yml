@@ -209,7 +209,7 @@ jobs:
     
       - run: |
           git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
-          terragrunt run-all init --terragrunt-working-dir ${{ inputs.WORKING_DIR }}
+          sudo terragrunt run-all init --terragrunt-working-dir ${{ inputs.WORKING_DIR }}
       
       - name: Validate
         uses: gruntwork-io/terragrunt-action@v2
