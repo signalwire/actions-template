@@ -209,6 +209,7 @@ jobs:
     
       - run: |
           git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
+          git init
           sudo terragrunt run-all init --terragrunt-log-level debug --terragrunt-debug --terragrunt-working-dir ${{ inputs.WORKING_DIR }}
       
       - name: Validate
