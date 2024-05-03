@@ -140,8 +140,8 @@ jobs:
         run: |
           sudo apt update ; sudo apt install wget -yq
           wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.58.2/terragrunt_linux_amd64
-          mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
-          chmod u+x /usr/local/bin/terragrunt
+          sudo mv terragrunt_linux_amd64 /usr/local/bin/terragrunt
+          sudo chmod u+x /usr/local/bin/terragrunt
           sudo apt-get update -y
           sudo apt-get install -y gnupg software-properties-common
           wget -O- https://apt.releases.hashicorp.com/gpg | \
