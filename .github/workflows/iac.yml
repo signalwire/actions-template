@@ -116,6 +116,9 @@ jobs:
         run: |
           sudo apt update
           sudo apt install unzip git -yq
+      
+      - name: cleanup old checkout  
+        run: chmod +w -R ${GITHUB_WORKSPACE}; rm -rf ${GITHUB_WORKSPACE}/*;
 
       - name: 'Checkout'
         uses: actions/checkout@v4
@@ -275,4 +278,4 @@ jobs:
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
 
-      - run: sudo chown -R $USER:$USER /home/runner/_work/${{ github.event.repository.name }}
+      # - run: sudo chown -R $USER:$USER /home/runner/_work/${{ github.event.repository.name }}
