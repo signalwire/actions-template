@@ -12,7 +12,7 @@ on:
       TG_VERSION: 
         required: false
         type: string
-        default: '0.58.5'
+        default: '0.58.2'
       TF_VERSION: 
         required: false
         type: string
@@ -112,7 +112,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: sudo apt update ; sudo apt install unzip -yq
-        
+
       - name: 'Checkout'
         uses: actions/checkout@v4
 
