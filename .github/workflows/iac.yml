@@ -273,4 +273,4 @@ jobs:
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
 
-      - run: sudo chown -R $USER:$USER /home/github/_work/${{ github.repository.name }}
+      - run: sudo chown -R $USER:$USER /home/runner/_work/${{ github.event.repository.name }}
