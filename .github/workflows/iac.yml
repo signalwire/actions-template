@@ -111,7 +111,9 @@ jobs:
 
     steps:
       - name: Install dependencies
-        run: sudo apt update ; sudo apt install unzip -yq
+        run: |
+          sudo apt update
+          sudo apt install unzip git -yq
 
       - name: 'Checkout'
         uses: actions/checkout@v4
@@ -169,8 +171,6 @@ jobs:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
                 
       - uses: opentofu/setup-opentofu@main
-
-      - run: sudo apt update ; sudo apt install git -yq ; git config --global --add safe.directory '*'
 
       - name: Init
         id: init
