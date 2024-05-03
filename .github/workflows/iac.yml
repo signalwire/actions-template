@@ -107,7 +107,9 @@ jobs:
     environment:
       name: ${{ inputs.ENVIRONMENT }}
     
-    permissions: write-all
+    permissions: 
+      contents: 'read'
+      id-token: 'write'
 
     steps:
       - name: Install dependencies
