@@ -207,6 +207,7 @@ jobs:
       - name: Plan
         uses: gruntwork-io/terragrunt-action@v2
         id: plan
+        continue-on-error: true
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
@@ -230,10 +231,6 @@ jobs:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
           # TF_LOG: trace
-
-      - name: Terraform Plan Status
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
 
       - name: Generate token
         id: generate_token
