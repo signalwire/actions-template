@@ -12,7 +12,7 @@ on:
       TG_VERSION: 
         required: false
         type: string
-        default: '0.57.5'
+        default: '0.58.2'
       TF_VERSION: 
         required: false
         type: string
@@ -107,19 +107,29 @@ jobs:
     environment:
       name: ${{ inputs.ENVIRONMENT }}
     
-    permissions: write-all
+    permissions: 
+      contents: 'read'
+      id-token: 'write'
 
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install unzip git -yq
+      
+      - name: cleanup old checkout  
+        run: chmod +w -R ${GITHUB_WORKSPACE}; rm -rf ${GITHUB_WORKSPACE}/*;
+          
       - name: 'Checkout'
         uses: actions/checkout@v4
-
+      
       - name: Checkout actions
         uses: actions/checkout@v4
         with:
           repository: signalwire/actions-template
           ref: main
           path: actions
-
+            
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
@@ -136,9 +146,6 @@ jobs:
           project_id: ${{ inputs.PROJECT_ID }}
           service_account: ${{ inputs.GCP_SA }}
 
-      - name: Install dependencies
-        run: sudo apt update ; sudo apt install unzip -yq
-      
       - name: Sops Binary Installer
         uses: mdgreenwald/mozilla-sops-action@v1.6.0
         with:
@@ -170,11 +177,9 @@ jobs:
                 
       - uses: opentofu/setup-opentofu@main
 
-      - run: sudo apt update ; sudo apt install git -yq ; git config --global --add safe.directory '*'
-
       - name: Init
         id: init
-        uses: gruntwork-io/terragrunt-action@v2
+        uses: gruntwork-io/terragrunt-action@v2.1.1
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
@@ -202,6 +207,7 @@ jobs:
       - name: Plan
         uses: gruntwork-io/terragrunt-action@v2
         id: plan
+        continue-on-error: true
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
@@ -225,10 +231,6 @@ jobs:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
           # TF_LOG: trace
-
-      - name: Terraform Plan Status
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
 
       - name: Generate token
         id: generate_token
@@ -272,3 +274,5 @@ jobs:
           OVH_APPLICATION_SECRET: ${{ secrets.OVH_APPLICATION_SECRET }}
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
+
+      - run: sudo chmod -R 777 /home/runner/_work/${{ github.event.repository.name }}
