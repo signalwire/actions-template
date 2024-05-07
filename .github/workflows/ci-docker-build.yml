@@ -82,7 +82,6 @@ jobs:
           --build-arg REPO_DOMAIN="${{ inputs.REPO_DOMAIN }}" \
           --build-arg REPO_USERNAME="${{ secrets.REPO_USERNAME }}" \
           --file "${{ inputs.DOCKERFILE }}" \
-          --no-cache \
           --platform linux/${{ inputs.PLATFORM }} \
           --progress=plain \
           --secret id=REPO_PASSWORD,env=REPO_PASSWORD \
