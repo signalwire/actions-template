@@ -57,6 +57,11 @@ on:
         required: true
         type: string
         default: ubuntu-latest
+      AZURE_ENV:
+        required: false
+        description: If Azure is required
+        type: boolean
+        default: false
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -99,6 +104,15 @@ on:
       PRIVATE_SSH_KEY_TFMODULES:
         required: false
         description: A private SSH key to clone the repository
+      AZURE_CLIENT_ID:
+        required: false
+        description: "Azure Client ID"
+      AZURE_TENANT_ID:
+        required: false
+        description: "Azure Tenant ID"
+      AZURE_SUBSCRIPTION_ID:
+        required: false
+        description: "Azure Subscription ID"
 
 jobs:
   terragrunt:
@@ -146,8 +160,17 @@ jobs:
           project_id: ${{ inputs.PROJECT_ID }}
           service_account: ${{ inputs.GCP_SA }}
 
+      - name: 'Authenticate Azure'
+        uses: azure/login@v1
+        if: inputs.AZURE_ENV == true
+        with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: Sops Binary Installer
         uses: mdgreenwald/mozilla-sops-action@v1.6.0
+        if: inputs.TELEPORT_APP != ''
         with:
           version: 3.7.3
           
