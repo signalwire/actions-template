@@ -299,3 +299,4 @@ jobs:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
 
       - run: sudo chmod -R 777 /home/runner/_work/${{ github.event.repository.name }}
+        continue-on-error: true
