@@ -161,7 +161,7 @@ jobs:
           service_account: ${{ inputs.GCP_SA }}
 
       - name: 'Authenticate Azure'
-        uses: azure/login@v2.1.0
+        uses: azure/login@v1.5.1
         if: inputs.AZURE_ENV == true
         with:
             client-id: ${{ secrets.AZURE_CLIENT_ID }}
