@@ -113,10 +113,15 @@ on:
       AZURE_SUBSCRIPTION_ID:
         required: false
         description: "Azure Subscription ID"
+      AZURE_CLIENT_SECRET:
+        required: false
+        description: "Azure Client Secret"
 env:
   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+
 jobs:
   terragrunt:
     name: 'Terragrunt ${{ inputs.WORKING_DIR}}'
