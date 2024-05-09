@@ -226,6 +226,7 @@ jobs:
       
       - name: Validate
         uses: gruntwork-io/terragrunt-action@v2
+        if: steps.init.outputs.status == 'success'
         id: validate
         with:
           tf_version: ${{ inputs.TF_VERSION }}
