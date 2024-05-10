@@ -206,7 +206,7 @@ jobs:
 
       - name: Init
         id: init
-        uses: gruntwork-io/terragrunt-action@v2.1.1
+        uses: gruntwork-io/terragrunt-action@v2.1.2
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
