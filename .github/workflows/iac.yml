@@ -113,6 +113,10 @@ on:
       AZURE_SUBSCRIPTION_ID:
         required: false
         description: "Azure Subscription ID"
+env:
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 jobs:
   terragrunt:
@@ -160,13 +164,13 @@ jobs:
           project_id: ${{ inputs.PROJECT_ID }}
           service_account: ${{ inputs.GCP_SA }}
 
-      - name: 'Authenticate Azure'
-        uses: azure/login@v1
-        if: inputs.AZURE_ENV == true
-        with:
-            client-id: ${{ secrets.AZURE_CLIENT_ID }}
-            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      # - name: 'Authenticate Azure'
+      #   uses: azure/login@v1.5.1
+      #   if: inputs.AZURE_ENV == true
+      #   with:
+      #       client-id: ${{ secrets.AZURE_CLIENT_ID }}
+      #       tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      #       subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Sops Binary Installer
         uses: mdgreenwald/mozilla-sops-action@v1.6.0
@@ -299,3 +303,4 @@ jobs:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
 
       - run: sudo chmod -R 777 /home/runner/_work/${{ github.event.repository.name }}
+        continue-on-error: true
