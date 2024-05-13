@@ -125,9 +125,7 @@ jobs:
     environment:
       name: ${{ inputs.ENVIRONMENT }}
     
-    permissions: 
-      contents: 'read'
-      id-token: 'write'
+    permissions: write-all
 
     steps:
       - name: Install dependencies
@@ -138,17 +136,15 @@ jobs:
       - name: cleanup old checkout  
         run: chmod +w -R ${GITHUB_WORKSPACE}; rm -rf ${GITHUB_WORKSPACE}/*;
           
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+
       - name: Checkout actions
         uses: actions/checkout@v4
         with:
           repository: signalwire/actions-template
           ref: main
           path: actions
-      
-      - name: 'Checkout'
-        uses: actions/checkout@v4
-        with:
-          clean: false
         
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
@@ -197,9 +193,6 @@ jobs:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
                 
       - uses: opentofu/setup-opentofu@main
-      # - run: |
-      #     ls -la
-      #     ${{ inputs.WORKING_DIR }}
 
       - name: Init
         id: init
@@ -253,7 +246,7 @@ jobs:
           OVH_APPLICATION_SECRET: ${{ secrets.OVH_APPLICATION_SECRET }}
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{ github.token }}
           # TF_LOG: trace
 
       - name: Generate token
