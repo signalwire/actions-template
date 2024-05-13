@@ -196,32 +196,21 @@ jobs:
                 
       - uses: opentofu/setup-opentofu@main
 
-      - name: Update Homebrew
-        run: |
-          brew update --preinstall
-          cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/foo.rb" > .github/brew-formulae
-  
-      - run: |
-          brew install terragrunt
-          brew install terraform
-          git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
-          cd ${{ inputs.WORKING_DIR }}
-          terragrunt run-all init 
-      # - name: Init
-      #   id: init
-      #   uses: gruntwork-io/terragrunt-action@v2.1.2
-      #   with:
-      #     tf_version: ${{ inputs.TF_VERSION }}
-      #     tg_version: ${{ inputs.TG_VERSION }}
-      #     tg_dir: ${{github.workspace}}/${{ inputs.WORKING_DIR }}
-      #     tg_command: 'run-all init'
-      #   env:
-      #     # configure git to use custom token to clone repository.
-      #     INPUT_PRE_EXEC_1: |
-      #       git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
-      #     # print git configuration
-      #     INPUT_PRE_EXEC_2: |
-      #       git config --global --list
+      - name: Init
+        id: init
+        uses: gruntwork-io/terragrunt-action@v2
+        with:
+          tf_version: ${{ inputs.TF_VERSION }}
+          tg_version: ${{ inputs.TG_VERSION }}
+          tg_dir: ./${{ inputs.WORKING_DIR }}
+          tg_command: 'run-all init'
+        env:
+          # configure git to use custom token to clone repository.
+          INPUT_PRE_EXEC_1: |
+            git config --global url."https://user:${{secrets.PAT_GIT}}@github.com".insteadOf "https://github.com"
+          # print git configuration
+          INPUT_PRE_EXEC_2: |
+            git config --global --list
       
       - name: Validate
         uses: gruntwork-io/terragrunt-action@v2
