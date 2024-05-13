@@ -125,8 +125,7 @@ jobs:
     environment:
       name: ${{ inputs.ENVIRONMENT }}
     
-    permissions: 
-      permissions: write-all
+    permissions: write-all
 
     steps:
       - name: Install dependencies
