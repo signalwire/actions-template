@@ -199,18 +199,16 @@ jobs:
       # - uses: opentofu/setup-opentofu@main
       - run: |
           ls -la
-          ls -la ${{ inputs.WORKING_DIR }}
-          pwd
+          ${{ inputs.WORKING_DIR }}
 
       - name: Init
         id: init
-        uses:  gruntwork-io/terragrunt-action@v1
+        uses: gruntwork-io/terragrunt-action@v2
         with:
-          tofu_version: 1.6.0
+          tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: ${{ inputs.WORKING_DIR }}
+          tg_dir: ./${{ inputs.WORKING_DIR }}
           tg_command: 'run-all init'
-          tg_add_approve: true
         env:
           # configure git to use custom token to clone repository.
           INPUT_PRE_EXEC_1: |
