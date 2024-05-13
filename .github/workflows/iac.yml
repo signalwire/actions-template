@@ -197,6 +197,9 @@ jobs:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
                 
       # - uses: opentofu/setup-opentofu@main
+      - run: |
+          ls -la
+          ls -la ${{ inputs.WORKING_DIR }}
 
       - name: Init
         id: init
