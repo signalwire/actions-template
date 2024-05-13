@@ -164,8 +164,6 @@ jobs:
           project_id: ${{ inputs.PROJECT_ID }}
           service_account: ${{ inputs.GCP_SA }}
 
-      - run: git init
-
       - name: Sops Binary Installer
         uses: mdgreenwald/mozilla-sops-action@v1.6.0
         if: inputs.TELEPORT_APP != ''
@@ -204,7 +202,7 @@ jobs:
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: /home/runner/_work/${{ github.event.repository.name }}/${{ inputs.WORKING_DIR }}
+          tg_dir: /home/runner/work/infrastructure-lives/${{ github.event.repository.name }}/${{ inputs.WORKING_DIR }}
           tg_command: 'run-all init'
         env:
           # configure git to use custom token to clone repository.
