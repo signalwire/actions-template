@@ -196,14 +196,14 @@ jobs:
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
                 
-      # - uses: opentofu/setup-opentofu@main
-      - run: |
-          ls -la
-          ${{ inputs.WORKING_DIR }}
+      - uses: opentofu/setup-opentofu@main
+      # - run: |
+      #     ls -la
+      #     ${{ inputs.WORKING_DIR }}
 
       - name: Init
         id: init
-        uses: gruntwork-io/terragrunt-action@v2
+        uses: gruntwork-io/terragrunt-action@v1
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
