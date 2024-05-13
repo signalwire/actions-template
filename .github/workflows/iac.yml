@@ -138,16 +138,16 @@ jobs:
       - name: cleanup old checkout  
         run: chmod +w -R ${GITHUB_WORKSPACE}; rm -rf ${GITHUB_WORKSPACE}/*;
           
-      - name: 'Checkout'
-        uses: actions/checkout@v4
-      
       - name: Checkout actions
         uses: actions/checkout@v4
         with:
           repository: signalwire/actions-template
           ref: main
           path: actions
-            
+      
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+        
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
