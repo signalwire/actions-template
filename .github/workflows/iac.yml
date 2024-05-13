@@ -208,7 +208,7 @@ jobs:
         with:
           tofu_version: 1.6.0
           tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: ./${{ inputs.WORKING_DIR }}
+          tg_dir: ${{ inputs.WORKING_DIR }}
           tg_command: 'run-all init'
           tg_add_approve: true
         env:
