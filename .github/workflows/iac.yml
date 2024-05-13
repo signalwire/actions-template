@@ -147,7 +147,7 @@ jobs:
       
       - name: 'Checkout'
         uses: actions/checkout@v4
-        
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
@@ -202,7 +202,7 @@ jobs:
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: /home/runner/work/infrastructure-lives/${{ github.event.repository.name }}/${{ inputs.WORKING_DIR }}
+          tg_dir: ${{ inputs.WORKING_DIR }}
           tg_command: 'run-all init'
         env:
           # configure git to use custom token to clone repository.
