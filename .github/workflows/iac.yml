@@ -194,16 +194,17 @@ jobs:
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
                 
-      - uses: opentofu/setup-opentofu@main
+      # - uses: opentofu/setup-opentofu@main
 
       - name: Init
         id: init
         uses: gruntwork-io/terragrunt-action@v2
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
+          tofu_version: 1.6.0
           tg_version: ${{ inputs.TG_VERSION }}
           tg_dir: ./${{ inputs.WORKING_DIR }}
           tg_command: 'run-all init'
+          tg_add_approve: true
         env:
           # configure git to use custom token to clone repository.
           INPUT_PRE_EXEC_1: |
