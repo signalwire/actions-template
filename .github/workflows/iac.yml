@@ -200,6 +200,7 @@ jobs:
       - run: |
           ls -la
           ls -la ${{ inputs.WORKING_DIR }}
+          pwd
 
       - name: Init
         id: init
