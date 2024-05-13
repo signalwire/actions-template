@@ -248,8 +248,33 @@ jobs:
           OVH_APPLICATION_SECRET: ${{ secrets.OVH_APPLICATION_SECRET }}
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # TF_LOG: trace
+
+      - name: Comment PR
+        uses: actions/github-script@v6
+        if: always()
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `### *${{ github.workflow }}* Action ([Run #${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})) Summary 🚀
+              #### Target directory: ${{ inputs.WORKING_DIR }}
+              #### Terragrunt Format and Style 🖌️ ${{ steps.validate.outcome }}
+              #### Terraform Plan 📖 **${{ steps.plan.outcome }}** 
+  
+              <details><summary>Show Plan</summary>
+  
+              \`\`\`\n
+              ${{ steps.plan.outputs.tg_action_output }}
+              \`\`\`
+  
+              </details>
+  
+              Pusher: *@${{ github.actor }}*, Action: *${{ github.event_name }}*`
+            })
 
       - name: Generate token
         id: generate_token
