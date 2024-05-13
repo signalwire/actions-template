@@ -204,7 +204,7 @@ jobs:
 
       - name: Init
         id: init
-        uses: gruntwork-io/terragrunt-action@v2
+        uses:  gruntwork-io/terragrunt-action@v1
         with:
           tofu_version: 1.6.0
           tg_version: ${{ inputs.TG_VERSION }}
