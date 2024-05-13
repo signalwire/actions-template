@@ -138,16 +138,18 @@ jobs:
       - name: cleanup old checkout  
         run: chmod +w -R ${GITHUB_WORKSPACE}; rm -rf ${GITHUB_WORKSPACE}/*;
           
-      - name: 'Checkout'
-        uses: actions/checkout@v4
-      
       - name: Checkout actions
         uses: actions/checkout@v4
         with:
           repository: signalwire/actions-template
           ref: main
           path: actions
-            
+      
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+        with:
+          clean: false
+        
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
         with:
@@ -163,14 +165,6 @@ jobs:
           workload_identity_provider: ${{ inputs.GCP_WIP }}
           project_id: ${{ inputs.PROJECT_ID }}
           service_account: ${{ inputs.GCP_SA }}
-
-      # - name: 'Authenticate Azure'
-      #   uses: azure/login@v1.5.1
-      #   if: inputs.AZURE_ENV == true
-      #   with:
-      #       client-id: ${{ secrets.AZURE_CLIENT_ID }}
-      #       tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      #       subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Sops Binary Installer
         uses: mdgreenwald/mozilla-sops-action@v1.6.0
@@ -203,14 +197,17 @@ jobs:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
                 
       - uses: opentofu/setup-opentofu@main
+      # - run: |
+      #     ls -la
+      #     ${{ inputs.WORKING_DIR }}
 
       - name: Init
         id: init
-        uses: gruntwork-io/terragrunt-action@v2.1.2
+        uses: gruntwork-io/terragrunt-action@v1
         with:
           tf_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
-          tg_dir: ${{ inputs.WORKING_DIR }}
+          tg_dir: ./${{ inputs.WORKING_DIR }}
           tg_command: 'run-all init'
         env:
           # configure git to use custom token to clone repository.
@@ -221,7 +218,7 @@ jobs:
             git config --global --list
       
       - name: Validate
-        uses: gruntwork-io/terragrunt-action@v2
+        uses: gruntwork-io/terragrunt-action@v1
         id: validate
         with:
           tf_version: ${{ inputs.TF_VERSION }}
@@ -232,7 +229,7 @@ jobs:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
       
       - name: Plan
-        uses: gruntwork-io/terragrunt-action@v2
+        uses: gruntwork-io/terragrunt-action@v1
         id: plan
         continue-on-error: true
         with:
@@ -279,7 +276,7 @@ jobs:
 
       - name: Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: gruntwork-io/terragrunt-action@v2
+        uses: gruntwork-io/terragrunt-action@v1
         id: apply
         with:
           tf_version: ${{ inputs.TF_VERSION }}
