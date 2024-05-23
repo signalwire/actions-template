@@ -41,7 +41,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.WORKING_DIRECTORY }}
       run: |
-        env REPO_PASSWORD='${{ env.REPO_PASSWORD }}' docker build \
+        env REPO_PASSWORD='${{ env.REPO_PASSWORD }}' DEPLOYMENT_TOKEN='${{ env.DEPLOYMENT_TOKEN }}' docker build \
           --build-arg BUILD_NUMBER="${GITHUB_RUN_ID}" \
           --build-arg GIT_SHA="$(echo ${GITHUB_SHA} | cut -c1-10)" \
           --build-arg MAINTAINER="${{ inputs.MAINTAINER }}" \
@@ -51,6 +51,7 @@ runs:
           --platform linux/${{ inputs.PLATFORM }} \
           --progress=plain \
           --secret id=REPO_PASSWORD,env=REPO_PASSWORD \
+          --secret id=DEPLOYMENT_TOKEN,env=DEPLOYMENT_TOKEN \
           --tag artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} \
           --ulimit nofile=1024000:1024000 \
         . 2>&1 | tee -a ${{ inputs.BUILD_LOG_FILENAME }}
