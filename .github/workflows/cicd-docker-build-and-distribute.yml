@@ -87,9 +87,11 @@ on:
         required: true
       USERNAME:
         required: true
+      REPO_USERNAME:
+        required: false
       REPO_PASSWORD:
         required: false
-      REPO_USERNAME:
+      DEPLOYMENT_TOKEN:
         required: false
       GH_BOT_DEPLOY_TOKEN:
         required: true
@@ -135,6 +137,7 @@ jobs:
         env:
           REPO_USERNAME: ${{ secrets.REPO_USERNAME }}
           REPO_PASSWORD: ${{ secrets.REPO_PASSWORD }}
+          DEPLOYMENT_TOKEN: ${{ secrets.DEPLOYMENT_TOKEN }}
 
       - name: Upload build logs
         uses: actions/upload-artifact@v4
