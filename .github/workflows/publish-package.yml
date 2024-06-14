@@ -1,0 +1,87 @@
+name: Publish package
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: Environment where the variables and secrets are scoped to
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        description: A GitHub runner type
+        type: string
+      WORKING_DIRECTORY:
+        required: false
+        type: string
+        default: 'work'
+        description: Working directory
+      META_BRANCH:
+        required: true
+        type: string
+        description: Branch name (in metarepo) that has artifact location information (trigger/PROJECT/PROJECT_BRANCH)
+      OS:
+        required: true
+        type: string
+        description: OS type (debian/centos/...)
+      CODENAME:
+        required: true
+        type: string
+        description: Artifact Debian Codename (buster/bullseye/bookworm/...)
+      ARCH:
+        required: true
+        type: string
+        description: Artifact architecture (amd64/arm32v7/arm64v8/...)
+
+    secrets:
+      HOSTNAME:
+        required: true
+      PROXY_URL:
+        required: true
+      TELEPORT_TOKEN:
+        required: true
+      USERNAME:
+        required: true
+      GH_BOT_DEPLOY_TOKEN:
+        required: true
+
+jobs:
+  publish-deb:
+    runs-on: ${{ inputs.RUNNER }}
+    permissions:
+      contents: read
+      id-token: write
+    environment: ${{ inputs.ENVIRONMENT }}
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: ${{ inputs.WORKING_DIRECTORY }}
+
+      - name: Checkout reusable actions
+        uses: actions/checkout@v4
+        with:
+          repository: signalwire/actions-template
+          ref: publish-deb
+          fetch-depth: 1
+          path: actions
+          sparse-checkout: |
+            .github/actions/publish-package/action.yml
+          sparse-checkout-cone-mode: false
+
+      - name: Publish DEB
+        uses: ./actions/.github/actions/publish-package
+        with:
+          OS: ${{ inputs.OS }}
+          BRANCH: ${{ inputs.META_BRANCH }}
+          CODENAME: ${{ inputs.CODENAME }}
+          ARCH: ${{ inputs.ARCH }}
+        env:
+          HOSTNAME: ${{ secrets.HOSTNAME }}
+          PROXY_URL: ${{ secrets.PROXY_URL }}
+          TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+          USERNAME: ${{ secrets.USERNAME }}
+          GH_BOT_DEPLOY_TOKEN: ${{ secrets.GH_BOT_DEPLOY_TOKEN }}

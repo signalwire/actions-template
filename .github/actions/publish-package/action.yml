@@ -1,0 +1,70 @@
+name: 'Publish package to repository'
+
+inputs:
+  TELEPORT_VERSION:
+    required: false
+    default: 14.0.0
+    description: The teleport binary client version
+  REPO_URL:
+    required: false
+    default: 'signalwire/bamboo_gha_trigger'
+    description: Repository URL that contains data of built artifacts
+  BRANCH:
+    required: true
+    description: Branch name that has artifact location information (trigger/PROJECT/PROJECT_BRANCH)
+  OS:
+    required: true
+    description: OS type (debian/centos/...)
+  CODENAME:
+    required: true
+    description: Artifact Debian Codename (buster/bullseye/bookworm/...)
+  ARCH:
+    required: true
+    description: Artifact architecture (amd64/arm32v7/arm64v8/...)
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout metarepo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.REPO_URL }}
+        ref: ${{ inputs.BRANCH }}
+        token: ${{ env.GH_BOT_DEPLOY_TOKEN || github.token }}
+        set-safe-directory: '*'
+        path: repo
+        sparse-checkout: |
+          metafile.txt
+
+    - name: Read source directory
+      shell: bash
+      working-directory: repo
+      run: |
+        SOURCE_DIR=$(cat metafile.txt | tr -d '\n')
+        echo "SOURCE_DIR=${SOURCE_DIR}" >> ${GITHUB_ENV}
+
+    - name: Create temporary directory
+      shell: bash
+      run: |
+        TEMP_DIR=$(mktemp -d)
+        echo "TEMP_DIR=${TEMP_DIR}" >> ${GITHUB_ENV}
+
+    - name: Install Teleport
+      uses: teleport-actions/setup@v1
+      with:
+        version: ${{ inputs.TELEPORT_VERSION }}
+
+    - name: Authorize against Teleport
+      id: auth
+      uses: teleport-actions/auth@v2
+      if: env.HOSTNAME != ''
+      with:
+        proxy: ${{ env.PROXY_URL }}
+        token: ${{ env.TOKEN }}
+        certificate-ttl: 1h
+
+    - name: Copy files to local
+      shell: bash
+      run: |
+        tsh scp --identity=${{ steps.auth.outputs.identity-file }} --login=${{ env.USERNAME }} ${{ env.HOSTNAME }}:${SOURCE_DIR}/${{ inputs.OS }}-${{ inputs.CODENAME }}-${{ inputs.ARCH }}-artifact.tar.gz ${TEMP_DIR}
+        ls -lah ${TEMP_DIR} && rm -vrf ${TEMP_DIR}
