@@ -12,6 +12,10 @@ inputs:
     required: true
     description: Portainer Domain
     default: "deploy.signalwire.cloud"
+  PORTAINER_DOMAIN_PROTOCOL:
+    required: true
+    description: Portainer Protocol
+    default: "http"
 outputs:
   DEPLOYED_DATE:
     description: 'date and time that image was deployed'
@@ -29,14 +33,14 @@ runs:
       id: deploy
       shell: bash
       run: |
-          curl -s -H "X-API-Key: ${{env.PORTAINER_API_KEY}}" http://${{inputs.PORTAINER_DOMAIN}}/api/endpoints/${{env.ENDPOINT_ID}}/docker/services/${{ inputs.STACK_NAME }} > service.spec.json
+          curl -s -H "X-API-Key: ${{env.PORTAINER_API_KEY}}" ${{inputs.PORTAINER_DOMAIN_PROTOCOL}}://${{inputs.PORTAINER_DOMAIN}}/api/endpoints/${{env.ENDPOINT_ID}}/docker/services/${{ inputs.STACK_NAME }} > service.spec.json
           
           version=$(jq '.Version.Index' service.spec.json)
           previousimg=$(jq '.Spec.TaskTemplate.ContainerSpec.Image' -r service.spec.json)
           
           jq '.Spec.TaskTemplate.ContainerSpec.Image="${{ inputs.IMAGE_TAG}}" | .Spec' service.spec.json > update.spec.json
           
-            curl -s -X POST -H "X-API-Key: ${{env.PORTAINER_API_KEY}}" -H "Content-Type: application/json" http://${{inputs.PORTAINER_DOMAIN}}/api/endpoints/${{env.ENDPOINT_ID}}/docker/services/${{ inputs.STACK_NAME }}/update?version=$version -d @update.spec.json
+            curl -s -X POST -H "X-API-Key: ${{env.PORTAINER_API_KEY}}" -H "Content-Type: application/json" ${{inputs.PORTAINER_DOMAIN_PROTOCOL}}://${{inputs.PORTAINER_DOMAIN}}/api/endpoints/${{env.ENDPOINT_ID}}/docker/services/${{ inputs.STACK_NAME }}/update?version=$version -d @update.spec.json
           
           echo PREVIOUS_IMAGE=$previousimg >> $GITHUB_OUTPUT
           echo DEPLOYED_DATE=$(date -u) >> $GITHUB_OUTPUT

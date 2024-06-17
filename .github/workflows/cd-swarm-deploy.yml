@@ -46,6 +46,11 @@ on:
         type: string
         description: Portainer Domain
         default: deploy.signalwire.cloud
+      PORTAINER_DOMAIN_PROTOCOL:
+        required: true
+        type: string
+        description: Portainer Protocol
+        default: http
     secrets:
       ENDPOINT_ID:
         required: false
