@@ -117,6 +117,7 @@ jobs:
         STACK_NAME: ${{ inputs.STACK_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
         PORTAINER_DOMAIN: ${{ inputs.PORTAINER_DOMAIN }}
+        PORTAINER_DOMAIN_PROTOCOL: ${{ inputs.PORTAINER_DOMAIN_PROTOCOL }}
 
     - uses: ./actions/.github/actions/slack
       if: ${{ inputs.NOTIFY_SLACK  == true }}
