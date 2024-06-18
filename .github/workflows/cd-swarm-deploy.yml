@@ -47,7 +47,7 @@ on:
         description: Portainer Domain
         default: deploy.signalwire.cloud
       PORTAINER_DOMAIN_PROTOCOL:
-        required: true
+        required: false
         type: string
         description: Portainer Protocol
         default: http
