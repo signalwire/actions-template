@@ -33,15 +33,17 @@ inputs:
 runs:
   using: "composite"
   steps:
-
     - name: Set up QEMU for Docker
       uses: docker/setup-qemu-action@v3
 
     - name: Build Docker image
       shell: bash
       working-directory: ${{ inputs.WORKING_DIRECTORY }}
+      env:
+        REPO_PASSWORD: ${{ env.REPO_PASSWORD }}
+        DEPLOYMENT_TOKEN: ${{ env.DEPLOYMENT_TOKEN }}
       run: |
-        env REPO_PASSWORD='${{ env.REPO_PASSWORD }}' DEPLOYMENT_TOKEN='${{ env.DEPLOYMENT_TOKEN }}' docker build \
+        docker build \
           --build-arg BUILD_NUMBER="${GITHUB_RUN_ID}" \
           --build-arg GIT_SHA="$(echo ${GITHUB_SHA} | cut -c1-10)" \
           --build-arg MAINTAINER="${{ inputs.MAINTAINER }}" \
