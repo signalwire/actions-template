@@ -3,6 +3,10 @@ name: Build and Distribute (via Docker)
 on:
   workflow_call:
     inputs:
+      REF:
+        required: false
+        description: The branch, tag or SHA to checkout
+        type: string
       ENVIRONMENT:
         required: false
         type: string
@@ -104,10 +108,18 @@ jobs:
       id-token: write
     environment: ${{ inputs.ENVIRONMENT }}
     steps:
-
       - name: Checkout code
+        if: ${{ inputs.REF == '' }}
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
+          path: ${{ inputs.CODE_WORKING_DIRECTORY }}
+
+      - name: Checkout code by REF
+        if: ${{ inputs.REF != '' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.REF }}
           fetch-depth: 0
           path: ${{ inputs.CODE_WORKING_DIRECTORY }}
 
