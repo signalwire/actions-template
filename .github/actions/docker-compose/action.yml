@@ -51,6 +51,8 @@ runs:
       docker ps -a
       docker network ls
       docker image ls
+      sleep 20
+      docker ps -a
     shell: bash
 
   # - uses: isbang/compose-action@v1.4.1
