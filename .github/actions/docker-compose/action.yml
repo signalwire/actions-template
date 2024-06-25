@@ -44,6 +44,14 @@ runs:
     if: inputs.RUN_BACKGROUND == 'true'
     run: docker-compose -f ${{ inputs.COMPOSE_FILE }} up -d
     shell: bash
+
+  - name: inspect docker
+    run: |
+      docker ps -a
+      docker network ls
+      docker image ls
+    shell: bash
+
   # - uses: isbang/compose-action@v1.4.1
   #   if: inputs.RUN_BACKGROUND == 'true'
   #   with:
