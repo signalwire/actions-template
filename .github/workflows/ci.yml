@@ -207,7 +207,7 @@ jobs:
 
   CHECK:
     name: CI
-    uses: signalwire/actions-template/.github/workflows/ci-check.yml@main
+    uses: signalwire/actions-template/.github/workflows/ci-check.yml@ryanwi/debug
     with:
       ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
