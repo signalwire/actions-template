@@ -53,6 +53,7 @@ runs:
       docker image ls
       sleep 20
       docker ps -a
+      docker logs provisioning-postgres-datasphere-1
     shell: bash
 
   # - uses: isbang/compose-action@v1.4.1
