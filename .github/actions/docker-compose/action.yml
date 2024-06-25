@@ -47,6 +47,7 @@ runs:
 
   - name: inspect docker
     run: |
+      sleep 20
       docker ps -a
       docker network ls
       docker image ls
