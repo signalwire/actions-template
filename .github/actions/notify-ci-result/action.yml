@@ -17,10 +17,10 @@ inputs:
     required: false
     description: message to send to slack or comment on PR
   channel:
-    required: true
+    required: false
     description: slack channel id to notify
   slack_webhook_url:
-    required: true
+    required: false
     description: slack webhook url
   scan_build_path:
     required: false
@@ -71,7 +71,12 @@ runs:
         message: |
           Scan-build ${{ inputs.message }}: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
     - name: Notify scan build result to slack
-      if: ${{ inputs.for == 'scan_build' && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      if: >
+        ${{ inputs.for == 'scan_build' &&
+            github.event_name == 'push' &&
+            github.ref == 'refs/heads/master' &&
+            inputs.channel != '' &&
+            slack_webhook_url.channel != '' }}
       uses: signalwire/actions-template/.github/actions/slack@main
       with:
         CHANNEL: ${{ inputs.channel }}
@@ -92,7 +97,12 @@ runs:
         message: |
           Unit-Tests failed: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
     - name: Notify run tests result to slack
-      if: ${{ inputs.for == 'run_tests' && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      if: >
+        ${{ inputs.for == 'run_tests' &&
+            github.event_name == 'push' &&
+            github.ref == 'refs/heads/master' &&
+            inputs.channel != '' &&
+            slack_webhook_url.channel != '' }}
       uses: signalwire/actions-template/.github/actions/slack@main
       with:
         CHANNEL: ${{ inputs.channel }}
