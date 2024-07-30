@@ -104,7 +104,7 @@ runs:
           Unit-Tests failed: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
     - name: Notify run tests result to slack
       if: >
-        ${{ inputs.for == 'scan_build' &&
+        ${{ inputs.for == 'run_tests' &&
             github.event_name == 'push' &&
             (
               github.ref == 'refs/heads/master' ||
