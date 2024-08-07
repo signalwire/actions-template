@@ -31,12 +31,12 @@ runs:
     run: docker network create signalwire_freeswitch
     shell: bash
 
-  - name: Run docker-compose
+  - name: Run docker compose
     if: inputs.RUN_BACKGROUND == 'false'
     run: docker compose -f ${{ inputs.COMPOSE_FILE }} up
     shell: bash
   
-  - name: Run docker-compose in background
+  - name: Run docker compose in background
     if: inputs.RUN_BACKGROUND == 'true'
     run: docker compose -f ${{ inputs.COMPOSE_FILE }} up -d
     shell: bash
