@@ -224,7 +224,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: signalwire/actions-template
-        ref: ryanwi/docker-cache
+        ref: main
         path: actions
         
     - uses: ./actions/.github/actions/gpg
