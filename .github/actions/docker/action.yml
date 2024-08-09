@@ -132,7 +132,7 @@ runs:
 
     - name: Build and export to Docker without cache
       uses: docker/build-push-action@v6
-      if: inputs.TAG_ONLY == 'false' && inputs.ENABLE_CACHE == 'false'
+      if: inputs.ENABLE_CACHE == 'false'
       with:
         load: true
         tags: |
@@ -147,7 +147,7 @@ runs:
 
     - name: Build and export to Docker with cache
       uses: docker/build-push-action@v6
-      if: inputs.TAG_ONLY == 'false' && inputs.ENABLE_CACHE == 'true'
+      if: inputs.ENABLE_CACHE == 'true'
       with:
         load: true
         tags: |
