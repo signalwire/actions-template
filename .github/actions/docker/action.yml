@@ -63,14 +63,6 @@ inputs:
     default: 'false'
     description: 'Generate tag only.'
     required: false
-  CACHE_FROM:
-    default: 'type=gha'
-    description: 'Cache from.'
-    required: false
-  CACHE_TO:
-    default: 'type=gha,mode=max'
-    description: 'Cache to.'
-    required: false
   ENABLE_CACHE:
     default: 'false'
     description: 'Whether to use cache when building the image'

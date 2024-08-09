@@ -106,16 +106,6 @@ on:
         type: string
         description:  ref to pull and build default to github.ref
         required: false
-      CACHE_FROM:
-        type: string
-        default: 'type=gha'
-        description: 'Cache from.'
-        required: false
-      CACHE_TO:
-        type: string
-        default: 'type=gha,mode=max'
-        description: 'Cache to.'
-        required: false
       ENABLE_DOCKER_CACHE:
         type: boolean
         default: false
@@ -285,8 +275,6 @@ jobs:
         CONTAINER_TEST_RUN_OPTIONS: ${{ inputs.CONTAINER_TEST_RUN_OPTIONS }}
         CONTAINER_TEST_COMMAND: ${{ inputs.CONTAINER_TEST_COMMAND }}
         OUTPUT_TAG_INDEX: ${{ inputs.OUTPUT_TAG_INDEX }}
-        CACHE_FROM: ${{ inputs.CACHE_FROM }}
-        CACHE_TO: ${{ inputs.CACHE_TO }}
         ENABLE_CACHE: ${{ inputs.ENABLE_DOCKER_CACHE }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
