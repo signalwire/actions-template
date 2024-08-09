@@ -210,42 +210,42 @@ on:
 
 jobs:
 
-  # CHECK:
-  #   name: CI
-  #   uses: signalwire/actions-template/.github/workflows/ci-check.yml@main
-  #   with:
-  #     ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-  #     PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
-  #     LANGUAGE: ${{ inputs.LANGUAGE }}
-  #     COVERAGE: ${{ inputs.COVERAGE }}
-  #     NODE_VERSION: ${{ inputs.NODE_VERSION }}
-  #     RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
-  #     DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
-  #     TEST_DEPENDENCIES: ${{ inputs.TEST_DEPENDENCIES }}
-  #     TEST_DEPENDENCIES_PRIVATE: ${{ inputs.TEST_DEPENDENCIES_PRIVATE }}
-  #     DEPENDENCIES_FILE: ${{ inputs.DEPENDENCIES_FILE }}
-  #     SUBMODULES_RECURSIVE: ${{ inputs.SUBMODULES_RECURSIVE }}
-  #     RUNNER: ${{ inputs.RUNNER }}
-  #     ENV_PATH: ${{ inputs.ENV_PATH }}
-  #     TEST_CREATE_NETWORK: ${{ inputs.TEST_CREATE_NETWORK }}
-  #     RUBY_RAKE_COMMANDS: ${{ inputs.RUBY_RAKE_COMMANDS }}
-  #     ZEITWERK: ${{ inputs.ZEITWERK }}
-  #     BRAKEMAN: ${{ inputs.BRAKEMAN }}
-  #     RUBOCOP: ${{ inputs.RUBOCOP }}
-  #     RUN_TESTS: ${{ inputs.RUN_TESTS }}
-  #     DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
-  #     VAULT_SECRETS: ${{ inputs.VAULT_SECRETS }}
-  #     TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
-  #     TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
-  #   secrets:
-  #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-  #     SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
-  #     DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-  #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-  #     GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
-  #     VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
-  #     TELEPORT_TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+  CHECK:
+    name: CI
+    uses: signalwire/actions-template/.github/workflows/ci-check.yml@ryanwi/docker-cache
+    with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
+      PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
+      LANGUAGE: ${{ inputs.LANGUAGE }}
+      COVERAGE: ${{ inputs.COVERAGE }}
+      NODE_VERSION: ${{ inputs.NODE_VERSION }}
+      RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
+      DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
+      TEST_DEPENDENCIES: ${{ inputs.TEST_DEPENDENCIES }}
+      TEST_DEPENDENCIES_PRIVATE: ${{ inputs.TEST_DEPENDENCIES_PRIVATE }}
+      DEPENDENCIES_FILE: ${{ inputs.DEPENDENCIES_FILE }}
+      SUBMODULES_RECURSIVE: ${{ inputs.SUBMODULES_RECURSIVE }}
+      RUNNER: ${{ inputs.RUNNER }}
+      ENV_PATH: ${{ inputs.ENV_PATH }}
+      TEST_CREATE_NETWORK: ${{ inputs.TEST_CREATE_NETWORK }}
+      RUBY_RAKE_COMMANDS: ${{ inputs.RUBY_RAKE_COMMANDS }}
+      ZEITWERK: ${{ inputs.ZEITWERK }}
+      BRAKEMAN: ${{ inputs.BRAKEMAN }}
+      RUBOCOP: ${{ inputs.RUBOCOP }}
+      RUN_TESTS: ${{ inputs.RUN_TESTS }}
+      DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
+      VAULT_SECRETS: ${{ inputs.VAULT_SECRETS }}
+      TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+      TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      TELEPORT_TOKEN: ${{ secrets.TELEPORT_TOKEN }}
 
   BUILD:
     name: BUILD
