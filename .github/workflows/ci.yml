@@ -151,6 +151,11 @@ on:
         default: .
         description: Whenever the WF requires a different path than . for the revision file
         required: false
+      ENABLE_DOCKER_CACHE:
+        type: boolean
+        default: false
+        description: 'Whether to use cache when building the image'
+        required: false
       ## Vault Secrets
       VAULT_SECRETS:
         type: string
@@ -269,6 +274,7 @@ jobs:
       VAULT_SECRETS: ${{ inputs.VAULT_SECRETS }}
       TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
       TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+      ENABLE_DOCKER_CACHE: ${{ inputs.ENABLE_DOCKER_CACHE }}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

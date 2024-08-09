@@ -71,6 +71,10 @@ inputs:
     default: 'type=gha,mode=max'
     description: 'Cache to.'
     required: false
+  ENABLE_CACHE:
+    default: 'false'
+    description: 'Whether to use cache when building the image'
+    required: false
 outputs:
   IMAGE_TAG:
     description: "Export image tag"
@@ -126,15 +130,31 @@ runs:
       run: echo BUILD_ARGS=${{inputs.BUILD_ARGS}} >> $GITHUB_ENV
       shell: bash
 
-    - name: Build and export to Docker
+    - name: Build and export to Docker without cache
       uses: docker/build-push-action@v6
-      if: inputs.TAG_ONLY == 'false'
+      if: inputs.TAG_ONLY == 'false' && inputs.ENABLE_CACHE == 'false'
       with:
         load: true
         tags: |
           ${{ steps.meta.outputs.tags }}
-        # cache-from: type=gha
-        # cache-to: type=gha,mode=max
+        no-cache: true
+        file: ${{ inputs.FILE }}
+        context: ${{ inputs.CONTEXT }}
+        # cannot use multiple platforms with `load`, build a single arch image for validation purposes in CI
+        platforms: linux/amd64
+        build-args: ${{ env.BUILD_ARGS }}
+        secrets: ${{ env.DOCKER_SECRETS }}
+
+    - name: Build and export to Docker with cache
+      uses: docker/build-push-action@v6
+      if: inputs.TAG_ONLY == 'false' && inputs.ENABLE_CACHE == 'true'
+      with:
+        load: true
+        tags: |
+          ${{ steps.meta.outputs.tags }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        no-cache: false
         file: ${{ inputs.FILE }}
         context: ${{ inputs.CONTEXT }}
         # cannot use multiple platforms with `load`, build a single arch image for validation purposes in CI
@@ -155,8 +175,8 @@ runs:
         docker logs test
         ${{ inputs.CONTAINER_TEST_COMMAND }}
     
-    - name: Build and push
-      if: inputs.PUSH == 'true' # && inputs.TAG_ONY == 'false'
+    - name: Build and push with cache
+      if: inputs.PUSH == 'true' && inputs.ENABLE_CACHE == 'true'
       uses: docker/build-push-action@v6
       with:
         push: true
@@ -164,7 +184,22 @@ runs:
           ${{ steps.meta.outputs.tags }}
         cache-from: ${{ inputs.CACHE_FROM }}
         cache-to: ${{ inputs.CACHE_TO }}}
+        no-cache: false
         file: ${{ inputs.FILE }}
+        context: ${{ inputs.CONTEXT }}
+        platforms: ${{ inputs.PLATFORMS }}
+        build-args: ${{ env.BUILD_ARGS }}
+        secrets: ${{ env.DOCKER_SECRETS }}
+
+    - name: Build and push without cache
+      if: inputs.PUSH == 'true' && inputs.ENABLE_CACHE == 'false'
+      uses: docker/build-push-action@v6
+      with:
+        push: true
+        tags: |
+          ${{ steps.meta.outputs.tags }}
+        file: ${{ inputs.FILE }}
+        no-cache: true
         context: ${{ inputs.CONTEXT }}
         platforms: ${{ inputs.PLATFORMS }}
         build-args: ${{ env.BUILD_ARGS }}
