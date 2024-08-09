@@ -182,8 +182,8 @@ runs:
         push: true
         tags: |
           ${{ steps.meta.outputs.tags }}
-        cache-from: ${{ inputs.CACHE_FROM }}
-        cache-to: ${{ inputs.CACHE_TO }}}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
         no-cache: false
         file: ${{ inputs.FILE }}
         context: ${{ inputs.CONTEXT }}
