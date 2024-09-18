@@ -51,6 +51,7 @@ runs:
     - uses: actions/setup-python@v5
       with:
         cache: 'pip'
+        cache-dependency-path: 'requirements.txt'
     - run: pip -V
       shell: bash
     - run: |
