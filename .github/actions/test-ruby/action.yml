@@ -125,18 +125,18 @@ runs:
     #       < reviewdog-report.json
     #   shell: bash
 
-    # - name: Split the input variable RUBY_RAKE_COMMANDS into an array and execute
-    #   if: inputs.RUBY_RAKE_COMMANDS != null
-    #   env:
-    #     arr: ${{ inputs.RUBY_RAKE_COMMANDS }}
-    #   run: |
-    #     IFS=',' read -ra arr <<< "$arr"
-    #     for i in "${arr[@]}"; do
-    #       if [[ $i == bundle* ]]; then
-    #         $i
-    #       fi
-    #     done
-    #   shell: bash
+    - name: Split the input variable RUBY_RAKE_COMMANDS into an array and execute
+      if: inputs.RUBY_RAKE_COMMANDS != null
+      env:
+        arr: ${{ inputs.RUBY_RAKE_COMMANDS }}
+      run: |
+        IFS=',' read -ra arr <<< "$arr"
+        for i in "${arr[@]}"; do
+          if [[ $i == bundle* ]]; then
+            $i
+          fi
+        done
+      shell: bash
 
     - name: Run Tests
       run: |
