@@ -65,12 +65,12 @@ runs:
 
     - name: Download NLTK data
       run: |
-        python -m nltk.downloader -d /usr/local/share/nltk_data punkt punkt_tab
+        python -m nltk.downloader -d $HOME/nltk_data punkt punkt_tab
       shell: bash
 
     - name: Verify NLTK data installation
       run: |
-        python -c "import nltk; nltk.data.path.append('/usr/local/share/nltk_data'); nltk.tokenize.word_tokenize('This is a test.')"
+        python -c "import nltk; nltk.data.path.append('$HOME/nltk_data'); nltk.tokenize.word_tokenize('This is a test.')"
       shell: bash
 
     # - name: Additional Setup
