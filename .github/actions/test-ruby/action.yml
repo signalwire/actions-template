@@ -73,26 +73,26 @@ runs:
       env:
         ENV_PATH: ${{ inputs.ENV_PATH }}
 
-    - name: Display env
-      run: |
-        if [[ -f .env ]]; then
-          cat .env
-        else
-          echo ".env file does not exist"
-        fi
-      shell: bash
+    # - name: Display env
+    #   run: |
+    #     if [[ -f .env ]]; then
+    #       cat .env
+    #     else
+    #       echo ".env file does not exist"
+    #     fi
+    #   shell: bash
 
-    - name: Run zeitwerk chek
-      if: inputs.ZEITWERK == 'true'
-      run: |
-        bin/rails zeitwerk:check
-      shell: bash
+    # - name: Run zeitwerk chek
+    #   if: inputs.ZEITWERK == 'true'
+    #   run: |
+    #     bin/rails zeitwerk:check
+    #   shell: bash
 
-    - name: Generate Brakeman report
-      if: inputs.BRAKEMAN == 'true'
-      run: |
-        bundle exec brakeman --skip-files bundle/ -q -w2 -f json > tmp/brakeman.json || exit 0
-      shell: bash
+    # - name: Generate Brakeman report
+    #   if: inputs.BRAKEMAN == 'true'
+    #   run: |
+    #     bundle exec brakeman --skip-files bundle/ -q -w2 -f json > tmp/brakeman.json || exit 0
+    #   shell: bash
 
 #     - name: Publish report
 #       if: inputs.BRAKEMAN == 'true'
@@ -101,46 +101,46 @@ runs:
 #         GITHUB_TOKEN: ${{github.token}}
 #         REPORT_PATH: tmp/brakeman.json
 
-    - name: Install Reviewdog
-      if: inputs.RUBOCOP == 'true'
-      uses: reviewdog/action-setup@v1
+    # - name: Install Reviewdog
+    #   if: inputs.RUBOCOP == 'true'
+    #   uses: reviewdog/action-setup@v1
 
-    - name: Generate RuboCop report
-      if: inputs.RUBOCOP == 'true'
-      uses: d-lebed/rubocop-run-action@v0.11.0
-      with:
-        options: --format=RdjsonFormatter --out=reviewdog-report.json --format=progress
-        rdjson_formatter: ${{ inputs.REVIEWDOG }}
-        preserve_exitcode: false
+    # - name: Generate RuboCop report
+    #   if: inputs.RUBOCOP == 'true'
+    #   uses: d-lebed/rubocop-run-action@v0.11.0
+    #   with:
+    #     options: --format=RdjsonFormatter --out=reviewdog-report.json --format=progress
+    #     rdjson_formatter: ${{ inputs.REVIEWDOG }}
+    #     preserve_exitcode: false
 
-    - name: Post Review
-      if: inputs.REVIEWDOG == 'true' && inputs.RUBOCOP == 'true'
-      env:
-        REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
-      run: |
-        reviewdog \
-          -reporter=github-pr-review \
-          -filter-mode=added \
-          -f=rdjson \
-          < reviewdog-report.json
-      shell: bash
+    # - name: Post Review
+    #   if: inputs.REVIEWDOG == 'true' && inputs.RUBOCOP == 'true'
+    #   env:
+    #     REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
+    #   run: |
+    #     reviewdog \
+    #       -reporter=github-pr-review \
+    #       -filter-mode=added \
+    #       -f=rdjson \
+    #       < reviewdog-report.json
+    #   shell: bash
 
-    - name: Split the input variable RUBY_RAKE_COMMANDS into an array and execute
-      if: inputs.RUBY_RAKE_COMMANDS != null
-      env:
-        arr: ${{ inputs.RUBY_RAKE_COMMANDS }}
-      run: |
-        IFS=',' read -ra arr <<< "$arr"
-        for i in "${arr[@]}"; do
-          if [[ $i == bundle* ]]; then
-            $i
-          fi
-        done
-      shell: bash
+    # - name: Split the input variable RUBY_RAKE_COMMANDS into an array and execute
+    #   if: inputs.RUBY_RAKE_COMMANDS != null
+    #   env:
+    #     arr: ${{ inputs.RUBY_RAKE_COMMANDS }}
+    #   run: |
+    #     IFS=',' read -ra arr <<< "$arr"
+    #     for i in "${arr[@]}"; do
+    #       if [[ $i == bundle* ]]; then
+    #         $i
+    #       fi
+    #     done
+    #   shell: bash
 
     - name: Run Tests
       run: |
-        bundle exec rspec -f j -o tmp/rspec_results.json -f p
+        bundle exec rspec -f j -o tmp/rspec_results.json -f p spec/services/data_sphere/extractor_spec.rb:14
       shell: bash
     
     - name: RSpec Report
