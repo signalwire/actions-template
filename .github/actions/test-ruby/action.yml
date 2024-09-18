@@ -52,9 +52,9 @@ runs:
       if: inputs.ADDITIONAL_SETUP != '[]'
       shell: bash
       env:
-        ADDITIONAL_COMMANDS: ${{ inputs.ADDITIONAL_COMMANDS }}
+        ADDITIONAL_SETUP: ${{ inputs.ADDITIONAL_SETUP }}
       run: |
-        echo "$ADDITIONAL_COMMANDS" | jq -r '.[]' | while read -r command; do
+        echo "$ADDITIONAL_SETUP" | jq -r '.[]' | while read -r command; do
           echo "Executing command: $command"
           $command
         done
