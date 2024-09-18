@@ -59,21 +59,6 @@ runs:
           $command
         done
 
-- name: Execute additional commands
-  if: inputs.ADDITIONAL_COMMANDS != '[]'
-  shell: bash
-  env:
-    ADDITIONAL_COMMANDS: ${{ inputs.ADDITIONAL_COMMANDS }}
-  run: |
-    echo "$ADDITIONAL_COMMANDS" | jq -r '.[]' | while read -r command; do
-      echo "Executing command: $command"
-      if [[ $command == bundle* || $command == rake* ]]; then
-        $command
-      else
-        echo "Skipping unauthorized command: $command"
-      fi
-    done
-
     - uses: actions/cache@v4
       with:
         path: vendor/bundle
