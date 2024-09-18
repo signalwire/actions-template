@@ -50,7 +50,7 @@ runs:
 
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.9.2'
+        python-version: '3.9'
 
     # - name: Additional Setup
     #   if: inputs.ADDITIONAL_SETUP != '[]'
