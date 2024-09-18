@@ -54,20 +54,24 @@ runs:
         cache-dependency-path: 'requirements.txt'
     - run: pip -V
       shell: bash
+
     - run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
       shell: bash
+
     - run: pip -V
       shell: bash
 
     - name: Download NLTK data
       run: |
         python -m nltk.downloader -d /usr/local/share/nltk_data punkt punkt_tab
+      shell: bash
 
     - name: Verify NLTK data installation
       run: |
         python -c "import nltk; nltk.data.path.append('/usr/local/share/nltk_data'); nltk.tokenize.word_tokenize('This is a test.')"
+      shell: bash
 
     # - name: Additional Setup
     #   if: inputs.ADDITIONAL_SETUP != '[]'
