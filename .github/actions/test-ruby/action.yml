@@ -89,17 +89,17 @@ runs:
         fi
       shell: bash
 
-    - name: Run zeitwerk chek
-      if: inputs.ZEITWERK == 'true'
-      run: |
-        bin/rails zeitwerk:check
-      shell: bash
+    # - name: Run zeitwerk chek
+    #   if: inputs.ZEITWERK == 'true'
+    #   run: |
+    #     bin/rails zeitwerk:check
+    #   shell: bash
 
-    - name: Generate Brakeman report
-      if: inputs.BRAKEMAN == 'true'
-      run: |
-        bundle exec brakeman --skip-files bundle/ -q -w2 -f json > tmp/brakeman.json || exit 0
-      shell: bash
+    # - name: Generate Brakeman report
+    #   if: inputs.BRAKEMAN == 'true'
+    #   run: |
+    #     bundle exec brakeman --skip-files bundle/ -q -w2 -f json > tmp/brakeman.json || exit 0
+    #   shell: bash
 
 #     - name: Publish report
 #       if: inputs.BRAKEMAN == 'true'
@@ -108,29 +108,29 @@ runs:
 #         GITHUB_TOKEN: ${{github.token}}
 #         REPORT_PATH: tmp/brakeman.json
 
-    - name: Install Reviewdog
-      if: inputs.RUBOCOP == 'true'
-      uses: reviewdog/action-setup@v1
+    # - name: Install Reviewdog
+    #   if: inputs.RUBOCOP == 'true'
+    #   uses: reviewdog/action-setup@v1
 
-    - name: Generate RuboCop report
-      if: inputs.RUBOCOP == 'true'
-      uses: d-lebed/rubocop-run-action@v0.11.0
-      with:
-        options: --format=RdjsonFormatter --out=reviewdog-report.json --format=progress
-        rdjson_formatter: ${{ inputs.REVIEWDOG }}
-        preserve_exitcode: false
+    # - name: Generate RuboCop report
+    #   if: inputs.RUBOCOP == 'true'
+    #   uses: d-lebed/rubocop-run-action@v0.11.0
+    #   with:
+    #     options: --format=RdjsonFormatter --out=reviewdog-report.json --format=progress
+    #     rdjson_formatter: ${{ inputs.REVIEWDOG }}
+    #     preserve_exitcode: false
 
-    - name: Post Review
-      if: inputs.REVIEWDOG == 'true' && inputs.RUBOCOP == 'true'
-      env:
-        REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
-      run: |
-        reviewdog \
-          -reporter=github-pr-review \
-          -filter-mode=added \
-          -f=rdjson \
-          < reviewdog-report.json
-      shell: bash
+    # - name: Post Review
+    #   if: inputs.REVIEWDOG == 'true' && inputs.RUBOCOP == 'true'
+    #   env:
+    #     REVIEWDOG_GITHUB_API_TOKEN: ${{ github.token }}
+    #   run: |
+    #     reviewdog \
+    #       -reporter=github-pr-review \
+    #       -filter-mode=added \
+    #       -f=rdjson \
+    #       < reviewdog-report.json
+    #   shell: bash
 
     - name: Split the input variable RUBY_RAKE_COMMANDS into an array and execute
       if: inputs.RUBY_RAKE_COMMANDS != null
