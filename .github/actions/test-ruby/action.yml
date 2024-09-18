@@ -49,9 +49,9 @@ runs:
         ruby-version: ${{ inputs.RUBY_VERSION }}
 
     - uses: actions/setup-python@v5
-    #   with:
-    #     cache: 'pip' # caching pip dependencies
-    # - run: pip install -r requirements.txt
+      with:
+        cache: 'pip'
+    - run: pip install -r requirements.txt
 
     # - name: Additional Setup
     #   if: inputs.ADDITIONAL_SETUP != '[]'
