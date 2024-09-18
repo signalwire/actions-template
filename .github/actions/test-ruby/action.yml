@@ -56,26 +56,8 @@ runs:
       run: |
         echo "$ADDITIONAL_SETUP" | jq -r '.[]' | while read -r command; do
           echo "Executing additional setup command: $command"
-          $command
+          eval "$command"
         done
-
-    # - name: Additional Setup
-    #   if: inputs.ADDITIONAL_SETUP != '[]'
-    #   shell: bash
-    #   # env:
-    #   #   ADDITIONAL_SETUP: ${{ inputs.ADDITIONAL_SETUP }}
-    #   run: |
-    #     additional_setup='${{ inputs.ADDITIONAL_SETUP }}'
-    #     echo "$additional_setup" | jq -r '.[]' | while read -r command; do
-    #       echo "Executing additional setup command: $command"
-    #       eval "$command
-    #     done
-
-    #   # run: |
-    #   #   echo "$ADDITIONAL_SETUP" | jq -r '.[]' | while read -r command; do
-    #   #     echo "Executing command: $command"
-    #   #     $command
-    #   #   done
 
     - uses: actions/cache@v4
       with:
