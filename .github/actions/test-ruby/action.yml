@@ -51,9 +51,10 @@ runs:
     - name: Additional Setup
       if: inputs.ADDITIONAL_SETUP != '[]'
       shell: bash
+      env:
+        ADDITIONAL_SETUP: ${{ inputs.ADDITIONAL_SETUP }}
       run: |
-        additional_setup='${{ inputs.ADDITIONAL_SETUP }}'
-        echo "$additional_setup" | jq -r '.[]' | while read -r command; do
+        echo "$ADDITIONAL_SETUP" | jq -r '.[]' | while read -r command; do
           echo "Executing additional setup command: $command"
           eval "$command"
         done
