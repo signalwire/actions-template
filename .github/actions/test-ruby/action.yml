@@ -48,12 +48,6 @@ runs:
         bundler-cache: true
         ruby-version: ${{ inputs.RUBY_VERSION }}
 
-    - name: Setup Ruby and install gems
-      uses: ruby/setup-ruby@v1
-      with:
-        bundler-cache: true
-        ruby-version: ${{ inputs.RUBY_VERSION }}
-
     - uses: actions/setup-python@v5
       with:
         python-version: '3.9.2'
