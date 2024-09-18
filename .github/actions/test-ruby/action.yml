@@ -48,35 +48,30 @@ runs:
         bundler-cache: true
         ruby-version: ${{ inputs.RUBY_VERSION }}
 
-    - uses: actions/setup-python@v5
-      with:
-        cache: 'pip'
-        cache-dependency-path: 'requirements.txt'
+    # - uses: actions/setup-python@v5
+    #   with:
+    #     cache: 'pip'
+    #     cache-dependency-path: 'requirements.txt'
 
-    - run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-      shell: bash
-
-    - name: Download NLTK data
-      run: |
-        python -m nltk.downloader -d $HOME/nltk_data punkt punkt_tab
-      shell: bash
-
-    - name: Verify NLTK data installation
-      run: |
-        python -c "import nltk; nltk.data.path.append('$HOME/nltk_data'); nltk.tokenize.word_tokenize('This is a test.')"
-      shell: bash
-
-    # - name: Additional Setup
-    #   if: inputs.ADDITIONAL_SETUP != '[]'
+    # - run: |
+    #     python -m pip install --upgrade pip
+    #     pip install -r requirements.txt
     #   shell: bash
+
+    # - name: Download NLTK data
     #   run: |
-    #     additional_setup='${{ inputs.ADDITIONAL_SETUP }}'
-    #     echo "$additional_setup" | jq -r '.[]' | while read -r command; do
-    #       echo "Executing additional setup command: $command"
-    #       eval "$command"
-    #     done
+    #     python -m nltk.downloader -d $HOME/nltk_data punkt punkt_tab
+    #   shell: bash
+
+    - name: Additional Setup
+      if: inputs.ADDITIONAL_SETUP != '[]'
+      shell: bash
+      run: |
+        additional_setup='${{ inputs.ADDITIONAL_SETUP }}'
+        echo "$additional_setup" | jq -r '.[]' | while read -r command; do
+          echo "Executing additional setup command: $command"
+          eval "$command"
+        done
 
     - uses: actions/cache@v4
       with:
