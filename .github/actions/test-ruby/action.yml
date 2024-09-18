@@ -54,15 +54,19 @@ runs:
         bundler-cache: true
         ruby-version: ${{ inputs.RUBY_VERSION }}
 
-    - name: Additional Setup
-      if: inputs.ADDITIONAL_SETUP != '[]'
-      shell: bash
-      run: |
-        additional_setup='${{ inputs.ADDITIONAL_SETUP }}'
-        echo "$additional_setup" | jq -r '.[]' | while read -r command; do
-          echo "Executing additional setup command: $command"
-          eval "$command"
-        done
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.9.2'
+
+    # - name: Additional Setup
+    #   if: inputs.ADDITIONAL_SETUP != '[]'
+    #   shell: bash
+    #   run: |
+    #     additional_setup='${{ inputs.ADDITIONAL_SETUP }}'
+    #     echo "$additional_setup" | jq -r '.[]' | while read -r command; do
+    #       echo "Executing additional setup command: $command"
+    #       eval "$command"
+    #     done
 
     - uses: actions/cache@v4
       with:
