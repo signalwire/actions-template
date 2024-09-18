@@ -56,7 +56,7 @@ runs:
       run: |
         echo "$ADDITIONAL_SETUP" | jq -r '.[]' | while read -r command; do
           echo "Executing additional setup command: $command"
-          eval "$command"
+          $command
         done
 
     # - name: Additional Setup
