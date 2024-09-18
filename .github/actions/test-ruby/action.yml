@@ -51,6 +51,8 @@ runs:
     - uses: actions/setup-python@v5
       with:
         cache: 'pip'
+    - run: pip -V
+      shell: bash
     - run: pip install -r requirements.txt
       shell: bash
 
