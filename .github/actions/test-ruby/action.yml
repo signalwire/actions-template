@@ -26,6 +26,10 @@ inputs:
     required: false
     description: Reviewdog report
     default: 'false'
+  ADDITIONAL_SETUP:
+    type: string
+    default: '[]'
+    description: 'JSON array of additional setup commands'
 
 runs:
   using: "composite"
@@ -43,6 +47,17 @@ runs:
       with:
         bundler-cache: true
         ruby-version: ${{ inputs.RUBY_VERSION }}
+
+    - name: Additional Setup
+      if: inputs.ADDITIONAL_SETUP != '[]'
+      shell: bash
+      env:
+        ADDITIONAL_SETUP: ${{ inputs.ADDITIONAL_SETUP }}
+      run: |
+        echo "$ADDITIONAL_SETUP" | jq -r '.[]' | while read -r command; do
+          echo "Executing additional setup command: $command"
+          $command
+        done
 
     - uses: actions/cache@v4
       with:

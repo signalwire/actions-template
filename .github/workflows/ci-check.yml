@@ -61,6 +61,10 @@ on:
       RUBY_RAKE_COMMANDS:
         type: string
         description: A comma-separated list of rake commands.
+      ADDITIONAL_SETUP:
+        type: string
+        default: '[]'
+        description: 'JSON array of additional setup commands'
       ZEITWERK:
         type: boolean
         description: Zeitwerk run.
@@ -199,6 +203,7 @@ jobs:
         RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
         ENV_PATH: ${{ inputs.ENV_PATH }}
         RUBY_RAKE_COMMANDS: ${{ inputs.RUBY_RAKE_COMMANDS }}
+        ADDITIONAL_SETUP: ${{ inputs.ADDITIONAL_SETUP }}
         ZEITWERK: ${{ inputs.ZEITWERK }}
         BRAKEMAN: ${{ inputs.BRAKEMAN }}
         RUBOCOP: ${{ inputs.RUBOCOP }}
