@@ -140,7 +140,7 @@ runs:
 
     - name: Run Tests
       run: |
-        bundle exec rspec -f j -o tmp/rspec_results.json -f p spec/services/data_sphere/extractor_spec.rb:14
+        bundle exec rspec -f j -o tmp/rspec_results.json -f p
       shell: bash
     
     - name: RSpec Report
