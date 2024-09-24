@@ -1,0 +1,103 @@
+name: Teleport local copy
+description: Copy local files behind Teleport
+
+inputs:
+  TELEPORT_VERSION:
+    required: false
+    default: 14.0.0
+    description: The teleport binary client version
+  JOIN_METHOD:
+    required: false
+    default: github
+    description: Default join method for teleport
+  K8S_CLUSTER_NAME:
+    required: false
+    description: 'kubernetes cluster name to connect'
+  SRC:
+    required: true
+    description: 'Source file (on remote host)'
+  DST:
+    required: true
+    description: 'Destination file (on remote host)'
+  TELEPORT_APP:
+    required: false
+    default: ''
+    description: Teleport app to authenticate against
+
+outputs:
+  certificate-file:
+    value: ${{ steps.auth-app.outputs.certificate-file }}
+    description: Teleport app certificate file
+  key-file:
+    value: ${{ steps.auth-app.outputs.key-file }}
+    description: Teleport app key file
+
+runs:
+  using: "composite"
+  steps:
+    - name: Fetch Teleport binaries
+      uses: teleport-actions/setup@v1
+      with:
+        version: ${{ inputs.TELEPORT_VERSION }}
+
+    - name: Fetch credentials using Machine ID
+      id: auth
+      uses: teleport-actions/auth@v2
+      if: env.HOSTNAME != ''
+      with:
+        # Use the address of the auth/proxy server for your own cluster.
+        proxy: ${{ env.PROXY_URL }}
+        # Use the name of the join token resource you created in step 1.
+        token: ${{ env.TOKEN }}
+        # Specify the length of time that the generated credentials should be
+        # valid for. This is optional and defaults to "1h"
+        certificate-ttl: 1h
+
+    # - name: Fetch credentials
+    #   if: inputs.HOSTNAME != ''
+    #   run: >
+    #     tbot start
+    #     --auth-server=${{ inputs.PROXY_URL }}
+    #     --join-method=${{ inputs.JOIN_METHOD }}
+    #     --token=${{ env.TOKEN }}
+    #     --ca-pin=${{ env.CA_PIN }}
+    #     --oneshot
+    #     --destination-dir=./opt/machine-id
+    #     --data-dir=./opt/machine-id-data
+    #   shell: bash
+
+    - name: Authorize against Teleport
+      id: auth-k8s
+      if: inputs.K8S_CLUSTER_NAME != ''
+      uses: teleport-actions/auth-k8s@v2
+      with:
+        # Specify the publically accessible address of your Teleport proxy.
+        proxy: ${{ env.PROXY_URL }}
+        # Specify the name of the join token for your bot.
+        token: ${{ env.TOKEN }}
+        # Specify the length of time that the generated credentials should be
+        # valid for. This is optional and defaults to "1h"
+        certificate-ttl: 1h
+        kubernetes-cluster: ${{ inputs.K8S_CLUSTER_NAME }}
+
+    - name: Copy local files from SRC to DST
+      if: ${{ inputs.SRC != '' && inputs.DST != '' && inputs.SRC != inputs.DST }}
+      run: |
+        tsh -i ${{ steps.auth.outputs.identity-file }} --login=${{ env.USERNAME }} ssh ${{ env.HOSTNAME }} \
+        'mkdir -pv "$(dirname ${{ inputs.DST }})" && cp -aPnxv "${{ inputs.SRC }}" "${{ inputs.DST }}"'
+      shell: bash
+
+    - name: Fetch application credentials
+      id: auth-app
+      if: inputs.TELEPORT_APP != ''
+      uses: teleport-actions/auth-application@main
+      with:
+        # Specify the publically accessible address of your Teleport proxy.
+        proxy: ${{ env.PROXY_URL }}
+        # Specify the name of the join token for your bot.
+        token: ${{ env.TOKEN }}
+        # Specify the length of time that the generated credentials should be
+        # valid for. This is optional and defaults to "1h"
+        certificate-ttl: 1h
+        # Specify the name of the application you wish to access.
+        app: ${{ inputs.TELEPORT_APP }}
