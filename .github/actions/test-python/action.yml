@@ -21,5 +21,6 @@ runs:
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
-        bundler-cache: true
         python-version: ${{ inputs.PYTHON_VERSION }}
+        cache: 'pip' # caching pip dependencies
+    - run: pip install -r requirements.txt
