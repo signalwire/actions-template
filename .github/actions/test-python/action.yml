@@ -18,7 +18,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup Ruby and install gems
+    - name: Setup Python
       uses: actions/setup-python@v5
       with:
         bundler-cache: true
