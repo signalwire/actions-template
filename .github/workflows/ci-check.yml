@@ -25,6 +25,10 @@ on:
         required: false
         type: string
         description: Default Ruby version
+      PYTHON_VERSION:
+        required: false
+        type: string
+        description: Default Ruby version
       TEST_DEPENDENCIES:
         required: false
         type: boolean
@@ -207,6 +211,15 @@ jobs:
         ZEITWERK: ${{ inputs.ZEITWERK }}
         BRAKEMAN: ${{ inputs.BRAKEMAN }}
         RUBOCOP: ${{ inputs.RUBOCOP }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Test Python
+      if: ${{ inputs.LANGUAGE == 'Python' }}
+      uses: ./actions/.github/actions/test-python
+      with:
+        PYTHON_VERSION: ${{ inputs.PYTHON_VERSION }}
+        ENV_PATH: ${{ inputs.ENV_PATH }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     

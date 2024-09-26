@@ -1,0 +1,25 @@
+name: Python Unit Test
+description: Python Unit Test report
+
+
+inputs:
+  PYTHON_VERSION:
+    required: false
+    default: "3.10"
+    description: "Default Python version"
+  ENV_PATH: 
+    description: 'The .env file for CI.'
+    required: false
+  ADDITIONAL_SETUP:
+    type: string
+    default: '[]'
+    description: 'JSON array of additional setup commands'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Ruby and install gems
+      uses: actions/setup-python@v5
+      with:
+        bundler-cache: true
+        python-version: ${{ inputs.PYTHON_VERSION }}
