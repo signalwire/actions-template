@@ -219,7 +219,6 @@ jobs:
       uses: ./actions/.github/actions/test-python
       with:
         PYTHON_VERSION: ${{ inputs.PYTHON_VERSION }}
-        ENV_PATH: ${{ inputs.ENV_PATH }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
@@ -237,4 +236,3 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN : ${{ secrets.GITHUB_TOKEN }}
         SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
-
