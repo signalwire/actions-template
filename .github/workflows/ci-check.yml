@@ -28,7 +28,7 @@ on:
       PYTHON_VERSION:
         required: false
         type: string
-        description: Default Ruby version
+        description: Default Python version
       TEST_DEPENDENCIES:
         required: false
         type: boolean
