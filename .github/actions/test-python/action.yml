@@ -14,5 +14,5 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.PYTHON_VERSION }}
-        cache: 'pip' # caching pip dependencies
+        cache: 'pip'
     - run: pip install -r requirements.txt
