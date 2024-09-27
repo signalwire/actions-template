@@ -25,6 +25,10 @@ on:
         required: false
         type: string
         default: "3.0.6"
+      PYTHON_VERSION:
+        required: false
+        type: string
+        default: "3.10"
       PUSH:
         required: false
         type: boolean
@@ -225,6 +229,7 @@ jobs:
       NODE_VERSION: ${{ inputs.NODE_VERSION }}
       RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
       DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
+      PYTHON_VERSION: ${{ inputs.PYTHON_VERSION }}
       TEST_DEPENDENCIES: ${{ inputs.TEST_DEPENDENCIES }}
       TEST_DEPENDENCIES_PRIVATE: ${{ inputs.TEST_DEPENDENCIES_PRIVATE }}
       DEPENDENCIES_FILE: ${{ inputs.DEPENDENCIES_FILE }}

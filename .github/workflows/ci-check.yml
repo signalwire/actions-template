@@ -25,6 +25,10 @@ on:
         required: false
         type: string
         description: Default Ruby version
+      PYTHON_VERSION:
+        required: false
+        type: string
+        description: Default Python version
       TEST_DEPENDENCIES:
         required: false
         type: boolean
@@ -209,6 +213,14 @@ jobs:
         RUBOCOP: ${{ inputs.RUBOCOP }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Test Python
+      if: ${{ inputs.LANGUAGE == 'Python' }}
+      uses: ./actions/.github/actions/test-python
+      with:
+        PYTHON_VERSION: ${{ inputs.PYTHON_VERSION }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Test configs
       if: inputs.LANGUAGE == 'configs' || inputs.LANGUAGE == 'configs'
@@ -224,4 +236,3 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN : ${{ secrets.GITHUB_TOKEN }}
         SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
-
