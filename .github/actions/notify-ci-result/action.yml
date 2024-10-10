@@ -68,7 +68,7 @@ runs:
         path: ${{ steps.scan_tar.outputs.ARTIFACT_PATH }}
     - name: Comment scan build result on PR
       if: ${{ inputs.for == 'scan_build' && github.event_name == 'pull_request' }}
-      uses: thollander/actions-comment-pull-request@v2
+      uses: thollander/actions-comment-pull-request@v3
       with:
         message: |
           Scan-build ${{ inputs.message }}: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
@@ -98,7 +98,7 @@ runs:
         path: ${{ inputs.test_logs_path }}/logs
     - name: Comment run tests result on PR
       if: ${{ inputs.for == 'run_tests'  && github.event_name == 'pull_request' }}
-      uses: thollander/actions-comment-pull-request@v2
+      uses: thollander/actions-comment-pull-request@v3
       with:
         message: |
           Unit-Tests failed: [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
