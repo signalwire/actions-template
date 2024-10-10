@@ -248,6 +248,7 @@ jobs:
       TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
       TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
     secrets:
+      CONTRIBSYS_CREDENTIALS: ${{ secrets.CONTRIBSYS_CREDENTIALS }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
       SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}

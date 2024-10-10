@@ -213,6 +213,7 @@ jobs:
         RUBOCOP: ${{ inputs.RUBOCOP }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CONTRIBSYS_CREDENTIALS: ${{ secrets.CONTRIBSYS_CREDENTIALS }}
 
     - name: Test Python
       if: ${{ inputs.LANGUAGE == 'Python' }}
