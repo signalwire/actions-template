@@ -160,7 +160,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: signalwire/actions-template
-        ref: main
+        ref: ryanwi/bundle-config
         path: actions
 
     - name: Retrieve Secrets from HashiCorp Vault
