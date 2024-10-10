@@ -48,8 +48,7 @@ runs:
         bundler-cache: true
         ruby-version: ${{ inputs.RUBY_VERSION }}
       env:
-        BUNDLE_GEMS__CONTRIBSYS__COM: ${{ secrets.BUNDLE_GEMS__CONTRIBSYS__COM }}
-
+        ${{ env.CONTRIBSYS_CREDENTIALS != '' && format('BUNDLE_GEMS__CONTRIBSYS__COM={0}', env.CONTRIBSYS_CREDENTIALS) || '' }}
 
     - name: Additional Setup
       if: inputs.ADDITIONAL_SETUP != '[]'
