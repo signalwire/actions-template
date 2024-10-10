@@ -174,17 +174,17 @@ jobs:
         TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
         SECRETS: ${{ inputs.VAULT_SECRETS }}
         
-    - name: Up Test dependencies
-      if: ${{ inputs.TEST_DEPENDENCIES == true}}
-      uses: ./actions/.github/actions/docker-compose
-      with:
-        COMPOSE_FILE: ${{ inputs.DEPENDENCIES_FILE }}
-        DOCKERHUB_LOGIN: ${{ inputs.TEST_DEPENDENCIES_PRIVATE }}
-        RUN_BACKGROUND: true
-        CREATE_NETWORK: ${{ inputs.TEST_CREATE_NETWORK }}
-      env:
-        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    # - name: Up Test dependencies
+    #   if: ${{ inputs.TEST_DEPENDENCIES == true}}
+    #   uses: ./actions/.github/actions/docker-compose
+    #   with:
+    #     COMPOSE_FILE: ${{ inputs.DEPENDENCIES_FILE }}
+    #     DOCKERHUB_LOGIN: ${{ inputs.TEST_DEPENDENCIES_PRIVATE }}
+    #     RUN_BACKGROUND: true
+    #     CREATE_NETWORK: ${{ inputs.TEST_CREATE_NETWORK }}
+    #   env:
+    #     DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+    #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Test .NET
       if: ${{ inputs.LANGUAGE == 'dot-net' }}

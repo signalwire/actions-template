@@ -48,7 +48,15 @@ runs:
         bundler-cache: true
         ruby-version: ${{ inputs.RUBY_VERSION }}
       env:
-        ${{ env.CONTRIBSYS_CREDENTIALS != '' && format('BUNDLE_GEMS__CONTRIBSYS__COM={0}', env.CONTRIBSYS_CREDENTIALS) || '' }}
+        BUNDLE_GEMS__CONTRIBSYS__COM: ${{ inputs.CONTRIBSYS_CREDENTIALS }}
+      if: inputs.CONTRIBSYS_CREDENTIALS != ''
+
+    - name: Setup Ruby and install gems
+      uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+        ruby-version: ${{ inputs.RUBY_VERSION }}
+      if: inputs.CONTRIBSYS_CREDENTIALS == ''
 
     - name: Additional Setup
       if: inputs.ADDITIONAL_SETUP != '[]'
