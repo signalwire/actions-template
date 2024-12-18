@@ -196,9 +196,9 @@ jobs:
 
       - name: Init
         id: init
-        uses: gruntwork-io/terragrunt-action@v1
+        uses: gruntwork-io/terragrunt-action@v2.1.4
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
+          tofu_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
           tg_dir: ./${{ inputs.WORKING_DIR }}
           tg_command: 'run-all init'
