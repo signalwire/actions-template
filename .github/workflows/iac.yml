@@ -16,7 +16,7 @@ on:
       TF_VERSION: 
         required: false
         type: string
-        default: '1.5.7'
+        default: '1.8.7'
       AWS_REGION: 
         required: true
         type: string
@@ -191,14 +191,12 @@ jobs:
           echo VAULT_TOKEN=$VAULT_TOKEN >> $GITHUB_ENV
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
-                
-      - uses: opentofu/setup-opentofu@main
 
       - name: Init
         id: init
-        uses: gruntwork-io/terragrunt-action@v1
+        uses: gruntwork-io/terragrunt-action@v2.1.4
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
+          tofu_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
           tg_dir: ./${{ inputs.WORKING_DIR }}
           tg_command: 'run-all init'
@@ -211,10 +209,10 @@ jobs:
             git config --global --list
       
       - name: Validate
-        uses: gruntwork-io/terragrunt-action@v1
+        uses: gruntwork-io/terragrunt-action@v2.1.4
         id: validate
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
+          tofu_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
           tg_dir: ${{ inputs.WORKING_DIR }}
           tg_command: 'run-all validate'
@@ -222,11 +220,11 @@ jobs:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
       
       - name: Plan
-        uses: gruntwork-io/terragrunt-action@v1
+        uses: gruntwork-io/terragrunt-action@v2.1.4
         id: plan
         continue-on-error: true
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
+          tofu_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
           tg_dir: ${{ inputs.WORKING_DIR }}
           tg_command: 'run-all plan'
@@ -269,10 +267,10 @@ jobs:
 
       - name: Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: gruntwork-io/terragrunt-action@v1
+        uses: gruntwork-io/terragrunt-action@v2.1.4
         id: apply
         with:
-          tf_version: ${{ inputs.TF_VERSION }}
+          tofu_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
           tg_dir: ${{ inputs.WORKING_DIR }}
           tg_command: 'run-all apply'
