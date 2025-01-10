@@ -165,19 +165,8 @@ jobs:
           project_id: ${{ inputs.PROJECT_ID }}
           service_account: ${{ inputs.GCP_SA }}
       
-      - name: Install 1password cli
-        run: |
-          curl -sS https://downloads.1password.com/linux/keys/1password.asc | \
-          sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg && \
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | \
-          sudo tee /etc/apt/sources.list.d/1password.list && \
-          sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/ && \
-          curl -sS https://downloads.1password.com/linux/debian/debsig/1password.pol | \
-          sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol && \
-          sudo mkdir -p /usr/share/debsig/keyrings/AC2D62742012EA22 && \
-          curl -sS https://downloads.1password.com/linux/keys/1password.asc | \
-          sudo gpg --dearmor --output /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg && \
-          sudo apt update && sudo apt install 1password-cli
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@v1
 
       - name: Sops Binary Installer
         uses: mdgreenwald/mozilla-sops-action@v1.6.0
