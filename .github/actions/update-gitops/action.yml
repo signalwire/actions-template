@@ -1,0 +1,41 @@
+name: Push to CI
+description: Push image tag to CI
+
+inputs:
+  GITOPS_REPOSITORY:
+    description: 'The GitOps repository to push to'
+    required: true
+  FILE_PATH:
+    description: 'The file path in the GitOps repository to update'
+    required: true
+  SERVICE_NAME:
+    description: 'The name of the service to update'
+    required: true
+  IMAGE_TAG:
+    description: 'The new image tag to push'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout GitOps repo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.GITOPS_REPOSITORY }}
+        token: ${{ env.GITOPS_PAT }}       
+
+    - name: Update image tag in GitOps repo
+      shell: bash
+      env:
+        FILE_PATH: ${{ inputs.FILE_PATH }}
+        SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+        IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+      run: |
+        sed -i 's|image: signalwire/$SERVICE_NAME:[^ ]*|image: $IMAGE_TAG|' $FILE_PATH
+
+    - name: Commit and Push Changes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
+        repository: .
+        branch: main # Replace with the appropriate branch for your repo
