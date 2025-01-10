@@ -113,6 +113,9 @@ on:
       AZURE_SUBSCRIPTION_ID:
         required: false
         description: "Azure Subscription ID"
+      OP_SERVICE_ACCOUNT_TOKEN: 
+        required: false
+        description: "1Password SA"
 env:
   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -245,6 +248,7 @@ jobs:
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
           GITHUB_TOKEN: ${{ github.token }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           # TF_LOG: trace
 
       - name: Generate token
@@ -289,6 +293,7 @@ jobs:
           OVH_APPLICATION_SECRET: ${{ secrets.OVH_APPLICATION_SECRET }}
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
       - run: sudo chmod -R 777 /home/runner/_work/${{ github.event.repository.name }}
         continue-on-error: true
