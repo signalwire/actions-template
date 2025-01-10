@@ -164,6 +164,15 @@ jobs:
           workload_identity_provider: ${{ inputs.GCP_WIP }}
           project_id: ${{ inputs.PROJECT_ID }}
           service_account: ${{ inputs.GCP_SA }}
+      
+      - name: Install 1password cli
+        run: |
+          ARCH="amd64"; \
+          OP_VERSION="v$(curl https://app-updates.agilebits.com/check/1/0/CLI2/en/2.0.0/N -s | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"; \
+          curl -sSfo op.zip \
+          https://cache.agilebits.com/dist/1P/op2/pkg/"$OP_VERSION"/op_linux_"$ARCH"_"$OP_VERSION".zip \
+          && unzip -od /usr/local/bin/ op.zip \
+          && rm op.zip
 
       - name: Sops Binary Installer
         uses: mdgreenwald/mozilla-sops-action@v1.6.0
