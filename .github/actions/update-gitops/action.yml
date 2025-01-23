@@ -37,7 +37,7 @@ runs:
 
     - name: Create new branch
       if: ${{ inputs.CREATE_PR == 'true' }}
-      run: git switch -C ${{ inputs.BRANCH_NAME }}
+      run: git switch -C deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
       shell: bash
 
     - name: Update image tag in GitOps repo for Swarm
