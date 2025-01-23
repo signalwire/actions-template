@@ -55,7 +55,7 @@ jobs:
   deploy:
     # The type of runner that the job will run on
     runs-on: ${{ inputs.RUNNER }}
-    name: Deploy to Swarm
+    name: GitOps Deploy
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
