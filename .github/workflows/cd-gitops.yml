@@ -7,14 +7,6 @@ on:
 
   workflow_call:
     inputs:
-      STACK_NAME:
-        required: true
-        type: string
-        description: Stack name on Portainer.
-      APPROVERS:
-        required: false
-        type: string
-        description: A list of approvers comma separated.
       IMAGE_TAG:
         required: true
         type: string
@@ -23,50 +15,31 @@ on:
         required: false
         type: string
         description: The environment which this deploy refers to.
+      GITOPS_REPOSITORY:
+        required: true
+        type: string
+        description: The GitOps repository to push to.
+      FILE_PATH:
+        required: true
+        type: string
+        description: The file path to update.
+      SERVICE_NAME:
+        required: true
+        type: string
+        description: The name of the service to update.
       RUNNER: 
         required: false
         type: string
         default: ubuntu-latest
         description: The default runner.
-      NOTIFY_SLACK:
-        required: false
-        type: boolean
-        default: true
-      SLACK_CHANNEL:
+      ORCHESTRATOR:
         required: false
         type: string
-        description: Default slack channel to post a message
-      ENDPOINT_ID:
-        required: false
-        type: string
-        description: Another option to set ENDPOINT_ID.
-        default: ''
-      PORTAINER_DOMAIN:
-        required: true
-        type: string
-        description: Portainer Domain
-        default: deploy.signalwire.cloud
-      PORTAINER_DOMAIN_PROTOCOL:
-        required: false
-        type: string
-        description: Portainer Protocol
-        default: http
+        default: swarm
+        description: The orchestrator to deploy to.
     secrets:
-      ENDPOINT_ID:
-        required: false
-        description: Portainer Endpoint ID.
-      PORTAINER_API_KEY:
+      GITOPS_PAT:
         required: true
-        description: Portainer API KEY.
-      GH_APPROVAL_APP_ID:
-        required: false
-        description: App ID for Approval
-      GH_APPROVAL_APP_PKEY:
-        required: false
-        description: App Key for Approval
-      SLACK_WEBHOOK_URL:
-        required: true
-        description: Slack WebHook URL
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -95,5 +68,6 @@ jobs:
         FILE_PATH: ${{ inputs.FILE_PATH }}
         SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+        ORCHESTRATOR: ${{ inputs.ORCHESTRATOR }}
       env: 
         GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
