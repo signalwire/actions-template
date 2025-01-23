@@ -37,6 +37,15 @@ on:
         type: string
         default: swarm
         description: The orchestrator to deploy to.
+      CREATE_PR:
+        required: true
+        description: Create a PR instead of pushing directly to the branch.
+        default: false
+        type: boolean
+      BRANCH_NAME:
+        required: false
+        description: The branch name to create if CREATE_PR is true.
+        type: string
     secrets:
       GITOPS_PAT:
         required: true

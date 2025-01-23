@@ -18,6 +18,12 @@ inputs:
     required: true
     default: swarm
     description: The orchestrator to deploy to.
+  CREATE_PR:
+    required: true
+    description: Create a PR instead of pushing directly to the branch.
+  BRANCH_NAME:
+    required: false
+    description: The branch name to create if CREATE_PR is true.
 
 runs:
   using: "composite"
@@ -27,6 +33,11 @@ runs:
       with:
         repository: ${{ inputs.GITOPS_REPOSITORY }}
         token: ${{ env.GITOPS_PAT }}       
+
+    - name: Create new branch
+      if: ${{ inputs.CREATE_PR == 'true' }}
+      run: git switch -C ${{ inputs.BRANCH_NAME }}
+      shell: bash
 
     - name: Update image tag in GitOps repo for Swarm
       shell: bash
@@ -52,4 +63,14 @@ runs:
       with:
         commit_message: "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
         repository: .
-        branch: main
+        branch: ${{ inputs.CREATE_PR }} != 'true' && 'main' || ${{ inputs.BRANCH_NAME }}
+        commit_user_name: ${{ github.actor }}
+        commit_user_email: ${{ github.actor }}@users.noreply.github.com
+
+    - name: Create PR
+      shell: bash
+      if: ${{ inputs.CREATE_PR }}
+      run: |
+          gh pr create --title "Update image tag for ${{ inputs.SERVICE_NAME }}" --body "Update image tag for ${{ inputs.SERVICE_NAME }}" --base main --head ${{ inputs.BRANCH_NAME }}
+
+    
