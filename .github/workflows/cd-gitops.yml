@@ -78,5 +78,7 @@ jobs:
         SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
         ORCHESTRATOR: ${{ inputs.ORCHESTRATOR }}
+        BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
+        CREATE_PR: ${{ inputs.CREATE_PR }}
       env: 
         GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
