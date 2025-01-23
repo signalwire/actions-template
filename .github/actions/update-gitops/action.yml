@@ -63,7 +63,7 @@ runs:
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
         commit_message: "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
-        repository: .
+        repository: ${{ inputs.GITOPS_REPOSITORY }}
         commit_user_name: ${{ github.actor }}
         commit_user_email: ${{ github.actor }}@users.noreply.github.com
 
