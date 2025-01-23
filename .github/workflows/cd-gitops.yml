@@ -71,7 +71,7 @@ jobs:
         path: actions
         
     - name: Push to CI
-      uses: ./actions/.github/update/push-to-ci
+      uses: ./actions/.github/actions/update-gitops
       with:
         GITOPS_REPOSITORY: ${{ inputs.GITOPS_REPOSITORY }}
         FILE_PATH: ${{ inputs.FILE_PATH }}
