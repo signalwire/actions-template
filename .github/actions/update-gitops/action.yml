@@ -65,7 +65,7 @@ runs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add ${{ inputs.FILE_PATH }}
-          git commit -m "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}""
+          git commit -m "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
           git push -u origin deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
 
     
