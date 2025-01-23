@@ -32,7 +32,8 @@ runs:
       uses: actions/checkout@v4
       with:
         repository: ${{ inputs.GITOPS_REPOSITORY }}
-        token: ${{ env.GITOPS_PAT }}       
+        token: ${{ env.GITOPS_PAT }}    
+        ref: ${{ github.head_ref }}   
 
     - name: Create new branch
       if: ${{ inputs.CREATE_PR == 'true' }}
