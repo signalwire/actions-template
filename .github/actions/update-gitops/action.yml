@@ -59,14 +59,16 @@ runs:
       run: |
          sed -i "s/^  tag: .*/  tag: $IMAGE_TAG/" "$FILE_PATH"
 
-    - name: Commit and Push Changes
-      uses: stefanzweifel/git-auto-commit-action@v5
-      with:
-        commit_message: "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
-        repository: ${{ inputs.GITOPS_REPOSITORY }}
-        commit_user_name: ${{ github.actor }}
-        commit_user_email: ${{ github.actor }}@users.noreply.github.com
+    - name: Create commit
+      shell: bash
+      run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ${{ inputs.FILE_PATH }}
+          git commit -m "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}""
+          git push -u origin deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
 
+    
     - name: Create PR
       shell: bash
       if: ${{ inputs.CREATE_PR }}
