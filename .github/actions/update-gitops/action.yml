@@ -63,7 +63,6 @@ runs:
       with:
         commit_message: "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
         repository: .
-        branch: ${{ inputs.CREATE_PR }} != 'true' && 'main' || ${{ inputs.BRANCH_NAME }}
         commit_user_name: ${{ github.actor }}
         commit_user_email: ${{ github.actor }}@users.noreply.github.com
 
