@@ -56,7 +56,7 @@ runs:
         FILE_PATH: ${{ inputs.FILE_PATH }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
       run: |
-         sed -i 's/^  tag: .*/  tag: $IMAGE_TAG'  $FILE_PATH
+         sed -i "s/^  tag: .*/  tag: $IMAGE_TAG/" "$FILE_PATH"
 
     - name: Commit and Push Changes
       uses: stefanzweifel/git-auto-commit-action@v5
