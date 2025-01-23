@@ -85,7 +85,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: signalwire/actions-template
-        ref: main
+        ref: feat/swarm-gitops
         path: actions
         
     - name: Push to CI
