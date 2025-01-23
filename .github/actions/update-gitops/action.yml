@@ -66,13 +66,18 @@ runs:
           git config user.email github-actions@github.com
           git add ${{ inputs.FILE_PATH }}
           git commit -m "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
-          git push -u origin deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
 
+    - name: Push changes
+      shell: bash
+      if: ${{ inputs.CREATE_PR }} == 'false'
+      run: |
+          git push
     
     - name: Create PR
       shell: bash
       if: ${{ inputs.CREATE_PR }}
       run: |
+          git push -u origin deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
           gh pr create --title "Update image tag for ${{ inputs.SERVICE_NAME }}" --body "Update image tag for ${{ inputs.SERVICE_NAME }}" --base main --head ${{ inputs.BRANCH_NAME }}
 
     
