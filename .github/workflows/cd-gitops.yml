@@ -70,7 +70,7 @@ jobs:
         ref: feat/swarm-gitops
         path: actions
         
-    - name: Push to CI
+    - name: GitOps
       uses: ./actions/.github/actions/update-gitops
       with:
         GITOPS_REPOSITORY: ${{ inputs.GITOPS_REPOSITORY }}
