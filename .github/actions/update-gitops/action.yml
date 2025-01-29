@@ -49,9 +49,6 @@ runs:
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
       run: |
         set -x
-        echo "$FILE_PATH"
-        echo "$SERVICE_NAME"
-        echo "$IMAGE_TAG"
         sed -i "s|image: signalwire/\${SERVICE_NAME}:[^ ]*|image: \${IMAGE_TAG}|" "$FILE_PATH"
         git status
         git diff
