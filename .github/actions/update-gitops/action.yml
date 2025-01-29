@@ -1,0 +1,99 @@
+name: Push to CI
+description: Push image tag to CI
+
+inputs:
+  GITOPS_REPOSITORY:
+    description: 'The GitOps repository to push to'
+    required: true
+  FILE_PATH:
+    description: 'The file path in the GitOps repository to update'
+    required: true
+  SERVICE_NAME:
+    description: 'The name of the service to update'
+    required: true
+  IMAGE_TAG:
+    description: 'The new image tag to push'
+    required: true
+  ORCHESTRATOR:
+    required: true
+    default: swarm
+    description: The orchestrator to deploy to.
+  CREATE_PR:
+    required: true
+    description: Create a PR instead of pushing directly to the branch.
+  BRANCH_NAME:
+    required: false
+    description: The branch name to create if CREATE_PR is true.
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout GitOps repo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.GITOPS_REPOSITORY }}
+        token: ${{ env.GITOPS_PAT }}    
+        ref: ${{ github.head_ref }}
+        path: gitops
+
+    - name: git pull
+      run: git pull
+      shell: bash
+      working-directory: gitops
+
+    - name: Create new branch
+      if: ${{ inputs.CREATE_PR == 'true' }}
+      run: git switch -C deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
+      shell: bash
+      working-directory: gitops
+
+    - name: Update image tag in GitOps repo for Swarm
+      shell: bash
+      if: ${{ inputs.ORCHESTRATOR == 'swarm' }}
+      env:
+        FILE_PATH: ${{ inputs.FILE_PATH }}
+        SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+        IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+      working-directory: gitops
+      run: |
+        set -x
+        echo "$FILE_PATH"
+        echo "$SERVICE_NAME"
+        echo "$IMAGE_TAG"
+        sed -i "s|image: signalwire/${SERVICE_NAME}:[^ ]*|image: ${IMAGE_TAG}|" "$FILE_PATH"
+        git status
+        git diff
+    
+    - name: Update image tag in GitOps repo for Kubernetes
+      shell: bash
+      if: ${{ inputs.ORCHESTRATOR == 'kubernetes' }}
+      working-directory: gitops
+      env:
+        FILE_PATH: ${{ inputs.FILE_PATH }}
+        IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+      run: |
+         sed -i "s/^  tag: .*/  tag: $IMAGE_TAG/" "$FILE_PATH"
+
+    - name: Create commit
+      shell: bash
+      working-directory: gitops
+      run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add ${{ inputs.FILE_PATH }}
+          git commit --author="${{ github.event.head_commit.author.name }} <${{ github.event.head_commit.author.email }}>" -m "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
+
+    - name: Push changes
+      shell: bash
+      if: inputs.CREATE_PR == 'false'
+      working-directory: gitops
+      run: |
+          git push
+    
+    - name: Create PR
+      shell: bash
+      if: inputs.CREATE_PR == 'true'
+      working-directory: gitops
+      run: |
+          git push -u origin deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
+          gh pr create --title "Update image tag for ${{ inputs.SERVICE_NAME }}" --body "Update image tag for ${{ inputs.SERVICE_NAME }}"

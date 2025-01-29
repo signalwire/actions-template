@@ -1,0 +1,88 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Swarm Deploy
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      IMAGE_TAG:
+        required: true
+        type: string
+        description: The image tag to be updated.
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: The environment which this deploy refers to.
+      GITOPS_REPOSITORY:
+        required: true
+        type: string
+        description: The GitOps repository to push to.
+      FILE_PATH:
+        required: true
+        type: string
+        description: The file path to update.
+      SERVICE_NAME:
+        required: true
+        type: string
+        description: The name of the service to update.
+      RUNNER: 
+        required: false
+        type: string
+        default: ubuntu-latest
+        description: The default runner.
+      ORCHESTRATOR:
+        required: false
+        type: string
+        default: swarm
+        description: The orchestrator to deploy to.
+      CREATE_PR:
+        required: true
+        description: Create a PR instead of pushing directly to the branch.
+        default: false
+        type: boolean
+      BRANCH_NAME:
+        required: false
+        description: The branch name to create if CREATE_PR is true.
+        type: string
+    secrets:
+      GITOPS_PAT:
+        required: true
+
+env:
+  GH_TOKEN: ${{ secrets.GITOPS_PAT }}
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  deploy:
+    # The type of runner that the job will run on
+    runs-on: ${{ inputs.RUNNER }}
+    name: GitOps Deploy
+    environment: ${{ inputs.ENVIRONMENT }}
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Checkout actions
+      uses: actions/checkout@v4
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+        
+    - name: GitOps
+      uses: ./actions/.github/actions/update-gitops
+      with:
+        GITOPS_REPOSITORY: ${{ inputs.GITOPS_REPOSITORY }}
+        FILE_PATH: ${{ inputs.FILE_PATH }}
+        SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+        IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+        ORCHESTRATOR: ${{ inputs.ORCHESTRATOR }}
+        BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
+        CREATE_PR: ${{ inputs.CREATE_PR }}
+      env: 
+        GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
