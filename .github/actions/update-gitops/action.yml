@@ -36,8 +36,8 @@ runs:
         ref: ${{ github.head_ref }}
         path: gitops
 
-    - name: git pull
-      run: git pull
+    - name: git fetch origin main
+      run: git fetch origin main
       shell: bash
       working-directory: gitops
 
