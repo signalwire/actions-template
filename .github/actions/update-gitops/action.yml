@@ -68,8 +68,8 @@ runs:
     - name: Create commit
       shell: bash
       run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add ${{ inputs.FILE_PATH }}
           git commit -m "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
 
