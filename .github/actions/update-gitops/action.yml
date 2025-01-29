@@ -36,6 +36,11 @@ runs:
         ref: ${{ github.head_ref }}
         path: gitops
 
+    - name: git pull
+      run: git pull
+      shell: bash
+      working-directory: gitops
+
     - name: Create new branch
       if: ${{ inputs.CREATE_PR == 'true' }}
       run: git switch -C deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
