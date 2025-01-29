@@ -50,6 +50,8 @@ on:
       GITOPS_PAT:
         required: true
 
+env:
+  GH_TOKEN: ${{ github.token }}
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   deploy:
