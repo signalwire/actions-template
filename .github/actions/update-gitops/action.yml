@@ -52,11 +52,9 @@ runs:
         echo "$FILE_PATH"
         echo "$SERVICE_NAME"
         echo "$IMAGE_TAG"
-        cat "$FILE_PATH"
         sed -i "s|image: signalwire/${SERVICE_NAME}:[^ ]*|image: ${IMAGE_TAG}|" "$FILE_PATH"
         git status
         git diff
-        cat "$FILE_PATH"
     
     - name: Update image tag in GitOps repo for Kubernetes
       shell: bash
