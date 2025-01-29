@@ -48,6 +48,7 @@ runs:
         SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
       run: |
+        set -x
         echo "$FILE_PATH"
         echo "$SERVICE_NAME"
         echo "$IMAGE_TAG"
