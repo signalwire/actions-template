@@ -75,15 +75,13 @@ runs:
 
     - name: Push changes
       shell: bash
-      if: ${{ inputs.CREATE_PR }} == 'false'
+      if: inputs.CREATE_PR == 'false'
       run: |
           git push
     
     - name: Create PR
       shell: bash
-      if: ${{ inputs.CREATE_PR }} == 'true'
+      if: inputs.CREATE_PR == 'true'
       run: |
           git push -u origin deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
           gh pr create --title "Update image tag for ${{ inputs.SERVICE_NAME }}" --body "Update image tag for ${{ inputs.SERVICE_NAME }}" --base main --head ${{ inputs.BRANCH_NAME }}
-
-    
