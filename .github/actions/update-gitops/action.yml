@@ -36,8 +36,8 @@ runs:
         ref: ${{ github.head_ref }}
         path: gitops
 
-    - name: git fetch origin main
-      run: git fetch origin main
+    - name: git pull
+      run: git pull
       shell: bash
       working-directory: gitops
 
@@ -95,5 +95,5 @@ runs:
       if: inputs.CREATE_PR == 'true'
       working-directory: gitops
       run: |
-          git push -u origin deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }} --force
+          git push -u origin deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
           gh pr create --title "Update image tag for ${{ inputs.SERVICE_NAME }}" --body "Update image tag for ${{ inputs.SERVICE_NAME }}" --base main --head ${{ inputs.BRANCH_NAME }}
