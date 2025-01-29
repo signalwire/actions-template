@@ -52,6 +52,7 @@ runs:
         echo "$SERVICE_NAME"
         echo "$IMAGE_TAG"
         cat "$FILE_PATH"
+        grep "$SERVICE_NAME" "$FILE_PATH"
         sed -i "s|image: repo/\${SERVICE_NAME}:[^ ]*|image: \${IMAGE_TAG}|" "$FILE_PATH"
         git status
         git diff
