@@ -33,12 +33,14 @@ runs:
       with:
         repository: ${{ inputs.GITOPS_REPOSITORY }}
         token: ${{ env.GITOPS_PAT }}    
-        ref: ${{ github.head_ref }}   
+        ref: ${{ github.head_ref }}
+        path: gitops
 
     - name: Create new branch
       if: ${{ inputs.CREATE_PR == 'true' }}
       run: git switch -C deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
       shell: bash
+      working-directory: gitops
 
     - name: Update image tag in GitOps repo for Swarm
       shell: bash
@@ -47,6 +49,7 @@ runs:
         FILE_PATH: ${{ inputs.FILE_PATH }}
         SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+      working-directory: gitops
       run: |
         set -x
         echo "$FILE_PATH"
@@ -59,6 +62,7 @@ runs:
     - name: Update image tag in GitOps repo for Kubernetes
       shell: bash
       if: ${{ inputs.ORCHESTRATOR == 'kubernetes' }}
+      working-directory: gitops
       env:
         FILE_PATH: ${{ inputs.FILE_PATH }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
@@ -67,6 +71,7 @@ runs:
 
     - name: Create commit
       shell: bash
+      working-directory: gitops
       run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
@@ -76,12 +81,14 @@ runs:
     - name: Push changes
       shell: bash
       if: inputs.CREATE_PR == 'false'
+      working-directory: gitops
       run: |
           git push
     
     - name: Create PR
       shell: bash
       if: inputs.CREATE_PR == 'true'
+      working-directory: gitops
       run: |
           git push -u origin deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
           gh pr create --title "Update image tag for ${{ inputs.SERVICE_NAME }}" --body "Update image tag for ${{ inputs.SERVICE_NAME }}" --base main --head ${{ inputs.BRANCH_NAME }}
