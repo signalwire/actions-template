@@ -48,6 +48,9 @@ runs:
         SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
       run: |
+        cat "$SERVICE_NAME"
+        cat "$IMAGE_TAG"
+        cat "$FILE_PATH"
         sed -i 's|image: signalwire/$SERVICE_NAME:[^ ]*|image: $IMAGE_TAG|' $FILE_PATH
     
     - name: Update image tag in GitOps repo for Kubernetes
