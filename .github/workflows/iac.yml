@@ -151,6 +151,7 @@ jobs:
         
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2
+        if: inputs.ENVIRONMENT == 'aws'
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_SECRET }}
@@ -273,7 +274,7 @@ jobs:
           issue-title: "Terragrunt approval pending for ${{ inputs.WORKING_DIR }}"
 
       - name: Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' || github.event_name == 'schedule'
         uses: gruntwork-io/terragrunt-action@v2.1.4
         id: apply
         with:
