@@ -33,6 +33,17 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Wait for Docker daemon
+      shell: bash
+      run: |
+        until docker info >/dev/null 2>&1; do
+          if [ $SECONDS -ge 60 ]; then
+            echo "Timeout waiting for Docker daemon"
+            exit 1
+          fi
+          sleep 1
+        done
+
     - name: Set up QEMU for Docker
       uses: docker/setup-qemu-action@v3
 
