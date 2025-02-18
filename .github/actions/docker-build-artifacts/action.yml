@@ -46,6 +46,8 @@ runs:
 
     - name: Set up QEMU for Docker
       uses: docker/setup-qemu-action@v3
+      with:
+        cache-image: false
 
     - name: Build Docker image
       shell: bash
