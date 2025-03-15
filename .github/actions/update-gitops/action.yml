@@ -43,7 +43,10 @@ runs:
 
     - name: Create new branch
       if: ${{ inputs.CREATE_PR == 'true' }}
-      run: git switch -C deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
+      run: |
+          BRANCH_NAME="deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}"
+          BRANCH_NAME=${BRANCH_NAME//:/-}
+          git switch -C "$BRANCH_NAME"
       shell: bash
       working-directory: gitops
 
