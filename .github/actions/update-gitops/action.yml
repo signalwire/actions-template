@@ -43,7 +43,7 @@ runs:
       uses: actions/checkout@v4
       with:
         repository: ${{ inputs.GITOPS_REPOSITORY }}
-        token: ${{ env.GITOPS_PAT }}
+        token: ${{ inputs.GH_TOKEN || env.GITOPS_PAT || github.token }}
         ref: ${{ github.head_ref }}
         path: gitops
 
