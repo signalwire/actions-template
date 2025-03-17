@@ -32,7 +32,7 @@ runs:
       uses: actions/checkout@v4
       with:
         repository: ${{ inputs.GITOPS_REPOSITORY }}
-        token: ${{ env.GITOPS_PAT }}    
+        token: ${{ env.GITOPS_PAT }}
         ref: ${{ github.head_ref }}
         path: gitops
 
@@ -41,9 +41,16 @@ runs:
       shell: bash
       working-directory: gitops
 
+    - name: Set branch name
+      run: |
+        BRANCH_NAME="deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}"
+        BRANCH_NAME=${BRANCH_NAME//:/-}
+        echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+      shell: bash
+
     - name: Create new branch
       if: ${{ inputs.CREATE_PR == 'true' }}
-      run: git switch -C deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}
+      run: git switch -C "$BRANCH_NAME"
       shell: bash
       working-directory: gitops
 
@@ -95,7 +102,5 @@ runs:
       if: inputs.CREATE_PR == 'true'
       working-directory: gitops
       run: |
-          BRANCH_NAME="deploy-${{ inputs.SERVICE_NAME }}-${{ inputs.IMAGE_TAG }}"
-          BRANCH_NAME=${BRANCH_NAME//:/-}
           git push -u origin "$BRANCH_NAME"
           gh pr create --title "Update image tag for ${{ inputs.SERVICE_NAME }}" --body "Update image tag for ${{ inputs.SERVICE_NAME }}"
