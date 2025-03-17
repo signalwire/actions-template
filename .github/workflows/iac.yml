@@ -199,9 +199,6 @@ jobs:
         env:
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
-      - uses: eLco/setup-vault@v1
-      - run: vault secrets list
-
       - name: Init
         id: init
         uses: gruntwork-io/terragrunt-action@v2.1.4
