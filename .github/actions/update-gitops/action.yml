@@ -50,8 +50,7 @@ runs:
 
     - name: Create new branch
       if: ${{ inputs.CREATE_PR == 'true' }}
-      run: |
-          git switch -C "$BRANCH_NAME"
+      run: git switch -C "$BRANCH_NAME"
       shell: bash
       working-directory: gitops
 
