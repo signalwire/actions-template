@@ -24,6 +24,9 @@ inputs:
   BRANCH_NAME:
     required: false
     description: The branch name to create if CREATE_PR is true.
+  GH_TOKEN:
+    description: 'GitHub Token for authentication'
+    required: true
 
 runs:
   using: "composite"
@@ -106,6 +109,8 @@ runs:
       shell: bash
       if: inputs.CREATE_PR == 'true'
       working-directory: gitops
+      env:
+        GH_TOKEN: ${{ inputs.GH_TOKEN }}
       run: |
           git push -u origin "$BRANCH_NAME"
           gh pr create --title "Update image tag for ${{ inputs.SERVICE_NAME }}" --body "Update image tag for ${{ inputs.SERVICE_NAME }}"
