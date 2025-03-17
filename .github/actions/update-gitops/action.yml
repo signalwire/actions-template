@@ -31,6 +31,14 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Validate inputs
+      run: |
+        if [ "${{ inputs.CREATE_PR }}" == "true" ] && [ -z "${{ inputs.GH_TOKEN }}" ]; then
+          echo "GH_TOKEN is required when CREATE_PR is true."
+          exit 1
+        fi
+      shell: bash
+
     - name: Checkout GitOps repo
       uses: actions/checkout@v4
       with:
