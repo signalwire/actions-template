@@ -88,7 +88,12 @@ runs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add ${{ inputs.FILE_PATH }}
-          git commit --author="${{ github.event.head_commit.author.name }} <${{ github.event.head_commit.author.email }}>" -m "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
+          if [ -z "${{ github.event.head_commit.author.email }}" ]; then
+            echo "Author email is empty, using default author."
+            git commit --author="github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>" -m "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
+          else
+            git commit --author="${{ github.event.head_commit.author.name }} <${{ github.event.head_commit.author.email }}>" -m "[${{ inputs.SERVICE_NAME }}] Update image tag to ${{ inputs.IMAGE_TAG }}"
+          fi
 
     - name: Push changes
       shell: bash
