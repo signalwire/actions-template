@@ -25,7 +25,7 @@ inputs:
     required: false
     description: The branch name to create if CREATE_PR is true.
   GH_TOKEN:
-    description: 'GitHub Token for authentication'
+    description: GitHub Token for authentication
     required: false
 
 runs:
