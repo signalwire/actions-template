@@ -149,3 +149,4 @@ runs:
       with:
         token: ${{ env.GITHUB_TOKEN }}
         json-path: tmp/rspec_results.json
+        comment: false
