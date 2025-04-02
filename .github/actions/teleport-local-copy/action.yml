@@ -4,7 +4,8 @@ description: Copy local files behind Teleport
 inputs:
   TELEPORT_VERSION:
     required: false
-    default: 14.0.0
+    # Please keep `teleport` and `teleport-local-copy` versions in-sync
+    default: 16.4.18
     description: The teleport binary client version
   JOIN_METHOD:
     required: false
