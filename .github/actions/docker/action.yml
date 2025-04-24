@@ -162,11 +162,11 @@ runs:
         docker images
         echo "Starting container for image: ${{ steps.meta.outputs.tags }}"
         echo "CONTAINER_TEST_RUN_OPTIONS ${{ inputs.CONTAINER_TEST_RUN_OPTIONS }}"
-        docker run --name test ${{ inputs.CONTAINER_TEST_RUN_OPTIONS }} ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-        # sleep 20
-        # docker ps -a
-        # docker logs test
-        # ${{ inputs.CONTAINER_TEST_COMMAND }}
+        docker run -d --name test ${{ inputs.CONTAINER_TEST_RUN_OPTIONS }} ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+        sleep 20
+        docker ps -a
+        docker logs test
+        ${{ inputs.CONTAINER_TEST_COMMAND }}
     
     - name: Build and push with cache
       if: inputs.PUSH == 'true' && inputs.ENABLE_CACHE == 'true'
