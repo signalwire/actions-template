@@ -163,7 +163,7 @@ runs:
         echo "Starting container for image: ${{ steps.meta.outputs.tags }}"
         docker run -d --rm --name test ${{ inputs.CONTAINER_TEST_RUN_OPTIONS }} ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
         sleep 20
-        docker ps
+        docker ps -a
         docker logs test
         ${{ inputs.CONTAINER_TEST_COMMAND }}
     
