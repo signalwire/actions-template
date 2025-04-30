@@ -9,8 +9,11 @@ inputs:
     description: 'The file path in the GitOps repository to update'
     required: true
   SERVICE_NAME:
-    description: 'The name of the service to update'
+    description: 'The name of the image for the services to update'
     required: true
+  TARGET_SERVICE:
+    description: 'The specific service to update (optional). Leave empty to update all services using the image.'
+    required: false    
   IMAGE_TAG:
     description: 'The new image tag to push'
     required: true
@@ -18,6 +21,10 @@ inputs:
     required: true
     default: swarm
     description: The orchestrator to deploy to.
+  UPDATE_MODE:
+    description: 'Mode of update: "all" to update all services using the image, "specific" to update only the TARGET_SERVICE.'
+    required: true
+    default: specific
   CREATE_PR:
     required: true
     description: Create a PR instead of pushing directly to the branch.
@@ -81,6 +88,37 @@ runs:
         sed -i "s|image: signalwire/${SERVICE_NAME}:[^ ]*|image: ${IMAGE_TAG}|" "$FILE_PATH"
         git status
         git diff
+
+    - name: Update image tag in GitOps repo for Swarm
+      shell: bash
+      env:
+        FILE_PATH: ${{ inputs.FILE_PATH }}
+        TARGET_SERVICE: ${{ inputs.TARGET_SERVICE }}
+        IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+        UPDATE_MODE: ${{ inputs.UPDATE_MODE }}
+      working-directory: gitops
+      run: |
+        set -x
+        echo "$FILE_PATH"
+        echo "$TARGET_SERVICE"
+        echo "$IMAGE_TAG"
+        echo "$UPDATE_MODE"
+        if [ "$UPDATE_MODE" == "specific" ]; then
+          if [ -z "$TARGET_SERVICE" ]; then
+            echo "Error: TARGET_SERVICE must be specified when UPDATE_MODE is 'specific'."
+            exit 1
+          fi
+          # Update only the specific service block
+          sed -i "/^  $TARGET_SERVICE:/,/image:/s|image: signalwire/[^ ]*|image: signalwire/taxman:${IMAGE_TAG}|" "$FILE_PATH"
+        elif [ "$UPDATE_MODE" == "all" ]; then
+          # Update all services using the image
+          sed -i "s|image: signalwire/[^ ]*|image: signalwire/taxman:${IMAGE_TAG}|" "$FILE_PATH"
+        else
+          echo "Error: Invalid UPDATE_MODE. Must be 'specific' or 'all'."
+          exit 1
+        fi
+        git status
+        git diff      
     
     - name: Update image tag in GitOps repo for Kubernetes
       shell: bash
