@@ -127,6 +127,11 @@ on:
         default: ''
         description: 'The Teleport proxy URL to use.'
         required: false
+      ARTIFACT_NAME:
+        required: false
+        description: 'Artifact name to download.'
+        default: ''
+        type: string
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -162,9 +167,6 @@ on:
       TELEPORT_TOKEN:
         required: false
         description: 'Teleport token.'
-      ARTIFACT_NAME:
-        required: false
-        description: 'Artifact name to download.'
     outputs:
       IMAGE_TAG: 
         value: ${{ jobs.build.outputs.IMAGE_TAG }}
