@@ -162,6 +162,9 @@ on:
       TELEPORT_TOKEN:
         required: false
         description: 'Teleport token.'
+      ARTIFACT_NAME:
+        required: false
+        description: 'Artifact name to download.'
     outputs:
       IMAGE_TAG: 
         value: ${{ jobs.build.outputs.IMAGE_TAG }}
@@ -190,6 +193,12 @@ jobs:
       with:
         ref: ${{ inputs.REF || github.ref }}
         fetch-depth: 0
+
+    - name: Retrieve artifacts
+      if: ${{ inputs.ARTIFACT_NAME != '' }}
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ inputs.ARTIFACT_NAME }}
 
     - name: Update git
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
