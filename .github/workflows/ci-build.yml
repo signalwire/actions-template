@@ -127,11 +127,6 @@ on:
         default: ''
         description: 'The Teleport proxy URL to use.'
         required: false
-      ARTIFACT_NAME:
-        required: false
-        description: 'Artifact name to download.'
-        default: ''
-        type: string
     secrets:
       DOCKERHUB_USERNAME:
         required: false
@@ -201,6 +196,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.ARTIFACT_NAME }}
+
 
     - name: Update git
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
