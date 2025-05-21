@@ -220,7 +220,8 @@ jobs:
           INPUT_PRE_EXEC_2: |
             git config --global --list
           TERRAGRUNT_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
-      
+          TG_QUEUE_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
+
       - name: Validate
         uses: gruntwork-io/terragrunt-action@v2.1.4
         id: validate
@@ -232,7 +233,8 @@ jobs:
         env:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
           TERRAGRUNT_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
-      
+          TG_QUEUE_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
+
       - name: Plan
         uses: gruntwork-io/terragrunt-action@v2.1.4
         id: plan
@@ -261,6 +263,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           TERRAGRUNT_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
+          TG_QUEUE_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
           # TF_LOG: trace
 
       - name: Generate token
@@ -307,6 +310,7 @@ jobs:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           TERRAGRUNT_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
+          TG_QUEUE_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
 
       - run: sudo chmod -R 777 /home/runner/_work/${{ github.event.repository.name }}
         continue-on-error: true
