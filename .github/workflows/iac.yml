@@ -38,6 +38,11 @@ on:
         type: string
         default: ''
         description: An app registered on teleport to authenticate using proxy
+      TERRAGRUNT_EXCLUDE_DIR:
+        required: false
+        type: string
+        default: ''
+        description: A comma-separated list of UNIX style globs of directories to ignore
       GCP_WIP:
         required: false
         type: string
@@ -214,6 +219,7 @@ jobs:
           # print git configuration
           INPUT_PRE_EXEC_2: |
             git config --global --list
+          TERRAGRUNT_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
       
       - name: Validate
         uses: gruntwork-io/terragrunt-action@v2.1.4
@@ -225,6 +231,7 @@ jobs:
           tg_command: 'run-all validate'
         env:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
+          TERRAGRUNT_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
       
       - name: Plan
         uses: gruntwork-io/terragrunt-action@v2.1.4
@@ -253,6 +260,7 @@ jobs:
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
           GITHUB_TOKEN: ${{ github.token }}
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          TERRAGRUNT_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
           # TF_LOG: trace
 
       - name: Generate token
@@ -298,6 +306,7 @@ jobs:
           OVH_CONSUMER_KEY: ${{ secrets.OVH_CONSUMER_KEY }}
           OVH_CLOUD_PROJECT_SERVICE: ${{ secrets.OVH_CLOUD_PROJECT_SERVICE }}
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          TERRAGRUNT_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
 
       - run: sudo chmod -R 777 /home/runner/_work/${{ github.event.repository.name }}
         continue-on-error: true
