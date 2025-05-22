@@ -81,8 +81,8 @@ runs:
         set -x
         echo "FILE_PATH: $FILE_PATH"
         echo "SERVICE_NAME: $SERVICE_NAME"
-        echo "IMAGE_TAG: $IMAGE_TAG"
         echo "SWARM_SERVICE_NAME: $SWARM_SERVICE_NAME"
+        echo "IMAGE_TAG: $IMAGE_TAG"
         
         if [ -n "$SWARM_SERVICE_NAME" ]; then
           # Update specific swarm service by service name
