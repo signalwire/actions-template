@@ -9,7 +9,7 @@ inputs:
     description: 'The file path in the GitOps repository to update'
     required: true
   SERVICE_NAME:
-    description: 'The name of the service (based on docker image repo) to update'
+    description: 'The name of the service (based on docker image repo name) to update'
     required: true
   SWARM_SERVICE_NAME:
     description: 'The specific swarm service name to update'
