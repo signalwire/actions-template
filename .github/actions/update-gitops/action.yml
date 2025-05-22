@@ -9,14 +9,14 @@ inputs:
     description: 'The file path in the GitOps repository to update'
     required: true
   SERVICE_NAME:
-    description: 'The name of the service to update'
-    required: true
-  IMAGE_TAG:
-    description: 'The new image tag to push'
+    description: 'The name of the service (based on docker image repo) to update'
     required: true
   SWARM_SERVICE_NAME:
     description: 'The specific swarm service name to update'
     required: false
+  IMAGE_TAG:
+    description: 'The new image tag to push'
+    required: true
   ORCHESTRATOR:
     required: true
     default: swarm
