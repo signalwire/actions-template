@@ -14,6 +14,9 @@ inputs:
   IMAGE_TAG:
     description: 'The new image tag to push'
     required: true
+  SWARM_SERVICE_NAME:
+    description: 'The specific swarm service name to update (e.g., us-west)'
+    required: false
   ORCHESTRATOR:
     required: true
     default: swarm
@@ -72,13 +75,24 @@ runs:
         FILE_PATH: ${{ inputs.FILE_PATH }}
         SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+        SWARM_SERVICE_NAME: ${{ inputs.SWARM_SERVICE_NAME }}
       working-directory: gitops
       run: |
         set -x
-        echo "$FILE_PATH"
-        echo "$SERVICE_NAME"
-        echo "$IMAGE_TAG"
-        sed -i "s|image: signalwire/${SERVICE_NAME}:[^ ]*|image: ${IMAGE_TAG}|" "$FILE_PATH"
+        echo "FILE_PATH: $FILE_PATH"
+        echo "SERVICE_NAME: $SERVICE_NAME"
+        echo "IMAGE_TAG: $IMAGE_TAG"
+        echo "SWARM_SERVICE_NAME: $SWARM_SERVICE_NAME"
+        
+        if [ -n "$SWARM_SERVICE_NAME" ]; then
+          # Update specific swarm service by service name
+          # Find the service section and update the image line that follows
+          sed -i "/^  ${SWARM_SERVICE_NAME}:/,/^  [^[:space:]]/ s|^    image: .*|    image: ${IMAGE_TAG}|" "$FILE_PATH"
+        else
+          # Original behavior: update all services with matching image name pattern
+          sed -i "s|image: signalwire/${SERVICE_NAME}:[^ ]*|image: ${IMAGE_TAG}|" "$FILE_PATH"
+        fi
+        
         git status
         git diff
     
