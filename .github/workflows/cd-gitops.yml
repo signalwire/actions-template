@@ -27,6 +27,10 @@ on:
         required: true
         type: string
         description: The name of the service to update.
+      SWARM_SERVICE_NAME:
+        required: false
+        type: string
+        description: The specific swarm service name to update (e.g., us-west). If provided, only this service will be updated by service name rather than image name.
       RUNNER: 
         required: false
         type: string
@@ -80,6 +84,7 @@ jobs:
         GITOPS_REPOSITORY: ${{ inputs.GITOPS_REPOSITORY }}
         FILE_PATH: ${{ inputs.FILE_PATH }}
         SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+        SWARM_SERVICE_NAME: ${{ inputs.SWARM_SERVICE_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
         ORCHESTRATOR: ${{ inputs.ORCHESTRATOR }}
         BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
