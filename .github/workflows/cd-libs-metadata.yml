@@ -76,7 +76,7 @@ jobs:
 
     steps:
       - name: Checkout metadatarepo (${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }})
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         continue-on-error: true
         id: metabranch
         with:
@@ -86,7 +86,7 @@ jobs:
           token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
       
       - name: Checkout metadatarepo (${{ inputs.TARGET_REPO_DEFAULT_BRANCH }})
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         if: steps.metabranch.outcome != 'success'
         with:
           repository: ${{ inputs.TARGET_REPO }}
