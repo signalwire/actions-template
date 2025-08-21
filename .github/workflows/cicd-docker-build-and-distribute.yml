@@ -176,6 +176,7 @@ jobs:
           FILES: './${{ inputs.CODE_WORKING_DIRECTORY }}/*.tar.gz'
           EXEC_COMMANDS: 'echo "${{ github.sha }}" > ${{ inputs.META_FILE_PATH_PREFIX }}/hash.txt'
           FILES_FOLDER: ${{ inputs.META_FILE_PATH_PREFIX }}
+          TELEPORT_VERSION: '18.1.4'
         env:
           HOSTNAME: ${{ secrets.HOSTNAME }}
           PROXY_URL: ${{ secrets.PROXY_URL }}
