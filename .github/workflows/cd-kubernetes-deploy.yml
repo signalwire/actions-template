@@ -30,7 +30,7 @@ on:
       TELEPORT_VERSION:
         required: false
         type: string
-        default: 16.5.10
+        default: 18.1.4
       K8S_CLUSTER_NAME:
         required: true
         type: string

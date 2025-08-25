@@ -5,7 +5,7 @@ inputs:
   TELEPORT_VERSION:
     required: false
     # Please keep `teleport` and `teleport-local-copy` versions in-sync
-    default: 16.5.10
+    default: 18.1.4
     description: The teleport binary client version
   JOIN_METHOD:
     required: false
