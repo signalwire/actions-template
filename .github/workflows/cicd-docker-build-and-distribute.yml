@@ -81,6 +81,36 @@ on:
         type: string
         default: "build"
         description: Directory to place produced artifacts into (will be inside CODE_WORKING_DIRECTORY)
+      PUSH_TO_S3:
+        required: false
+        type: boolean
+        default: false
+        description: Push artifacts into S3 bucket
+      S3_BUCKET:
+        required: false
+        type: string
+        default: ""
+        description: S3 bucket name
+      S3_PROVIDER:
+        required: false
+        type: string
+        default: "AWS"
+        description: S3 provider type
+      S3_REGION:
+        required: false
+        type: string
+        default: "us-east-2"
+        description: AWS S3 region
+      S3_LOCATION_CONSTRAINT:
+        required: false
+        type: string
+        default: "us-east-2"
+        description: AWS S3 location constraint
+      S3_STORAGE_CLASS:
+        required: false
+        type: string
+        default: ""
+        description: AWS S3 storage class
 
     secrets:
       HOSTNAME:
@@ -96,6 +126,10 @@ on:
       REPO_PASSWORD:
         required: false
       DEPLOYMENT_TOKEN:
+        required: false
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
         required: false
       # GH_BOT_DEPLOY_TOKEN is DEPRECATED
       GH_BOT_DEPLOY_TOKEN:
@@ -133,6 +167,7 @@ jobs:
           path: actions
           sparse-checkout: |
             .github/actions/teleport/action.yml
+            .github/actions/rclone-s3-sync/action.yml
             .github/actions/docker-build-artifacts/action.yml
           sparse-checkout-cone-mode: false
 
@@ -160,8 +195,31 @@ jobs:
           if-no-files-found: warn
           retention-days: ${{ inputs.LOG_RETENTION_DAYS }}
 
+      - name: Create hash file
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && inputs.PUSH_TO_S3 }}
+        shell: bash
+        working-directory: ${{ inputs.CODE_WORKING_DIRECTORY }}
+        run: |
+          echo "${{ github.sha }}" > ${{ inputs.ARTIFACTS_DIR }}/hash.txt
+
+      - name: Upload artifacts to S3
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && inputs.PUSH_TO_S3 }}
+        uses: ./actions/.github/actions/rclone-s3-sync
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        with:
+          SRC: ${{ inputs.CODE_WORKING_DIRECTORY }}/${{ inputs.ARTIFACTS_DIR }}
+          DST: ${{ inputs.META_FILE_PATH_PREFIX }}
+          S3_BUCKET: ${{ inputs.S3_BUCKET }}
+          S3_PROVIDER: ${{ inputs.S3_PROVIDER }}
+          S3_REGION: ${{ inputs.S3_REGION }}
+          S3_LOCATION_CONSTRAINT: ${{ inputs.S3_LOCATION_CONSTRAINT }}
+          S3_STORAGE_CLASS: ${{ inputs.S3_STORAGE_CLASS }}
+          SYNC_TYPE: local-to-remote
+
       - name: Compress build artifacts
-        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && !inputs.PUSH_TO_S3 }}
         shell: bash
         working-directory: ${{ inputs.CODE_WORKING_DIRECTORY }}
         env:
@@ -170,7 +228,7 @@ jobs:
           tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz -C "${ARTIFACTS_DIR}" $(ls -1 "${ARTIFACTS_DIR}")
 
       - name: Copy/Exec artifacts/commands to/on remote host
-        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && !inputs.PUSH_TO_S3 }}
         uses: ./actions/.github/actions/teleport
         with:
           EXEC_COMMANDS_PRE: "mkdir -p ${{ inputs.META_FILE_PATH_PREFIX }}"
