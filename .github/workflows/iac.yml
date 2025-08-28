@@ -38,6 +38,11 @@ on:
         type: string
         default: ''
         description: An app registered on teleport to authenticate using proxy
+      TELEPORT_VERSION:
+        required: false
+        type: string
+        default: 16.5.10
+        description: The teleport binary client version
       TERRAGRUNT_EXCLUDE_DIR:
         required: false
         type: string
@@ -189,7 +194,8 @@ jobs:
           PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
         with:
           TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
-            
+          TELEPORT_VERSION: ${{ inputs.TELEPORT_VERSION }}
+
       - name: Configure Vault
         if: inputs.TELEPORT_APP != ''
         run: |
