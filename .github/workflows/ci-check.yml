@@ -139,7 +139,7 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
     
@@ -149,7 +149,7 @@ jobs:
         sudo apt update
         sudo apt install -y git
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
       name: Checkout submodules
       with:
@@ -157,7 +157,7 @@ jobs:
         submodules: 'recursive'
 
     - name: Checkout actions
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: signalwire/actions-template
         ref: main

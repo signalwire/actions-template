@@ -145,21 +145,21 @@ jobs:
     steps:
       - name: Checkout code
         if: ${{ inputs.REF == '' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           path: ${{ inputs.CODE_WORKING_DIRECTORY }}
 
       - name: Checkout code by REF
         if: ${{ inputs.REF != '' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.REF }}
           fetch-depth: 0
           path: ${{ inputs.CODE_WORKING_DIRECTORY }}
 
       - name: Checkout reusable actions
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: signalwire/actions-template
           ref: main
