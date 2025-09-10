@@ -52,12 +52,12 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0
 
     - name: Checkout actions
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         repository: signalwire/actions-template
         ref: main
