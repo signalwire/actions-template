@@ -181,7 +181,6 @@ jobs:
 
       - name: Sops Binary Installer
         uses: mdgreenwald/mozilla-sops-action@v1.6.0
-        if: inputs.TELEPORT_APP != ''
         with:
           version: 3.7.3
           
