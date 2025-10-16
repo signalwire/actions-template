@@ -55,11 +55,12 @@ runs:
   steps:
 
     - name: "Run ${{ inputs.RESOURCE_TYPE}} for ${{ inputs.RESOURCE_NAME}}"
+      id: awx_job
       uses: fitbeard/action-trigger-awx@v24.6.1
       with:
         controller_host: ${{ env.AWX_HOST }}
         controller_oauth_token: ${{ env.AWX_OAUTH_TOKEN }}
-        tower_verify_ssl: ${{ inputs.AWX_VERIFY_SSL }}
+        controller_verify_ssl: ${{ inputs.AWX_VERIFY_SSL }}
         resource_type: ${{ inputs.RESOURCE_TYPE }}
         resource_name: ${{ inputs.RESOURCE_NAME }}
         limit: ${{ inputs.LIMIT }}
@@ -71,4 +72,14 @@ runs:
         monitor: ${{ inputs.MONITOR }}
         timeout: ${{ inputs.TIMEOUT }}
         credentials: ${{ inputs.CREDENTIALS }}
+
+    - name: "Validate AWX Job Status"
+      if: always()
+      shell: bash
+      run: |
+        # Check if the AWX job step succeeded
+        if [[ "${{ steps.awx_job.outcome }}" != "success" ]]; then
+          echo "::error::AWX job failed or was cancelled"
+          exit 1
+        fi
 
