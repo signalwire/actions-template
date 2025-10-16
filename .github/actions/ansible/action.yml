@@ -77,9 +77,42 @@ runs:
       if: always()
       shell: bash
       run: |
-        # Check if the AWX job step succeeded
+        # First check if the AWX action step itself failed
         if [[ "${{ steps.awx_job.outcome }}" != "success" ]]; then
-          echo "::error::AWX job failed or was cancelled"
+          echo "::error::AWX action step failed or was cancelled"
           exit 1
         fi
+
+        # Now check the actual AWX job status using the job ID
+        JOB_ID="${{ steps.awx_job.outputs.job_id }}"
+
+        if [[ -z "$JOB_ID" ]]; then
+          echo "::error::No job ID returned from AWX"
+          exit 1
+        fi
+
+        echo "Checking status of AWX job $JOB_ID"
+
+        # Query AWX API for job status
+        RESPONSE=$(curl -s -k -H "Authorization: Bearer ${{ env.AWX_OAUTH_TOKEN }}" \
+          "${{ env.AWX_HOST }}/api/v2/jobs/$JOB_ID/")
+
+        STATUS=$(echo "$RESPONSE" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+        FAILED=$(echo "$RESPONSE" | grep -o '"failed":[^,}]*' | cut -d':' -f2)
+
+        echo "Job status: $STATUS"
+        echo "Failed flag: $FAILED"
+
+        # Check if job failed
+        if [[ "$STATUS" == "failed" ]] || [[ "$FAILED" == "true" ]]; then
+          echo "::error::AWX job $JOB_ID failed"
+          exit 1
+        fi
+
+        if [[ "$STATUS" != "successful" ]]; then
+          echo "::error::AWX job $JOB_ID did not complete successfully (status: $STATUS)"
+          exit 1
+        fi
+
+        echo "AWX job $JOB_ID completed successfully"
 
