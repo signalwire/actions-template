@@ -102,7 +102,7 @@ jobs:
           git push --set-upstream origin ${{ inputs.LIB_NAME }}/${{ inputs.SOURCE_BRANCH }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
 
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: ${{ inputs.ARTIFACT_NAME }}
 
