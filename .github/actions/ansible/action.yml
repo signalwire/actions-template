@@ -56,7 +56,7 @@ runs:
 
     - name: "Run ${{ inputs.RESOURCE_TYPE}} for ${{ inputs.RESOURCE_NAME}}"
       id: awx_job
-      uses: fitbeard/action-trigger-awx@v24.6.1
+      uses: fitbeard/action-trigger-awx@v24.6.3
       with:
         controller_host: ${{ env.AWX_HOST }}
         controller_oauth_token: ${{ env.AWX_OAUTH_TOKEN }}
