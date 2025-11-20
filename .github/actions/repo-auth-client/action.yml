@@ -14,9 +14,6 @@ inputs:
       - issue
       - revoke
 outputs:
-  nonce:
-    description: Nonce value from AUTH service (only available in nonce mode)
-    value: ${{ steps.get-nonce.outputs.nonce || '' }}
   token:
     description: Token value from AUTH service (only available in issue mode)
     value: ${{ steps.issue-token.outputs.token || '' }}
@@ -62,8 +59,16 @@ runs:
                 f"https://${{ inputs.domain }}/auth.php", session
             )
 
-            with open(os.getenv('GITHUB_OUTPUT'), 'a') as f:
-                f.write(f'nonce={nonce}\n')
+            if not nonce:
+                print("Error: Received empty nonce from server")
+                sys.exit(1)
+
+            # Mask the nonce in logs to prevent exposure
+            print(f'::add-mask::{nonce}')
+            print("Nonce retrieved and masked successfully")
+
+            with open(os.getenv('GITHUB_ENV'), 'a') as f:
+                f.write(f'NONCE={nonce}\n')
         except Exception as e:
             print(f"An error occurred: {e}")
             sys.exit(1)
