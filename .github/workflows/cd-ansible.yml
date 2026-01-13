@@ -111,3 +111,4 @@ jobs:
       env:
         AWX_HOST: ${{ secrets.AWX_HOST }}
         AWX_OAUTH_TOKEN: ${{ secrets.AWX_OAUTH_TOKEN }}
+        DOCKER_API_VERSION: "1.43"
