@@ -63,6 +63,7 @@ runs:
         controller_verify_ssl: ${{ inputs.AWX_VERIFY_SSL }}
         resource_type: ${{ inputs.RESOURCE_TYPE }}
         resource_name: ${{ inputs.RESOURCE_NAME }}
+        job_type: ${{ inputs.JOB_TYPE }}
         limit: ${{ inputs.LIMIT }}
         extra_vars: ${{ inputs.EXTRA_VARS }}
         branch: ${{ inputs.BRANCH }}

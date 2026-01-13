@@ -99,6 +99,7 @@ jobs:
         AWX_VERIFY_SSL: ${{ inputs.AWX_VERIFY_SSL}}
         RESOURCE_TYPE: ${{ inputs.RESOURCE_TYPE}}
         RESOURCE_NAME: ${{ inputs.RESOURCE_NAME}}
+        JOB_TYPE: ${{ inputs.JOB_TYPE}}
         LIMIT: ${{ inputs.LIMIT}}
         EXTRA_VARS: ${{ inputs.EXTRA_VARS}}
         BRANCH: ${{ inputs.BRANCH}}
