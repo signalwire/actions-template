@@ -93,7 +93,7 @@ jobs:
         ref: main
         path: actions
 
-    - uses: ./actions/.github/actions/ansible
+    - uses: ./actions/.github/actions/ansible@fix/awx-job-type-input
       name: Trigger AWX
       with:
         AWX_VERIFY_SSL: ${{ inputs.AWX_VERIFY_SSL}}
