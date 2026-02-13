@@ -126,8 +126,7 @@ runs:
           echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
         else
           if git rev-parse "$NEW_TAG" >/dev/null 2>&1; then
-            echo "::error::Tag $NEW_TAG already exists. Wait a moment and retry."
-            exit 1
+            echo "Tag $NEW_TAG already exists, reusing it"
           else
             # Write tag message to file to safely handle special characters.
             TAG_MSG_FILE=$(mktemp)
@@ -189,7 +188,7 @@ runs:
 
         # Use yq to extract current production image.
         CURRENT_IMAGE=$(yq eval '
-          .services[].image | select(test("'"${SERVICE_NAME}"'"))
+          .services[].image | select(contains("'"${SERVICE_NAME}"'"))
         ' "$STACK_FILE_PATH" | head -1)
 
         if [[ -z "$CURRENT_IMAGE" ]]; then
@@ -241,7 +240,7 @@ runs:
       id: get_prs
       shell: bash
       env:
-        GH_TOKEN: ${{ env.SOURCE_REPO_TOKEN || env.GITOPS_PAT_PROD }}
+        GH_TOKEN: ${{ env.SOURCE_REPO_TOKEN }}
         ACTION_PATH: ${{ github.action_path }}
         CURRENT_SHA: ${{ steps.prod_info.outputs.current_sha }}
         STAGING_GIT_SHA: ${{ steps.staging_info.outputs.git_sha }}

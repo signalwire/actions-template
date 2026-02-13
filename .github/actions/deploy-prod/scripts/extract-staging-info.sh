@@ -23,7 +23,7 @@ fi
 # Stack files use docker-compose format: services.<name>.image
 # We search for any service whose image matches the service name pattern.
 FULL_IMAGE=$(yq eval '
-  .services[].image | select(test("'"${SERVICE_NAME}"'"))
+  .services[].image | select(contains("'"${SERVICE_NAME}"'"))
 ' "$STACK_FILE" | head -1)
 
 # Fallback: if yq finds nothing (e.g., image is under a different structure),

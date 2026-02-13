@@ -32,7 +32,7 @@ PREVIOUS_PRS=$(gh pr list \
   --repo "$REPO" \
   --state all \
   --limit 50 \
-  --search "$SEARCH_TERM" \
+  --search "$SEARCH_TERM sort:created-desc" \
   --json number,headRefName,state,mergedAt,title 2>&1) || {
     echo "::error::Failed to query PRs from $REPO. Check GH_TOKEN permissions."
     echo "gh output: $PREVIOUS_PRS"
