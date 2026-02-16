@@ -33,7 +33,12 @@ on:
         required: false
         type: string
         default: ''
-        description: 'Path to stack file in GitOps repos (default: infrastructure/${SERVICE_NAME}.stack.yml).'
+        description: 'Path to stack file in staging GitOps repo for reading current image (default: infrastructure/${SERVICE_NAME}.stack.yml). Also used for prod if PROD_STACK_FILE_PATHS is not set.'
+      PROD_STACK_FILE_PATHS:
+        required: false
+        type: string
+        default: ''
+        description: 'Comma-separated list of stack file paths in the PROD GitOps repo to update. If not set, uses STACK_FILE_PATH for prod as well. Useful when prod has multiple files (e.g., per-region stacks).'
       DOCKER_REPOSITORY:
         required: false
         type: string
@@ -145,6 +150,7 @@ jobs:
           GITOPS_STAGING_REPO: ${{ inputs.GITOPS_STAGING_REPO }}
           GITOPS_PROD_REPO: ${{ inputs.GITOPS_PROD_REPO }}
           STACK_FILE_PATH: ${{ inputs.STACK_FILE_PATH }}
+          PROD_STACK_FILE_PATHS: ${{ inputs.PROD_STACK_FILE_PATHS }}
           DOCKER_REPOSITORY: ${{ inputs.DOCKER_REPOSITORY }}
           SOURCE_REPO: ${{ inputs.SOURCE_REPO }}
           BASE_BRANCH: ${{ inputs.BASE_BRANCH }}

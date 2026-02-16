@@ -10,7 +10,7 @@
 #   --old-sha SHA              Previous git SHA
 #   --repo REPO                Target GitOps repo (e.g., org/gitops-prod)
 #   --source-repo REPO         Source repo for comparison links (e.g., org/my-service)
-#   --stack-file PATH          Path to stack file in GitOps repo
+#   --stack-file PATH          Path to stack file in GitOps repo (can be specified multiple times)
 #   --docker-repo REPO         Docker repository (e.g., org/my-service)
 #   --base-branch BRANCH       Base branch for PR (default: main)
 #   --dry-run                  Show what would be done without creating PR
@@ -30,7 +30,7 @@ OLD_IMAGE_TAG=""
 OLD_SHA=""
 REPO=""
 SOURCE_REPO=""
-STACK_FILE=""
+STACK_FILES=()
 DOCKER_REPO=""
 BASE_BRANCH="main"
 
@@ -44,7 +44,7 @@ while [[ $# -gt 0 ]]; do
     --old-sha)        OLD_SHA="$2"; shift 2 ;;
     --repo)           REPO="$2"; shift 2 ;;
     --source-repo)    SOURCE_REPO="$2"; shift 2 ;;
-    --stack-file)     STACK_FILE="$2"; shift 2 ;;
+    --stack-file)     STACK_FILES+=("$2"); shift 2 ;;
     --docker-repo)    DOCKER_REPO="$2"; shift 2 ;;
     --base-branch)    BASE_BRANCH="$2"; shift 2 ;;
     --dry-run)        DRY_RUN=true; shift ;;
@@ -63,7 +63,10 @@ PR_LIST_CONTENT="${PR_LIST:-}"
 : "${OLD_SHA:?--old-sha is required}"
 : "${REASON:?DEPLOY_REASON environment variable is required}"
 : "${REPO:?--repo is required}"
-: "${STACK_FILE:?--stack-file is required}"
+if [[ ${#STACK_FILES[@]} -eq 0 ]]; then
+  echo "::error::--stack-file is required (at least one)"
+  exit 1
+fi
 
 : "${DOCKER_REPO:?--docker-repo is required}"
 : "${SOURCE_REPO:?--source-repo is required}"
@@ -86,28 +89,42 @@ if [[ "$DRY_RUN" == "true" ]]; then
   echo "=== DRY RUN MODE ==="
   echo ""
   echo "Would create branch: $BRANCH_NAME"
-  echo "Would update file: $STACK_FILE"
-  echo "  - image: ${DOCKER_REPO}:${NEW_IMAGE_TAG}"
-  echo "  - GIT_SHA: ${NEW_SHA}"
+  for STACK_FILE in "${STACK_FILES[@]}"; do
+    echo "Would update file: $STACK_FILE"
+    echo "  - image: ${DOCKER_REPO}:${NEW_IMAGE_TAG}"
+    echo "  - GIT_SHA: ${NEW_SHA}"
+  done
   echo ""
 else
   git checkout -b "$BRANCH_NAME"
 
-  # Update image tag using yq for proper YAML handling.
-  # Find and update any image value matching the docker repo.
-  yq eval -i "
-    (.services[].image | select(contains(\"${SERVICE_NAME}\"))) = \"${DOCKER_REPO}:${NEW_IMAGE_TAG}\"
-  " "$STACK_FILE"
+  for STACK_FILE in "${STACK_FILES[@]}"; do
+    echo "Updating $STACK_FILE ..."
 
-  # Update GIT_SHA in environment sections.
-  yq eval -i "
-    (.. | select(has(\"GIT_SHA\")).GIT_SHA) = \"${NEW_SHA}\"
-  " "$STACK_FILE"
+    # Update image tag using yq for proper YAML handling.
+    # Find and update any image value matching the docker repo.
+    yq eval -i "
+      (.services[].image | select(contains(\"${SERVICE_NAME}\"))) = \"${DOCKER_REPO}:${NEW_IMAGE_TAG}\"
+    " "$STACK_FILE"
 
-  git add "$STACK_FILE"
+    # Update GIT_SHA in environment sections.
+    yq eval -i "
+      (.. | select(has(\"GIT_SHA\")).GIT_SHA) = \"${NEW_SHA}\"
+    " "$STACK_FILE"
+
+    git add "$STACK_FILE"
+  done
+
   git commit -m "[${SERVICE_NAME}] Update image to ${DOCKER_REPO}:${NEW_IMAGE_TAG}"
   git push origin "$BRANCH_NAME"
 fi
+
+# Build list of updated files for PR body.
+FILES_LIST=""
+for STACK_FILE in "${STACK_FILES[@]}"; do
+  FILES_LIST="${FILES_LIST}
+- \`${STACK_FILE}\`"
+done
 
 # Build PR body with rich deployment context.
 PR_BODY="## :rocket: Production Deployment: ${SERVICE_NAME}
@@ -130,6 +147,9 @@ ${REASON}
 #### Pull Requests Included
 
 ${PR_LIST_CONTENT}
+
+### Stack Files Updated
+${FILES_LIST}
 
 ### Pre-Merge Checklist
 

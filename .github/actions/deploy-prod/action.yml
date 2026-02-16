@@ -23,7 +23,11 @@ inputs:
     description: 'GitOps production repository (e.g., org/repo-prod)'
     required: true
   STACK_FILE_PATH:
-    description: 'Path to stack file in GitOps repos (default: infrastructure/${SERVICE_NAME}.stack.yml)'
+    description: 'Path to stack file in staging GitOps repo for reading current image (default: infrastructure/${SERVICE_NAME}.stack.yml). Also used for prod if PROD_STACK_FILE_PATHS is not set.'
+    required: false
+    default: ''
+  PROD_STACK_FILE_PATHS:
+    description: 'Comma-separated list of stack file paths in the PROD GitOps repo to update. If not set, uses STACK_FILE_PATH for prod as well.'
     required: false
     default: ''
   DOCKER_REPOSITORY:
@@ -63,6 +67,7 @@ runs:
         INPUT_SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
         INPUT_BRANCH_PREFIX: ${{ inputs.BRANCH_PREFIX }}
         INPUT_STACK_FILE_PATH: ${{ inputs.STACK_FILE_PATH }}
+        INPUT_PROD_STACK_FILE_PATHS: ${{ inputs.PROD_STACK_FILE_PATHS }}
         INPUT_DOCKER_REPOSITORY: ${{ inputs.DOCKER_REPOSITORY }}
         INPUT_SOURCE_REPO: ${{ inputs.SOURCE_REPO }}
       run: |
@@ -78,6 +83,13 @@ runs:
           STACK_FILE="infrastructure/${SERVICE_NAME}.stack.yml"
         fi
 
+        # PROD_STACK_FILE_PATHS: comma-separated list of prod stack files.
+        # If not set, fall back to STACK_FILE (same file for both staging and prod).
+        PROD_STACK_FILES="$INPUT_PROD_STACK_FILE_PATHS"
+        if [[ -z "$PROD_STACK_FILES" ]]; then
+          PROD_STACK_FILES="$STACK_FILE"
+        fi
+
         DOCKER_REPO="$INPUT_DOCKER_REPOSITORY"
         if [[ -z "$DOCKER_REPO" ]]; then
           DOCKER_REPO="signalwire/${SERVICE_NAME}"
@@ -91,6 +103,7 @@ runs:
         {
           echo "branch_prefix=$BRANCH_PREFIX"
           echo "stack_file=$STACK_FILE"
+          echo "prod_stack_files=$PROD_STACK_FILES"
           echo "docker_repo=$DOCKER_REPO"
           echo "source_repo=$SOURCE_REPO"
         } >> "$GITHUB_OUTPUT"
@@ -180,11 +193,13 @@ runs:
       id: prod_info
       shell: bash
       env:
-        STACK_FILE: ${{ steps.defaults.outputs.stack_file }}
+        PROD_STACK_FILES: ${{ steps.defaults.outputs.prod_stack_files }}
         SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
         LATEST_TAG: ${{ steps.get_tag.outputs.latest_tag }}
       run: |
-        STACK_FILE_PATH="_prod/${STACK_FILE}"
+        # Use the first prod stack file for reading current state.
+        FIRST_PROD_FILE="${PROD_STACK_FILES%%,*}"
+        STACK_FILE_PATH="_prod/${FIRST_PROD_FILE}"
 
         # Use yq to extract current production image.
         CURRENT_IMAGE=$(yq eval '
@@ -267,7 +282,7 @@ runs:
         OLD_SHA: ${{ steps.prod_info.outputs.current_sha }}
         GITOPS_PROD_REPO: ${{ inputs.GITOPS_PROD_REPO }}
         SOURCE_REPO: ${{ steps.defaults.outputs.source_repo }}
-        STACK_FILE: ${{ steps.defaults.outputs.stack_file }}
+        PROD_STACK_FILES: ${{ steps.defaults.outputs.prod_stack_files }}
         DOCKER_REPO: ${{ steps.defaults.outputs.docker_repo }}
         BASE_BRANCH: ${{ inputs.BASE_BRANCH }}
         DEPLOY_REASON: ${{ inputs.REASON }}
@@ -279,6 +294,14 @@ runs:
           DRY_RUN_FLAG="--dry-run"
         fi
 
+        # Build --stack-file arguments for each prod file.
+        STACK_FILE_ARGS=""
+        IFS=',' read -ra FILES <<< "$PROD_STACK_FILES"
+        for f in "${FILES[@]}"; do
+          f="$(echo "$f" | xargs)"  # trim whitespace
+          STACK_FILE_ARGS="$STACK_FILE_ARGS --stack-file $f"
+        done
+
         "${ACTION_PATH}/scripts/create-prod-pr.sh" \
           --service-name "$SERVICE_NAME" \
           --branch-name "${BRANCH_PREFIX}/${NEW_TAG}" \
@@ -288,7 +311,7 @@ runs:
           --old-sha "$OLD_SHA" \
           --repo "$GITOPS_PROD_REPO" \
           --source-repo "$SOURCE_REPO" \
-          --stack-file "$STACK_FILE" \
+          $STACK_FILE_ARGS \
           --docker-repo "$DOCKER_REPO" \
           --base-branch "$BASE_BRANCH" \
           $DRY_RUN_FLAG
