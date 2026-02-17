@@ -102,7 +102,11 @@ runs:
         fi
         
         if [ -n "$GIT_SHA" ]; then
-          sed -i "s|GIT_SHA: [^ ]*|GIT_SHA: $GIT_SHA|" "$FILE_PATH"
+          if [ -n "$SWARM_SERVICE_NAME" ]; then
+            sed -i "/^  ${SWARM_SERVICE_NAME}:/,/^  [^[:space:]]/ s|GIT_SHA: [^ ]*|GIT_SHA: $GIT_SHA|" "$FILE_PATH"
+          else
+            sed -i "s|GIT_SHA: [^ ]*|GIT_SHA: $GIT_SHA|" "$FILE_PATH"
+          fi
         fi
 
         git status
