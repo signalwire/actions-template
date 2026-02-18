@@ -145,21 +145,21 @@ jobs:
     steps:
       - name: Checkout code
         if: ${{ inputs.REF == '' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           path: ${{ inputs.CODE_WORKING_DIRECTORY }}
 
       - name: Checkout code by REF
         if: ${{ inputs.REF != '' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.REF }}
           fetch-depth: 0
           path: ${{ inputs.CODE_WORKING_DIRECTORY }}
 
       - name: Checkout reusable actions
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: signalwire/actions-template
           ref: main
@@ -188,7 +188,7 @@ jobs:
           DEPLOYMENT_TOKEN: ${{ secrets.DEPLOYMENT_TOKEN }}
 
       - name: Upload build logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ inputs.TARGET_ARTIFACT_NAME }}.log
           path: ${{ inputs.CODE_WORKING_DIRECTORY }}/artifacts-*.log
