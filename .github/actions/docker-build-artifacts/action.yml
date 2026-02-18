@@ -15,7 +15,7 @@ inputs:
     description: Package maintainer
   WORKING_DIRECTORY:
     required: true
-    default: '.'
+    default: "."
     description: Working directory
   ARTIFACTS_PATTERN:
     required: false
@@ -23,11 +23,11 @@ inputs:
     description: Regexp that matches artifacts
   ARTIFACTS_DIR:
     required: false
-    default: 'BUILD'
+    default: "BUILD"
     description: Output directory for artifacts
   BUILD_LOG_FILENAME:
     required: false
-    default: 'build.log'
+    default: "build.log"
     description: Build log filename
 
 runs:
@@ -57,22 +57,43 @@ runs:
         REPO_PASSWORD: ${{ env.REPO_PASSWORD }}
         DEPLOYMENT_TOKEN: ${{ env.DEPLOYMENT_TOKEN }}
       run: |
-        docker build \
-          --build-arg BUILD_NUMBER="${GITHUB_RUN_ID}" \
-          --build-arg GIT_SHA="$(echo ${GITHUB_SHA} | cut -c1-10)" \
-          --build-arg MAINTAINER="${{ inputs.MAINTAINER }}" \
-          --build-arg REPO_DOMAIN="${{ inputs.REPO_DOMAIN }}" \
-          --build-arg REPO_USERNAME="${{ env.REPO_USERNAME }}" \
-          --file "${{ inputs.DOCKERFILE }}" \
-          --platform linux/${{ inputs.PLATFORM }} \
-          --progress=plain \
-          --secret id=REPO_PASSWORD,env=REPO_PASSWORD \
-          --secret id=DEPLOYMENT_TOKEN,env=DEPLOYMENT_TOKEN \
-          --tag artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} \
-          --ulimit nofile=1024000:1024000 \
-          --force-rm \
-          --pull \
-        . 2>&1 | tee -a ${{ inputs.BUILD_LOG_FILENAME }}
+        BUILD_ARGS=(
+          --build-arg BUILD_NUMBER="${GITHUB_RUN_ID}"
+          --build-arg GIT_SHA="$(echo ${GITHUB_SHA} | cut -c1-10)"
+          --build-arg MAINTAINER="${{ inputs.MAINTAINER }}"
+          --build-arg REPO_DOMAIN="${{ inputs.REPO_DOMAIN }}"
+          --build-arg REPO_USERNAME="${{ env.REPO_USERNAME }}"
+          --file "${{ inputs.DOCKERFILE }}"
+          --platform linux/${{ inputs.PLATFORM }}
+          --progress=plain
+          --secret id=REPO_PASSWORD,env=REPO_PASSWORD
+          --secret id=DEPLOYMENT_TOKEN,env=DEPLOYMENT_TOKEN
+          --tag artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA}
+          --ulimit nofile=1024000:1024000
+          --pull
+        )
+
+        if docker buildx version >/dev/null 2>&1; then
+          docker buildx create --use --name larger_log \
+            --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=50000000 || true
+
+          docker buildx build "${BUILD_ARGS[@]}" --load \
+          . 2>&1 | tee -a ${{ inputs.BUILD_LOG_FILENAME }}
+
+          docker buildx rm larger_log || true
+        else
+          docker build "${BUILD_ARGS[@]}" --force-rm \
+          . 2>&1 | tee -a ${{ inputs.BUILD_LOG_FILENAME }}
+        fi
+
+    - name: Upload build log
+      if: failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: build-log-${{ github.run_id }}-${{ github.sha }}
+        path: ${{ inputs.WORKING_DIRECTORY }}/${{ inputs.BUILD_LOG_FILENAME }}
+        retention-days: 7
+        if-no-files-found: ignore
 
     - name: Extract artifacts from image
       shell: bash
@@ -80,22 +101,15 @@ runs:
       run: |
         set -euo pipefail
 
-        export TEMP_DIR=$(mktemp -d)
-
-        # dump Docker image blobs
-        docker save artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} --output "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar" && \
-        tar -xf "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar" -C "${TEMP_DIR}" && \
-        rm -f "${TEMP_DIR}/artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.tar"
-
-        # extract blobs content
-        mkdir -p "${{ inputs.ARTIFACTS_DIR }}" && find "${TEMP_DIR}/" -type f -exec file {} + \
-        | grep -E ":.*tar archive" \
-        | cut -d: -f1 \
-        | xargs -rI{} tar --keep-newer-files -xf {} -C "${{ inputs.ARTIFACTS_DIR }}"
+        # create container from image and export filesystem
+        container_id=$(docker create artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} sh)
+        mkdir -p "${{ inputs.ARTIFACTS_DIR }}"
+        docker export "$container_id" | tar -xf - -C "${{ inputs.ARTIFACTS_DIR }}"
+        find "${{ inputs.ARTIFACTS_DIR }}" -type d -empty -delete
 
         # cleanup
-        docker image rm artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA} && \
-        rm -rf "${TEMP_DIR}"
+        docker rm "$container_id"
+        docker image rm artifacts-${GITHUB_RUN_ID}:${GITHUB_SHA}
 
         if [ "$(find "${{ inputs.ARTIFACTS_DIR }}" -type f | wc -l)" -lt 1 ]; then
             echo "No files found in ${{ inputs.ARTIFACTS_DIR }}."
