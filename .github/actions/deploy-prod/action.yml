@@ -1,0 +1,322 @@
+name: 'Deploy to Production (GitOps PR)'
+description: 'Promotes a staging image to production by creating a PR in the production GitOps repository with full changelog and verification.'
+
+inputs:
+  SERVICE_NAME:
+    description: 'Service name (e.g., my-service)'
+    required: true
+  REASON:
+    description: 'Reason for this production deployment'
+    required: true
+  DRY_RUN:
+    description: 'Dry run mode - verify but do not create tag or PR'
+    required: false
+    default: 'false'
+  BRANCH_PREFIX:
+    description: 'Branch prefix for deployment PRs (default: SERVICE_NAME)'
+    required: false
+    default: ''
+  GITOPS_STAGING_REPO:
+    description: 'GitOps staging repository (e.g., org/repo-staging)'
+    required: true
+  GITOPS_PROD_REPO:
+    description: 'GitOps production repository (e.g., org/repo-prod)'
+    required: true
+  STACK_FILE_PATH:
+    description: 'Path to stack file in staging GitOps repo for reading current image (default: infrastructure/${SERVICE_NAME}.stack.yml). Also used for prod if PROD_STACK_FILE_PATHS is not set.'
+    required: false
+    default: ''
+  PROD_STACK_FILE_PATHS:
+    description: 'Comma-separated list of stack file paths in the PROD GitOps repo to update. If not set, uses STACK_FILE_PATH for prod as well.'
+    required: false
+    default: ''
+  DOCKER_REPOSITORY:
+    description: 'Docker repository (default: signalwire/${SERVICE_NAME})'
+    required: false
+    default: ''
+  SOURCE_REPO:
+    description: 'Source repository for commit comparison links (default: signalwire/${SERVICE_NAME})'
+    required: false
+    default: ''
+  BASE_BRANCH:
+    description: 'Base branch in the prod GitOps repo'
+    required: false
+    default: 'main'
+
+outputs:
+  new_tag:
+    description: 'The timestamp tag created on the source repo'
+    value: ${{ steps.create_tag.outputs.new_tag }}
+  pr_url:
+    description: 'URL of the deployment PR'
+    value: ${{ steps.create_pr.outputs.pr_url }}
+  staging_image_tag:
+    description: 'Production-ready image tag from staging'
+    value: ${{ steps.staging_info.outputs.prod_image_tag }}
+  previous_merged:
+    description: 'Whether previous deployment PR was merged'
+    value: ${{ steps.find_previous.outputs.previous_merged }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Resolve defaults
+      id: defaults
+      shell: bash
+      env:
+        INPUT_SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+        INPUT_BRANCH_PREFIX: ${{ inputs.BRANCH_PREFIX }}
+        INPUT_STACK_FILE_PATH: ${{ inputs.STACK_FILE_PATH }}
+        INPUT_PROD_STACK_FILE_PATHS: ${{ inputs.PROD_STACK_FILE_PATHS }}
+        INPUT_DOCKER_REPOSITORY: ${{ inputs.DOCKER_REPOSITORY }}
+        INPUT_SOURCE_REPO: ${{ inputs.SOURCE_REPO }}
+      run: |
+        SERVICE_NAME="$INPUT_SERVICE_NAME"
+
+        BRANCH_PREFIX="$INPUT_BRANCH_PREFIX"
+        if [[ -z "$BRANCH_PREFIX" ]]; then
+          BRANCH_PREFIX="${SERVICE_NAME}"
+        fi
+
+        STACK_FILE="$INPUT_STACK_FILE_PATH"
+        if [[ -z "$STACK_FILE" ]]; then
+          STACK_FILE="infrastructure/${SERVICE_NAME}.stack.yml"
+        fi
+
+        # PROD_STACK_FILE_PATHS: comma-separated list of prod stack files.
+        # If not set, fall back to STACK_FILE (same file for both staging and prod).
+        PROD_STACK_FILES="$INPUT_PROD_STACK_FILE_PATHS"
+        if [[ -z "$PROD_STACK_FILES" ]]; then
+          PROD_STACK_FILES="$STACK_FILE"
+        fi
+
+        DOCKER_REPO="$INPUT_DOCKER_REPOSITORY"
+        if [[ -z "$DOCKER_REPO" ]]; then
+          DOCKER_REPO="signalwire/${SERVICE_NAME}"
+        fi
+
+        SOURCE_REPO="$INPUT_SOURCE_REPO"
+        if [[ -z "$SOURCE_REPO" ]]; then
+          SOURCE_REPO="signalwire/${SERVICE_NAME}"
+        fi
+
+        {
+          echo "branch_prefix=$BRANCH_PREFIX"
+          echo "stack_file=$STACK_FILE"
+          echo "prod_stack_files=$PROD_STACK_FILES"
+          echo "docker_repo=$DOCKER_REPO"
+          echo "source_repo=$SOURCE_REPO"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Make scripts executable
+      shell: bash
+      run: chmod +x "${{ github.action_path }}/scripts/"*.sh
+
+    - name: Get most recent production tag
+      id: get_tag
+      shell: bash
+      run: |
+        LATEST_TAG=$(git tag -l --sort=-creatordate | grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}T' | head -1 || echo "")
+        echo "latest_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+        if [[ -n "$LATEST_TAG" ]]; then
+          echo "Latest existing production tag: $LATEST_TAG"
+        else
+          echo "No existing production tags found"
+        fi
+
+    - name: Create new tag
+      id: create_tag
+      shell: bash
+      env:
+        DRY_RUN: ${{ inputs.DRY_RUN }}
+        ACTOR: ${{ github.actor }}
+        REASON: ${{ inputs.REASON }}
+      run: |
+        NEW_TAG=$(date -u +%FT%H-%M-%SZ)
+
+        if [[ "$DRY_RUN" == "true" ]]; then
+          echo "DRY RUN: Would create tag $NEW_TAG"
+          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+        else
+          if git rev-parse "$NEW_TAG" >/dev/null 2>&1; then
+            echo "Tag $NEW_TAG already exists, reusing it"
+          else
+            # Write tag message to file to safely handle special characters.
+            TAG_MSG_FILE=$(mktemp)
+            printf "Production deployment by %s\n\n%s\n" "$ACTOR" "$REASON" > "$TAG_MSG_FILE"
+            git tag "$NEW_TAG" -a -F "$TAG_MSG_FILE"
+            rm -f "$TAG_MSG_FILE"
+            git push origin "$NEW_TAG"
+            echo "Created and pushed tag: $NEW_TAG"
+          fi
+          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Checkout staging GitOps repo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.GITOPS_STAGING_REPO }}
+        path: _staging
+        token: ${{ env.GITOPS_PAT_STAGING }}
+
+    - name: Extract staging image info
+      id: staging_info
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        STACK_FILE: ${{ steps.defaults.outputs.stack_file }}
+        SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+      run: |
+        "${ACTION_PATH}/scripts/extract-staging-info.sh" \
+          "_staging/${STACK_FILE}" \
+          "$SERVICE_NAME"
+
+    - name: Verify Docker image exists
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        DOCKER_REPO: ${{ steps.defaults.outputs.docker_repo }}
+        PROD_IMAGE_TAG: ${{ steps.staging_info.outputs.prod_image_tag }}
+      run: |
+        "${ACTION_PATH}/scripts/verify-docker-image.sh" \
+          "$DOCKER_REPO" \
+          "$PROD_IMAGE_TAG"
+
+    - name: Checkout production GitOps repo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.GITOPS_PROD_REPO }}
+        path: _prod
+        token: ${{ env.GITOPS_PAT_PROD }}
+
+    - name: Get current production image info
+      id: prod_info
+      shell: bash
+      env:
+        PROD_STACK_FILES: ${{ steps.defaults.outputs.prod_stack_files }}
+        SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+        LATEST_TAG: ${{ steps.get_tag.outputs.latest_tag }}
+      run: |
+        # Use the first prod stack file for reading current state.
+        FIRST_PROD_FILE="${PROD_STACK_FILES%%,*}"
+        STACK_FILE_PATH="_prod/${FIRST_PROD_FILE}"
+
+        # Use yq to extract current production image.
+        CURRENT_IMAGE=$(yq eval '
+          .services[].image | select(contains("'"${SERVICE_NAME}"'"))
+        ' "$STACK_FILE_PATH" | head -1)
+
+        if [[ -z "$CURRENT_IMAGE" ]]; then
+          CURRENT_IMAGE=$(grep -E "image:.*${SERVICE_NAME}" "$STACK_FILE_PATH" | head -1 | awk '{print $2}' | tr -d '"' | tr -d "'")
+        fi
+
+        CURRENT_TAG="${CURRENT_IMAGE##*:}"
+
+        CURRENT_SHA=$(yq eval '
+          .. | select(has("GIT_SHA")).GIT_SHA
+        ' "$STACK_FILE_PATH" 2>/dev/null | head -1)
+
+        if [[ -z "$CURRENT_SHA" || "$CURRENT_SHA" == "null" ]]; then
+          CURRENT_SHA=$(grep -E 'GIT_SHA' "$STACK_FILE_PATH" | head -1 | awk -F': ' '{print $NF}' | tr -d ' "' | tr -d "'")
+        fi
+
+        # Fall back to the latest production tag if GIT_SHA is not in the stack file.
+        if [[ -z "$CURRENT_SHA" || "$CURRENT_SHA" == "null" ]]; then
+          if [[ -n "$LATEST_TAG" ]]; then
+            echo "::notice::GIT_SHA not found in prod stack file, using latest production tag: $LATEST_TAG"
+            CURRENT_SHA="$LATEST_TAG"
+          else
+            echo "::warning::Could not determine current production SHA (no GIT_SHA in stack file and no existing production tags)"
+          fi
+        fi
+
+        echo "Current production image: ${CURRENT_TAG}"
+        echo "Current production SHA: ${CURRENT_SHA}"
+
+        {
+          echo "current_tag=$CURRENT_TAG"
+          echo "current_sha=$CURRENT_SHA"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Find previous deployment PR
+      id: find_previous
+      shell: bash
+      env:
+        GH_TOKEN: ${{ env.GITOPS_PAT_PROD }}
+        ACTION_PATH: ${{ github.action_path }}
+        GITOPS_PROD_REPO: ${{ inputs.GITOPS_PROD_REPO }}
+        BRANCH_PREFIX: ${{ steps.defaults.outputs.branch_prefix }}
+      run: |
+        "${ACTION_PATH}/scripts/find-previous-deploy-pr.sh" \
+          "$GITOPS_PROD_REPO" \
+          "$BRANCH_PREFIX"
+
+    - name: Get PRs between commits
+      id: get_prs
+      shell: bash
+      env:
+        GH_TOKEN: ${{ env.SOURCE_REPO_TOKEN }}
+        ACTION_PATH: ${{ github.action_path }}
+        CURRENT_SHA: ${{ steps.prod_info.outputs.current_sha }}
+        STAGING_GIT_SHA: ${{ steps.staging_info.outputs.git_sha }}
+        SOURCE_REPO: ${{ steps.defaults.outputs.source_repo }}
+      run: |
+        "${ACTION_PATH}/scripts/get-prs-between-commits.sh" \
+          "$CURRENT_SHA" \
+          "$STAGING_GIT_SHA" \
+          "$SOURCE_REPO"
+
+    - name: Create deployment branch and PR
+      id: create_pr
+      shell: bash
+      env:
+        GH_TOKEN: ${{ env.GITOPS_PAT_PROD }}
+        DRY_RUN: ${{ inputs.DRY_RUN }}
+        ACTION_PATH: ${{ github.action_path }}
+        SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+        BRANCH_PREFIX: ${{ steps.defaults.outputs.branch_prefix }}
+        NEW_TAG: ${{ steps.create_tag.outputs.new_tag }}
+        NEW_IMAGE_TAG: ${{ steps.staging_info.outputs.prod_image_tag }}
+        NEW_SHA: ${{ steps.staging_info.outputs.git_sha }}
+        OLD_IMAGE_TAG: ${{ steps.prod_info.outputs.current_tag }}
+        OLD_SHA: ${{ steps.prod_info.outputs.current_sha }}
+        GITOPS_PROD_REPO: ${{ inputs.GITOPS_PROD_REPO }}
+        SOURCE_REPO: ${{ steps.defaults.outputs.source_repo }}
+        PROD_STACK_FILES: ${{ steps.defaults.outputs.prod_stack_files }}
+        DOCKER_REPO: ${{ steps.defaults.outputs.docker_repo }}
+        BASE_BRANCH: ${{ inputs.BASE_BRANCH }}
+        DEPLOY_REASON: ${{ inputs.REASON }}
+        PR_LIST: ${{ steps.get_prs.outputs.pr_list }}
+      working-directory: _prod
+      run: |
+        DRY_RUN_FLAG=""
+        if [[ "$DRY_RUN" == "true" ]]; then
+          DRY_RUN_FLAG="--dry-run"
+        fi
+
+        # Build --stack-file arguments for each prod file.
+        STACK_FILE_ARGS=""
+        IFS=',' read -ra FILES <<< "$PROD_STACK_FILES"
+        for f in "${FILES[@]}"; do
+          f="$(echo "$f" | xargs)"  # trim whitespace
+          STACK_FILE_ARGS="$STACK_FILE_ARGS --stack-file $f"
+        done
+
+        "${ACTION_PATH}/scripts/create-prod-pr.sh" \
+          --service-name "$SERVICE_NAME" \
+          --branch-name "${BRANCH_PREFIX}/${NEW_TAG}" \
+          --new-image-tag "$NEW_IMAGE_TAG" \
+          --new-sha "$NEW_SHA" \
+          --old-image-tag "$OLD_IMAGE_TAG" \
+          --old-sha "$OLD_SHA" \
+          --repo "$GITOPS_PROD_REPO" \
+          --source-repo "$SOURCE_REPO" \
+          $STACK_FILE_ARGS \
+          --docker-repo "$DOCKER_REPO" \
+          --base-branch "$BASE_BRANCH" \
+          $DRY_RUN_FLAG
+
+    - name: Clean up checkout directories
+      if: always()
+      shell: bash
+      run: rm -rf _staging _prod

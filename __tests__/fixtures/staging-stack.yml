@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+  app:
+    image: acme-org/my-service:staging-20260129-765-2cb19ef
+    environment:
+      GIT_SHA: 2cb19efabc123456789012345678901234567890
+      NODE_ENV: production
+    deploy:
+      replicas: 2
+  redis:
+    image: redis:7-alpine

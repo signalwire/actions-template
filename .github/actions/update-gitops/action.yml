@@ -30,6 +30,13 @@ inputs:
   GH_TOKEN:
     required: false
     description: GitHub Token for authentication
+  GIT_SHA:
+    required: false
+    description: 'Git SHA to update in the stack file'
+  DRY_RUN:
+    required: false
+    default: 'false'
+    description: 'Verify changes without pushing'
 
 runs:
   using: "composite"
@@ -76,6 +83,7 @@ runs:
         SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
         SWARM_SERVICE_NAME: ${{ inputs.SWARM_SERVICE_NAME }}
+        GIT_SHA: ${{ inputs.GIT_SHA }}
       working-directory: gitops
       run: |
         set -x
@@ -93,9 +101,17 @@ runs:
           sed -i "s|image: signalwire/${SERVICE_NAME}:[^ ]*|image: ${IMAGE_TAG}|" "$FILE_PATH"
         fi
         
+        if [ -n "$GIT_SHA" ]; then
+          if [ -n "$SWARM_SERVICE_NAME" ]; then
+            sed -i "/^  ${SWARM_SERVICE_NAME}:/,/^  [^[:space:]]/ s|GIT_SHA: [^ ]*|GIT_SHA: $GIT_SHA|" "$FILE_PATH"
+          else
+            sed -i "s|GIT_SHA: [^ ]*|GIT_SHA: $GIT_SHA|" "$FILE_PATH"
+          fi
+        fi
+
         git status
         git diff
-    
+
     - name: Update image tag in GitOps repo for Kubernetes
       shell: bash
       if: ${{ inputs.ORCHESTRATOR == 'kubernetes' }}
@@ -108,6 +124,7 @@ runs:
 
     - name: Create commit
       shell: bash
+      if: inputs.DRY_RUN != 'true'
       working-directory: gitops
       run: |
           git config user.name github-actions[bot]
@@ -122,14 +139,14 @@ runs:
 
     - name: Push changes
       shell: bash
-      if: inputs.CREATE_PR == 'false'
+      if: inputs.CREATE_PR == 'false' && inputs.DRY_RUN != 'true'
       working-directory: gitops
       run: |
           git push
     
     - name: Create PR
       shell: bash
-      if: inputs.CREATE_PR == 'true'
+      if: inputs.CREATE_PR == 'true' && inputs.DRY_RUN != 'true'
       working-directory: gitops
       env:
         GH_TOKEN: ${{ inputs.GH_TOKEN }}
