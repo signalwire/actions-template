@@ -1,0 +1,15 @@
+{
+  "name": "actions-template-tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Unit tests for signalwire/actions-template shell scripts",
+  "scripts": {
+    "test": "jest --detectOpenHandles --forceExit",
+    "test:verbose": "jest --detectOpenHandles --forceExit --verbose",
+    "test:ci": "jest --detectOpenHandles --forceExit --ci --reporters=default --reporters=jest-junit"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0"
+  }
+}
