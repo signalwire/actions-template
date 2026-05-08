@@ -33,10 +33,10 @@ runs:
         import requests
         import sys
         from requests.adapters import HTTPAdapter, Retry
-        from urllib.parse import urlencode
+        from urllib.parse import urlencode, quote_plus
 
         def create_https_session_with_retries(
-            retries=5, backoff_factor=1.0, status_forcelist=(500, 502, 504, 400, 403, 404)
+            retries=5, backoff_factor=1.0, status_forcelist=(500, 502, 504)
         ):
             session = requests.Session()
             retry = Retry(
@@ -62,10 +62,14 @@ runs:
                 f"https://${{ inputs.domain }}/auth.php", session
             )
 
+            if not nonce:
+                print("Empty nonce response from AUTH service")
+                sys.exit(1)
+
             with open(os.getenv('GITHUB_OUTPUT'), 'a') as f:
                 f.write(f'nonce={nonce}\n')
-        except Exception as e:
-            print(f"An error occurred: {e}")
+        except Exception:
+            print("An error occurred while fetching nonce (details redacted to avoid leaking secrets)")
             sys.exit(1)
 
     - name: Issue Token
@@ -77,10 +81,10 @@ runs:
         import requests
         import sys
         from requests.adapters import HTTPAdapter, Retry
-        from urllib.parse import urlencode
+        from urllib.parse import urlencode, quote_plus
 
         def create_https_session_with_retries(
-            retries=5, backoff_factor=1.0, status_forcelist=(500, 502, 504, 400, 403, 404)
+            retries=5, backoff_factor=1.0, status_forcelist=(500, 502, 504)
         ):
             session = requests.Session()
             retry = Retry(
@@ -101,15 +105,26 @@ runs:
 
         session = create_https_session_with_retries()
 
+        nonce = os.environ.get('NONCE', '')
+        if not nonce:
+            print("NONCE environment variable is empty")
+            sys.exit(1)
+        print(f"::add-mask::{nonce}", flush=True)
+        print(f"::add-mask::{quote_plus(nonce)}", flush=True)
+
         try:
             token = GET(
-                f'https://${{ inputs.domain }}/?{urlencode({"verify": "${{ env.NONCE }}"})}', session
+                f'https://${{ inputs.domain }}/?{urlencode({"verify": nonce})}', session
             )
+
+            if not token:
+                print("Empty token response from AUTH service")
+                sys.exit(1)
 
             with open(os.getenv('GITHUB_OUTPUT'), 'a') as f:
                 f.write(f'token={token}\n')
-        except Exception as e:
-            print(f"An error occurred: {e}")
+        except Exception:
+            print("An error occurred while issuing token (details redacted to avoid leaking secrets)")
             sys.exit(1)
 
     - name: Revoke Token
@@ -121,10 +136,10 @@ runs:
         import requests
         import sys
         from requests.adapters import HTTPAdapter, Retry
-        from urllib.parse import urlencode
+        from urllib.parse import urlencode, quote_plus
 
         def create_https_session_with_retries(
-            retries=5, backoff_factor=1.0, status_forcelist=(500, 502, 504, 400, 403, 404)
+            retries=5, backoff_factor=1.0, status_forcelist=(500, 502, 504)
         ):
             session = requests.Session()
             retry = Retry(
@@ -145,10 +160,17 @@ runs:
 
         session = create_https_session_with_retries()
 
+        token_value = os.environ.get('TOKEN', '')
+        if not token_value:
+            print("TOKEN environment variable is empty")
+            sys.exit(1)
+        print(f"::add-mask::{token_value}", flush=True)
+        print(f"::add-mask::{quote_plus(token_value)}", flush=True)
+
         try:
-            token = GET(
-                f'https://${{ inputs.domain }}/?{urlencode({"revoke": "${{ env.TOKEN }}"})}', session
+            GET(
+                f'https://${{ inputs.domain }}/?{urlencode({"revoke": token_value})}', session
             )
-        except requests.exceptions.RequestException as e:
-            print(f"An error occurred: {e}")
+        except Exception:
+            print("An error occurred while revoking token (details redacted to avoid leaking secrets)")
             sys.exit(1)
