@@ -144,6 +144,11 @@ on:
         required: false
         default: '/usr/share/dotnet'
         description: Set a custom .NET install dir
+      DOTNET_TEST_ARGS:
+        type: string
+        required: false
+        default: ''
+        description: Extra arguments appended to the dotnet test command.
       BUILD_ARGS:
         required: false
         type: string
@@ -244,6 +249,7 @@ jobs:
       RUBOCOP: ${{ inputs.RUBOCOP }}
       RUN_TESTS: ${{ inputs.RUN_TESTS }}
       DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
+      DOTNET_TEST_ARGS: ${{ inputs.DOTNET_TEST_ARGS }}
       VAULT_SECRETS: ${{ inputs.VAULT_SECRETS }}
       TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
       TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
