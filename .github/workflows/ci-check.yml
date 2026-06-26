@@ -90,6 +90,11 @@ on:
         required: false
         default: '/usr/share/dotnet'
         description: Set a custom .NET install dir
+      DOTNET_TEST_ARGS:
+        type: string
+        required: false
+        default: ''
+        description: Extra arguments appended to the dotnet test command.
       ## Vault Secrets
       VAULT_SECRETS:
         type: string
@@ -193,7 +198,8 @@ jobs:
         DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
         DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
         RUN_TESTS: ${{ inputs.RUN_TESTS }}
-    
+        DOTNET_TEST_ARGS: ${{ inputs.DOTNET_TEST_ARGS }}
+
     - name: Test JS
       if: ${{ inputs.LANGUAGE == 'JavaScript' }}
       uses: ./actions/.github/actions/test-javascript

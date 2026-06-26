@@ -14,6 +14,10 @@ inputs:
     required: false
     default: './.dotnet'
     description: Set a custom .NET install dir
+  DOTNET_TEST_ARGS:
+    required: false
+    default: ''
+    description: Extra arguments appended to the dotnet test command.
 
 runs:
   using: "composite"
@@ -49,7 +53,7 @@ runs:
         load-mode: skip
 
     - name: Test
-      run: dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=LOCALTESTING || true
+      run: dotnet test --logger "trx;LogFileName=test-results.trx" --verbosity minimal -p:DefineConstants=LOCALTESTING ${{ inputs.DOTNET_TEST_ARGS }} || true
       if: inputs.RUN_TESTS != 'false'
       shell: bash
 
