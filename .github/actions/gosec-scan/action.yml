@@ -1,0 +1,25 @@
+name: Gosec Scan
+description: Run gosec (Go security static analysis) as a CI gate.
+
+inputs:
+  ARGS:
+    required: false
+    default: './...'
+    description: 'Arguments/package patterns passed to gosec.'
+  VERSION:
+    required: false
+    default: 'v2.25.0'
+    description: 'gosec version to install (e.g. a pinned release instead of latest, for reproducible CI).'
+
+runs:
+  using: "composite"
+  steps:
+    # `uses:` in a composite action step can't take an expression, so this is
+    # installed via `go install` (same pattern as govulncheck in test-go) rather
+    # than `uses: securego/gosec@${{ inputs.VERSION }}`, to keep VERSION an
+    # actual input instead of a hardcoded pin.
+    - name: Run Gosec Security Scanner
+      shell: bash
+      run: |
+        go install github.com/securego/gosec/v2/cmd/gosec@${{ inputs.VERSION }}
+        "$(go env GOPATH)/bin/gosec" ${{ inputs.ARGS }}

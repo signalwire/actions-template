@@ -43,6 +43,31 @@ on:
         type: boolean
         default: true
         description: 'Whether to run govulncheck (Go).'
+      RUN_GOSEC:
+        required: false
+        type: boolean
+        default: false
+        description: 'Whether to run gosec (Go security static analysis) as a parallel gating job.'
+      RUN_SEMGREP:
+        required: false
+        type: boolean
+        default: false
+        description: 'Whether to run Semgrep SAST as a parallel gating job.'
+      RUN_TRUFFLEHOG:
+        required: false
+        type: boolean
+        default: false
+        description: 'Whether to run TruffleHog secret scanning as a parallel gating job.'
+      RUN_GRYPE:
+        required: false
+        type: boolean
+        default: false
+        description: 'Whether to run a Grype dependency vulnerability scan as a parallel gating job.'
+      RUN_TRIVY_FS:
+        required: false
+        type: boolean
+        default: false
+        description: 'Whether to run a Trivy filesystem (dependency + IaC) scan as a parallel gating job.'
       TEST_DEPENDENCIES:
         required: false
         type: boolean
@@ -265,3 +290,98 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN : ${{ secrets.GITHUB_TOKEN }}
         SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+
+  # ──────────────────────────────────────────────────────────────────
+  # Optional security-scan jobs, gated by RUN_* inputs (default off, so
+  # existing callers are unaffected). Run in parallel with `ci` rather than
+  # as steps inside it, since they're independent gates, not part of the
+  # build/test/lint sequence.
+  # ──────────────────────────────────────────────────────────────────
+  security-gosec:
+    name: gosec
+    if: ${{ inputs.RUN_GOSEC == true }}
+    runs-on: ${{ inputs.RUNNER }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Checkout actions
+        uses: actions/checkout@v4
+        with:
+          repository: signalwire/actions-template
+          ref: main
+          path: actions
+
+      - uses: ./actions/.github/actions/gosec-scan
+
+  security-semgrep:
+    name: Semgrep SAST
+    if: ${{ inputs.RUN_SEMGREP == true }}
+    runs-on: ${{ inputs.RUNNER }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout actions
+        uses: actions/checkout@v4
+        with:
+          repository: signalwire/actions-template
+          ref: main
+          path: actions
+
+      - uses: ./actions/.github/actions/semgrep-scan
+
+  security-trufflehog:
+    name: TruffleHog secret scanning
+    if: ${{ inputs.RUN_TRUFFLEHOG == true }}
+    runs-on: ${{ inputs.RUNNER }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout actions
+        uses: actions/checkout@v4
+        with:
+          repository: signalwire/actions-template
+          ref: main
+          path: actions
+
+      - uses: ./actions/.github/actions/trufflehog-scan
+
+  security-grype:
+    name: Grype dependency scan
+    if: ${{ inputs.RUN_GRYPE == true }}
+    runs-on: ${{ inputs.RUNNER }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout actions
+        uses: actions/checkout@v4
+        with:
+          repository: signalwire/actions-template
+          ref: main
+          path: actions
+
+      - uses: ./actions/.github/actions/grype-scan
+
+  security-trivy-fs:
+    name: Trivy filesystem scan
+    if: ${{ inputs.RUN_TRIVY_FS == true }}
+    runs-on: ${{ inputs.RUNNER }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout actions
+        uses: actions/checkout@v4
+        with:
+          repository: signalwire/actions-template
+          ref: main
+          path: actions
+
+      - uses: ./actions/.github/actions/trivy-fs-scan
