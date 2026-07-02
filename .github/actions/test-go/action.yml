@@ -9,27 +9,38 @@ inputs:
   RUN_TESTS:
     required: false
     default: true
-    description: "Whenever you wanna run go test."
+    description: "Whether to run go test."
   RUN_LINT:
     required: false
     default: true
-    description: "Whenever you wanna run golangci-lint."
+    description: "Whether to run golangci-lint."
   RUN_VULNCHECK:
     required: false
     default: true
-    description: "Whenever you wanna run govulncheck."
+    description: "Whether to run govulncheck."
   GOLANGCI_LINT_VERSION:
     required: false
     default: "latest"
     description: "golangci-lint-action version pin."
+  GOVULNCHECK_VERSION:
+    required: false
+    default: "latest"
+    description: "govulncheck version to install (e.g. a pinned release instead of latest, for reproducible CI)."
 
 runs:
   using: "composite"
   steps:
-    - name: Setup Go
+    - name: Setup Go (pinned version)
+      if: ${{ inputs.GO_VERSION != '' }}
       uses: actions/setup-go@v5
       with:
         go-version: ${{ inputs.GO_VERSION }}
+        cache: true
+
+    - name: Setup Go (from go.mod)
+      if: ${{ inputs.GO_VERSION == '' }}
+      uses: actions/setup-go@v5
+      with:
         go-version-file: go.mod
         cache: true
 
@@ -44,7 +55,7 @@ runs:
     - name: Format check
       shell: bash
       run: |
-        UNFORMATTED=$(gofmt -l .)
+        UNFORMATTED=$(gofmt -l $(go list -f '{{.Dir}}' ./...))
         if [ -n "$UNFORMATTED" ]; then
           echo "The following files are not gofmt-formatted:"
           echo "$UNFORMATTED"
@@ -66,5 +77,5 @@ runs:
       if: ${{ inputs.RUN_VULNCHECK == 'true' || inputs.RUN_VULNCHECK == true }}
       shell: bash
       run: |
-        go install golang.org/x/vuln/cmd/govulncheck@latest
-        govulncheck ./...
+        go install golang.org/x/vuln/cmd/govulncheck@${{ inputs.GOVULNCHECK_VERSION }}
+        "$(go env GOPATH)/bin/govulncheck" ./...

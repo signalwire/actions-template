@@ -37,12 +37,12 @@ on:
         required: false
         type: boolean
         default: true
-        description: 'Whenever you wanna run golangci-lint (Go).'
+        description: 'Whether to run golangci-lint (Go).'
       RUN_VULNCHECK:
         required: false
         type: boolean
         default: true
-        description: 'Whenever you wanna run govulncheck (Go).'
+        description: 'Whether to run govulncheck (Go).'
       PUSH:
         required: false
         type: boolean
