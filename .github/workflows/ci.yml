@@ -29,6 +29,20 @@ on:
         required: false
         type: string
         default: "3.10"
+      GO_VERSION:
+        required: false
+        type: string
+        description: 'Go version to use. Defaults to the version in go.mod if not set.'
+      RUN_LINT:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to run golangci-lint (Go).'
+      RUN_VULNCHECK:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to run govulncheck (Go).'
       PUSH:
         required: false
         type: boolean
@@ -235,6 +249,9 @@ jobs:
       RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
       DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
       PYTHON_VERSION: ${{ inputs.PYTHON_VERSION }}
+      GO_VERSION: ${{ inputs.GO_VERSION }}
+      RUN_LINT: ${{ inputs.RUN_LINT }}
+      RUN_VULNCHECK: ${{ inputs.RUN_VULNCHECK }}
       TEST_DEPENDENCIES: ${{ inputs.TEST_DEPENDENCIES }}
       TEST_DEPENDENCIES_PRIVATE: ${{ inputs.TEST_DEPENDENCIES_PRIVATE }}
       DEPENDENCIES_FILE: ${{ inputs.DEPENDENCIES_FILE }}

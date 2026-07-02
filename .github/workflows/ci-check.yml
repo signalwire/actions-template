@@ -29,6 +29,20 @@ on:
         required: false
         type: string
         description: Default Python version
+      GO_VERSION:
+        required: false
+        type: string
+        description: 'Go version to use. Defaults to the version in go.mod if not set.'
+      RUN_LINT:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to run golangci-lint (Go).'
+      RUN_VULNCHECK:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to run govulncheck (Go).'
       TEST_DEPENDENCIES:
         required: false
         type: boolean
@@ -228,6 +242,15 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Test Go
+      if: ${{ inputs.LANGUAGE == 'Go' }}
+      uses: ./actions/.github/actions/test-go
+      with:
+        GO_VERSION: ${{ inputs.GO_VERSION }}
+        RUN_TESTS: ${{ inputs.RUN_TESTS }}
+        RUN_LINT: ${{ inputs.RUN_LINT }}
+        RUN_VULNCHECK: ${{ inputs.RUN_VULNCHECK }}
+
     - name: Test configs
       if: inputs.LANGUAGE == 'configs' || inputs.LANGUAGE == 'configs'
       uses: ./actions/.github/actions/test-configs
