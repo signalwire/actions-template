@@ -1,0 +1,32 @@
+name: Trivy Filesystem Scan
+description: >-
+  Scan the filesystem for dependency and IaC vulnerabilities with Trivy as a CI
+  gate. Distinct from the trivy/ action, which scans a built container image
+  and files a GitHub issue rather than failing the job.
+
+inputs:
+  SCAN_REF:
+    required: false
+    default: '.'
+    description: 'Path to scan.'
+  SEVERITY:
+    required: false
+    default: 'CRITICAL,HIGH'
+    description: 'Comma-separated severities that fail the build.'
+  IGNORE_UNFIXED:
+    required: false
+    default: 'true'
+    description: 'Whether to ignore vulnerabilities with no available fix.'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run Trivy filesystem scanner
+      uses: aquasecurity/trivy-action@v0.36.0
+      with:
+        scan-type: fs
+        scan-ref: ${{ inputs.SCAN_REF }}
+        severity: ${{ inputs.SEVERITY }}
+        ignore-unfixed: ${{ inputs.IGNORE_UNFIXED }}
+        exit-code: '1'
+        format: table

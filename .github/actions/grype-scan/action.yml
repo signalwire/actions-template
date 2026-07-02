@@ -1,0 +1,30 @@
+name: Grype Dependency Scan
+description: >-
+  Scan the filesystem for vulnerable dependencies with Grype as a CI gate.
+  Distinct from the anchore/ action, which scans a built container image and
+  files a GitHub issue rather than failing the job.
+
+inputs:
+  PATH:
+    required: false
+    default: '.'
+    description: 'Path to scan.'
+  SEVERITY_CUTOFF:
+    required: false
+    default: 'critical'
+    description: 'Minimum severity that fails the build (negligible, low, medium, high, critical).'
+  FAIL_BUILD:
+    required: false
+    default: 'true'
+    description: 'Whether to fail the job when a vulnerability at or above SEVERITY_CUTOFF is found.'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Scan dependencies with Grype
+      uses: anchore/scan-action@v7.4.0
+      with:
+        path: ${{ inputs.PATH }}
+        fail-build: ${{ inputs.FAIL_BUILD }}
+        severity-cutoff: ${{ inputs.SEVERITY_CUTOFF }}
+        output-format: table

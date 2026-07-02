@@ -1,0 +1,18 @@
+name: TruffleHog Scan
+description: >-
+  Scan repository history for verified secrets as a CI gate. The calling job's
+  checkout step needs `fetch-depth: 0` for full-history scanning.
+
+inputs:
+  EXTRA_ARGS:
+    required: false
+    default: '--only-verified'
+    description: 'Extra arguments passed to trufflehog.'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Scan for secrets
+      uses: trufflesecurity/trufflehog@main
+      with:
+        extra_args: ${{ inputs.EXTRA_ARGS }}
