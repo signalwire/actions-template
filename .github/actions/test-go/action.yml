@@ -69,7 +69,7 @@ runs:
 
     - name: Lint
       if: ${{ inputs.RUN_LINT == 'true' || inputs.RUN_LINT == true }}
-      uses: golangci/golangci-lint-action@v6
+      uses: golangci/golangci-lint-action@v9
       with:
         version: ${{ inputs.GOLANGCI_LINT_VERSION }}
 
