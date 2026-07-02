@@ -16,8 +16,10 @@ runs:
   steps:
     - name: Install Semgrep
       shell: bash
-      run: python3 -m pip install --quiet --user "semgrep${{ inputs.VERSION != '' && format('=={0}', inputs.VERSION) || '' }}"
+      run: |
+        python3 -m pip install --quiet --user "semgrep${{ inputs.VERSION != '' && format('=={0}', inputs.VERSION) || '' }}"
+        echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
     - name: Run Semgrep
       shell: bash
-      run: python3 -m semgrep scan --config "${{ inputs.CONFIG }}" --error .
+      run: semgrep scan --config "${{ inputs.CONFIG }}" --error .
