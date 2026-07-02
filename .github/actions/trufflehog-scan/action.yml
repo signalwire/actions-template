@@ -12,7 +12,9 @@ inputs:
 runs:
   using: "composite"
   steps:
+    # Pinned to a release tag (v3.95.8) rather than @main: a moving branch ref
+    # makes CI non-reproducible and lets upstream behavior change unreviewed.
     - name: Scan for secrets
-      uses: trufflesecurity/trufflehog@main
+      uses: trufflesecurity/trufflehog@00155c9dc586f34d189adc83d3ac2698c2ec551f # v3.95.8
       with:
         extra_args: ${{ inputs.EXTRA_ARGS }}

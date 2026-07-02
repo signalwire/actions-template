@@ -83,6 +83,29 @@ jobs:
       services_json: ${{ steps.resolve.outputs.services_json }}
       image_tag: ${{ steps.resolve.outputs.image_tag }}
     steps:
+      - name: Validate signing/attestation/SBOM inputs
+        run: |
+          fail=0
+          if [ "${{ inputs.ENABLE_COSIGN_SIGN }}" = "true" ] && [ -z "${{ inputs.KMS_KEY_PATH }}" ]; then
+            echo "::error::ENABLE_COSIGN_SIGN is true but KMS_KEY_PATH is empty."
+            fail=1
+          fi
+          if [ "${{ inputs.ENABLE_BINAUTHZ }}" = "true" ]; then
+            if [ "${{ inputs.ENABLE_COSIGN_SIGN }}" != "true" ]; then
+              echo "::error::ENABLE_BINAUTHZ requires ENABLE_COSIGN_SIGN to also be true."
+              fail=1
+            fi
+            if [ -z "${{ inputs.BINAUTHZ_ATTESTOR }}" ]; then
+              echo "::error::ENABLE_BINAUTHZ is true but BINAUTHZ_ATTESTOR is empty."
+              fail=1
+            fi
+          fi
+          if [ "${{ inputs.ENABLE_SBOM }}" = "true" ] && [ "${{ inputs.ENABLE_COSIGN_SIGN }}" != "true" ]; then
+            echo "::error::ENABLE_SBOM requires ENABLE_COSIGN_SIGN to also be true (SBOMs are attested with Cosign)."
+            fail=1
+          fi
+          exit "$fail"
+
       - name: Resolve services list and image tag
         id: resolve
         run: |
