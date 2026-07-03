@@ -60,6 +60,7 @@ on:
         type: string
         required: false
         default: registry.hub.docker.com
+        description: 'Registry host. Use us-east1-docker.pkg.dev (or similar) for GCP Artifact Registry.'
       TOKEN_FORMAT:
         type: string
         default: id_token
@@ -68,7 +69,17 @@ on:
         type: string
         required: false
         default: 'signalwire'
-        description: 'The default registry repo owner.'
+        description: 'Registry repo owner/path. For Artifact Registry: <project>/<repo>.'
+      WORKLOAD_IDENTITY_PROVIDER:
+        type: string
+        required: false
+        default: ''
+        description: 'GCP Workload Identity Federation provider. Required when REGISTRY contains pkg.dev.'
+      PROJECT_ID:
+        type: string
+        required: false
+        default: ''
+        description: 'GCP project id. Required when REGISTRY contains pkg.dev.'
       CONTAINER_SCAN:
         type: boolean
         default: true
@@ -242,17 +253,28 @@ jobs:
       env:
         PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-    # Remove unitil use it
-    # - uses: ./actions/.github/actions/gcloud-auth
-    #   if: contains(${{inputs.REGISTRY}}, 'pkg.dev' )
-    #   id: gcloud_auth
-    #   name: 'Authenticate to Googl Cloud'
-    #   with:
-    #     AUDIENCE: ${{ inputs.AUDIENCE }}
-    #     TOKEN_FORMAT: ${{ inputs.TOKEN_FORMAT }}
-    #   env:
-    #     GCP_WIP: ${{ secrets.GCP_WIP }}
-    #     GCP_SA: ${{ secrets.GCP_SA }}
+    - name: Validate Artifact Registry inputs
+      if: contains(inputs.REGISTRY, 'pkg.dev')
+      run: |
+        fail=0
+        if [ -z "${{ inputs.WORKLOAD_IDENTITY_PROVIDER }}" ]; then
+          echo "::error::REGISTRY is a GCP Artifact Registry (pkg.dev) but WORKLOAD_IDENTITY_PROVIDER is empty."
+          fail=1
+        fi
+        if [ -z "${{ inputs.PROJECT_ID }}" ]; then
+          echo "::error::REGISTRY is a GCP Artifact Registry (pkg.dev) but PROJECT_ID is empty."
+          fail=1
+        fi
+        exit "$fail"
+
+    - name: Authenticate to Google Cloud (WIF)
+      if: contains(inputs.REGISTRY, 'pkg.dev')
+      id: gcloud_auth
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ inputs.WORKLOAD_IDENTITY_PROVIDER }}
+        project_id: ${{ inputs.PROJECT_ID }}
+        token_format: access_token
 
     - name: Retrieve Secrets from HashiCorp Vault
       uses: ./actions/.github/actions/vault-secrets
@@ -288,10 +310,10 @@ jobs:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         DOCKER_SECRETS: ${{ secrets.DOCKER_SECRETS }}
+        GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.access_token }}
         BUILD_ARGS: |
           ${{ secrets.BUILD_ARGS }}
-          ${{ inputs.BUILD_ARGS }}
-        # GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.GCLOUD_TOKEN }}    
+          ${{ inputs.BUILD_ARGS }}    
     
     - uses: cloudposse/github-action-matrix-outputs-write@main
       id: out

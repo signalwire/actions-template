@@ -183,6 +183,26 @@ on:
         default: false
         description: 'Whether to use cache when building the image'
         required: false
+      REGISTRY:
+        type: string
+        required: false
+        default: registry.hub.docker.com
+        description: 'Registry host. Use us-east1-docker.pkg.dev (or similar) for GCP Artifact Registry.'
+      IMAGE_REPO:
+        type: string
+        required: false
+        default: 'signalwire'
+        description: 'Registry repo owner/path. For Artifact Registry: <project>/<repo>.'
+      WORKLOAD_IDENTITY_PROVIDER:
+        type: string
+        required: false
+        default: ''
+        description: 'GCP Workload Identity Federation provider. Required when REGISTRY contains pkg.dev.'
+      PROJECT_ID:
+        type: string
+        required: false
+        default: ''
+        description: 'GCP project id. Required when REGISTRY contains pkg.dev.'
       ## Vault Secrets
       VAULT_SECRETS:
         type: string
@@ -207,9 +227,11 @@ on:
       SONAR_PROJECT_KEY: 
         required: false
       DOCKERHUB_USERNAME:
-        required: true
+        required: false
+        description: 'DockerHub username. Required when REGISTRY is DockerHub.'
       DOCKERHUB_TOKEN:
-        required: true
+        required: false
+        description: 'DockerHub PAT. Required when REGISTRY is DockerHub.'
       GPG_PASSPHRASE:
         required: false
       GH_BOT_DEPLOY_KEY:
@@ -308,6 +330,10 @@ jobs:
       TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
       TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
       ENABLE_DOCKER_BUILD_CACHE: ${{ inputs.ENABLE_DOCKER_BUILD_CACHE }}
+      REGISTRY: ${{ inputs.REGISTRY }}
+      IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
+      WORKLOAD_IDENTITY_PROVIDER: ${{ inputs.WORKLOAD_IDENTITY_PROVIDER }}
+      PROJECT_ID: ${{ inputs.PROJECT_ID }}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

@@ -90,29 +90,41 @@ runs:
         version: latest
         endpoint: builders
 
+    # DockerHub: IMAGE_REPO/PROJECT_NAME
+    # Custom (e.g. Artifact Registry): REGISTRY/IMAGE_REPO/PROJECT_NAME
+    - name: Resolve image name
+      id: image
+      shell: bash
+      run: |
+        REGISTRY="${{ inputs.REGISTRY }}"
+        IMAGE_REPO="${{ inputs.IMAGE_REPO }}"
+        PROJECT_NAME="${{ inputs.PROJECT_NAME }}"
+        if [ -z "$REGISTRY" ] || [ "$REGISTRY" = "registry.hub.docker.com" ] || [ "$REGISTRY" = "docker.io" ]; then
+          echo "name=${IMAGE_REPO}/${PROJECT_NAME}" >> "$GITHUB_OUTPUT"
+        else
+          echo "name=${REGISTRY}/${IMAGE_REPO}/${PROJECT_NAME}" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Docker meta
       id: meta
       uses: docker/metadata-action@v5
       with:
-        # list of Docker images to use as base name for tags
         images: |
-          signalwire/${{ inputs.PROJECT_NAME }}
-        # generate Docker tags based on the following events/attributes
+          ${{ steps.image.outputs.name }}
         tags: |
           ${{ inputs.TAG }}
-    
-    # - name: Login to ${{ inputs.REGISTRY }}
-    #   uses: docker/login-action@v2
-    #   if: contains(inputs.REGISTRY, 'pkg.dev' )
-    #   with:
-    #     registry: ${{ inputs.REGISTRY }}
-    #     username: 'oauth2accesstoken'
-    #     password: ${{ env.GCLOUD_ACCESS_TOKEN }}
+
+    - name: Login to Artifact Registry
+      uses: docker/login-action@v3
+      if: contains(inputs.REGISTRY, 'pkg.dev') && inputs.TAG_ONLY == 'false'
+      with:
+        registry: ${{ inputs.REGISTRY }}
+        username: oauth2accesstoken
+        password: ${{ env.GCLOUD_ACCESS_TOKEN }}
 
     - name: Login to DockerHub
       uses: docker/login-action@v3
-      if: inputs.TAG_ONLY == 'false'
-      # if: contains(inputs.REGISTRY, 'docker.com' )
+      if: ${{ !contains(inputs.REGISTRY, 'pkg.dev') && inputs.TAG_ONLY == 'false' }}
       with:
         username: ${{ env.DOCKERHUB_USERNAME }}
         password: ${{ env.DOCKERHUB_TOKEN }}
