@@ -65,7 +65,16 @@ runs:
     - name: Test
       if: ${{ inputs.RUN_TESTS == 'true' || inputs.RUN_TESTS == true }}
       shell: bash
-      run: go test ./... -race -coverprofile=coverage.out
+      run: go test -json ./... -race -coverprofile=coverage.out > test-results.json || true
+
+    - name: Test Report
+      uses: dorny/test-reporter@v2
+      if: always() && (inputs.RUN_TESTS == 'true' || inputs.RUN_TESTS == true)
+      with:
+        name: Go Tests
+        path: test-results.json
+        reporter: golang-json
+        fail-on-error: true
 
     - name: Lint
       if: ${{ inputs.RUN_LINT == 'true' || inputs.RUN_LINT == true }}
