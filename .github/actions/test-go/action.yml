@@ -75,6 +75,11 @@ runs:
         path: test-results.json
         reporter: golang-json
         fail-on-error: true
+        # v2 defaults to true, which only writes a Job Summary entry and
+        # never calls the Checks API - no check run is created at all in
+        # that mode. False matches test-dotnet/test-javascript's existing
+        # dorny/test-reporter@v1 behavior (always creates a real check run).
+        use-actions-summary: false
 
     - name: Lint
       if: ${{ inputs.RUN_LINT == 'true' || inputs.RUN_LINT == true }}
