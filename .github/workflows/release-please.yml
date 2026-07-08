@@ -1,0 +1,45 @@
+# Reusable workflow: runs release-please on push to the target branch,
+# authenticated via a GitHub App token rather than the default GITHUB_TOKEN
+# so the tag/release it creates can actually trigger other workflows (a
+# plain GITHUB_TOKEN's actions are excluded from re-triggering workflow
+# runs, GitHub's own recursion guard).
+
+name: Release Please
+
+on:
+  workflow_call:
+    inputs:
+      RELEASE_TYPE:
+        required: false
+        type: string
+        default: simple
+        description: 'release-please release-type, e.g. simple, go, node.'
+      APP_ID:
+        required: true
+        type: string
+        description: 'GitHub App ID used to mint the token release-please authenticates with. Not secret (the App still needs to be installed with access to the calling repo).'
+    secrets:
+      APP_PRIVATE_KEY:
+        required: true
+        description: 'Private key for APP_ID.'
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ inputs.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@v5
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          release-type: ${{ inputs.RELEASE_TYPE }}
