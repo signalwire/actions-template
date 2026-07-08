@@ -1,8 +1,8 @@
-# Reusable workflow: runs release-please on push to the target branch,
-# authenticated via a GitHub App token rather than the default GITHUB_TOKEN
-# so the tag/release it creates can actually trigger other workflows (a
-# plain GITHUB_TOKEN's actions are excluded from re-triggering workflow
-# runs, GitHub's own recursion guard).
+# Reusable workflow: runs release-please, authenticated via a GitHub App
+# token rather than the default GITHUB_TOKEN so the tag/release it creates
+# can actually trigger other workflows (a plain GITHUB_TOKEN's actions are
+# excluded from re-triggering workflow runs, GitHub's own recursion guard).
+# Callers typically invoke this on push to their release branch.
 
 name: Release Please
 
@@ -23,10 +23,7 @@ on:
         required: true
         description: 'Private key for APP_ID.'
 
-permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+permissions: {}
 
 jobs:
   release-please:
