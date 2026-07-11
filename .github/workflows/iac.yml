@@ -211,7 +211,7 @@ jobs:
 
       - name: Init
         id: init
-        uses: gruntwork-io/terragrunt-action@v2.1.4
+        uses: gruntwork-io/terragrunt-action@v3.0.2
         with:
           tofu_version: ${{ inputs.TF_VERSION }}
           tg_version: ${{ inputs.TG_VERSION }}
@@ -228,7 +228,7 @@ jobs:
           TG_QUEUE_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
 
       - name: Validate
-        uses: gruntwork-io/terragrunt-action@v2.1.4
+        uses: gruntwork-io/terragrunt-action@v3.0.2
         id: validate
         with:
           tofu_version: ${{ inputs.TF_VERSION }}
@@ -241,7 +241,7 @@ jobs:
           TG_QUEUE_EXCLUDE_DIR: ${{ inputs.TERRAGRUNT_EXCLUDE_DIR }}
 
       - name: Plan
-        uses: gruntwork-io/terragrunt-action@v2.1.4
+        uses: gruntwork-io/terragrunt-action@v3.0.2
         id: plan
         continue-on-error: true
         with:
@@ -291,7 +291,7 @@ jobs:
 
       - name: Apply
         if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'schedule'
-        uses: gruntwork-io/terragrunt-action@v2.1.4
+        uses: gruntwork-io/terragrunt-action@v3.0.2
         id: apply
         with:
           tofu_version: ${{ inputs.TF_VERSION }}
