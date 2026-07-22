@@ -3,8 +3,8 @@ name: Reusable Cypress full stack
 # Reusable workflow: brings up a caller repo's full local dev stack (Go
 # services + Vault + Mongo + Redis + UI) via its own Makefile, seeds an
 # admin user, and runs Cypress against it. Requires the caller repo to
-# provide `make go-build`, `make up-app`, `make seed`, `make down`
-# targets matching the env/ports below.
+# provide `make up-app`, `make seed`, `make down` targets matching the
+# env/ports below (plus `make go-build` when ENABLE_GO is true).
 
 on:
   workflow_call:
@@ -18,9 +18,15 @@ on:
         required: false
         type: string
         default: Cypress E2E
+      ENABLE_GO:
+        description: Set up Go, restore its module cache, and run `make go-build` before bringing up the stack. Disable for callers whose stack doesn't need Go.
+        required: false
+        type: boolean
+        default: true
     secrets:
       PRIVATE_GO_MODULES_TOKEN:
-        required: true
+        required: false
+        description: Required when ENABLE_GO is true.
       CYPRESS_LOGIN_PASSWORD:
         required: false
 
@@ -43,6 +49,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Configure Git for private Go modules
+        if: ${{ inputs.ENABLE_GO }}
         run: |
           if [ -z "${TOKEN}" ]; then
             echo "::error::Set repository secret PRIVATE_GO_MODULES_TOKEN to a GitHub PAT with read access to github.com/signalwire/go-vaultdbauth"
@@ -53,11 +60,13 @@ jobs:
           TOKEN: ${{ secrets.PRIVATE_GO_MODULES_TOKEN }}
 
       - uses: actions/setup-go@v6
+        if: ${{ inputs.ENABLE_GO }}
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: false
 
       - name: Restore Go modules cache
+        if: ${{ inputs.ENABLE_GO }}
         uses: actions/cache/restore@v6.1.0
         with:
           path: |
@@ -92,6 +101,7 @@ jobs:
         working-directory: ui
 
       - name: Pre-build Go services
+        if: ${{ inputs.ENABLE_GO }}
         run: make go-build
         env:
           GOTOOLCHAIN: local
