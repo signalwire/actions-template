@@ -3,6 +3,11 @@
 # can actually trigger other workflows (a plain GITHUB_TOKEN's actions are
 # excluded from re-triggering workflow runs, GitHub's own recursion guard).
 # Callers typically invoke this on push to their release branch.
+#
+# Neither actions/create-github-app-token nor googleapis/release-please-action
+# are on this org's allowed-actions list, so both are done by hand here: the
+# App token via a plain JWT (openssl/curl), release-please via its npm CLI
+# (a `run:` step, not a `uses:` action, so the allowlist doesn't apply to it).
 
 name: Release Please
 
@@ -13,7 +18,7 @@ on:
         required: false
         type: string
         default: simple
-        description: 'release-please release-type, e.g. simple, go, node.'
+        description: 'release-please release-type, e.g. simple, go, node. Ignored if release-please-config.json is present (manifest mode).'
       APP_ID:
         required: true
         type: string
@@ -28,15 +33,52 @@ permissions: {}
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
-      - name: Generate a token
-        id: generate-token
-        uses: actions/create-github-app-token@v3
-        with:
-          app-id: ${{ inputs.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      - uses: actions/checkout@v7
 
-      - uses: googleapis/release-please-action@v5
-        with:
-          token: ${{ steps.generate-token.outputs.token }}
-          release-type: ${{ inputs.RELEASE_TYPE }}
+      - name: Generate a GitHub App installation token
+        id: app-token
+        env:
+          APP_ID: ${{ inputs.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+
+          now=$(date +%s)
+          header=$(printf '{"alg":"RS256","typ":"JWT"}' | b64url)
+          payload=$(printf '{"iat":%s,"exp":%s,"iss":"%s"}' "$((now - 60))" "$((now + 600))" "$APP_ID" | b64url)
+          unsigned="${header}.${payload}"
+          signature=$(printf '%s' "$unsigned" | openssl dgst -sha256 -sign <(printf '%s' "$APP_PRIVATE_KEY") | b64url)
+          jwt="${unsigned}.${signature}"
+
+          installation_id=$(curl -sS -H "Authorization: Bearer ${jwt}" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/installation" | jq -r '.id')
+
+          token=$(curl -sS -X POST -H "Authorization: Bearer ${jwt}" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/app/installations/${installation_id}/access_tokens" | jq -r '.token')
+
+          echo "::add-mask::${token}"
+          echo "token=${token}" >> "$GITHUB_OUTPUT"
+
+      - name: Run release-please
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO_URL: https://github.com/${{ github.repository }}
+          RELEASE_TYPE: ${{ inputs.RELEASE_TYPE }}
+        run: |
+          set -euo pipefail
+          npx --yes release-please@17 release-pr \
+            --token="${GH_TOKEN}" \
+            --repo-url="${REPO_URL}" \
+            --release-type="${RELEASE_TYPE}"
+
+          npx --yes release-please@17 github-release \
+            --token="${GH_TOKEN}" \
+            --repo-url="${REPO_URL}" \
+            --release-type="${RELEASE_TYPE}"
