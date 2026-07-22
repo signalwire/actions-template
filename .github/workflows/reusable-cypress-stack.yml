@@ -1,0 +1,165 @@
+name: Reusable Cypress full stack
+
+# Reusable workflow: brings up a caller repo's full local dev stack (Go
+# services + Vault + Mongo + Redis + UI) via its own Makefile, seeds an
+# admin user, and runs Cypress against it. Requires the caller repo to
+# provide `make up-app`, `make seed`, `make down` targets matching the
+# env/ports below (plus `make go-build` when ENABLE_GO is true).
+
+on:
+  workflow_call:
+    inputs:
+      cypress_spec:
+        description: Cypress --spec value (paths relative to ui/)
+        required: true
+        type: string
+      job_name:
+        description: Job display name in GitHub Checks
+        required: false
+        type: string
+        default: Cypress E2E
+      ENABLE_GO:
+        description: Set up Go, restore its module cache, and run `make go-build` before bringing up the stack. Disable for callers whose stack doesn't need Go.
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      PRIVATE_GO_MODULES_TOKEN:
+        required: false
+        description: Required when ENABLE_GO is true.
+      CYPRESS_LOGIN_PASSWORD:
+        required: false
+
+env:
+  GO_VERSION: '1.26'
+  GOPRIVATE: github.com/signalwire/*
+  GONOSUMDB: github.com/signalwire/*
+
+jobs:
+  cypress:
+    name: ${{ inputs.job_name }}
+    runs-on: ubuntu-latest
+    env:
+      CYPRESS_BASE_URL: http://127.0.0.1:5173
+      # Must match Makefile default so make up-app and wait-on use the same URL.
+      ORCHESTRATOR_HTTP_ADDR: 127.0.0.1:8080
+      # Vault dynamic users authenticate via admin (see build/vault-server/entrypoint.sh).
+      MONGO_URI: mongodb://127.0.0.1:27017/?authSource=admin&directConnection=true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Configure Git for private Go modules
+        if: ${{ inputs.ENABLE_GO }}
+        run: |
+          if [ -z "${TOKEN}" ]; then
+            echo "::error::Set repository secret PRIVATE_GO_MODULES_TOKEN to a GitHub PAT with read access to github.com/signalwire/go-vaultdbauth"
+            exit 1
+          fi
+          git config --global url."https://x-access-token:${TOKEN}@github.com/signalwire/".insteadOf "https://github.com/signalwire/"
+        env:
+          TOKEN: ${{ secrets.PRIVATE_GO_MODULES_TOKEN }}
+
+      - uses: actions/setup-go@v6
+        if: ${{ inputs.ENABLE_GO }}
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+
+      - name: Restore Go modules cache
+        if: ${{ inputs.ENABLE_GO }}
+        uses: actions/cache/restore@v6.1.0
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ hashFiles('go.sum') }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Restore Node modules cache
+        id: node-cache
+        uses: actions/cache/restore@v6.1.0
+        with:
+          path: ui/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('ui/package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.node-cache.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: ui
+
+      - name: Cache Cypress binary
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('ui/package-lock.json') }}
+
+      - name: Install Cypress binary
+        run: npx cypress install
+        working-directory: ui
+
+      - name: Pre-build Go services
+        if: ${{ inputs.ENABLE_GO }}
+        run: make go-build
+        env:
+          GOTOOLCHAIN: local
+
+      - name: Start full stack and wait for readiness
+        run: |
+          mkdir -p build/data
+          rm -f build/data/secret*
+          chmod 777 build/data
+          nohup make up-app </dev/null > /tmp/up-app.log 2>&1 &
+          echo $! > /tmp/up-app.pid
+
+          tail -f /tmp/up-app.log &
+          TAIL_PID=$!
+
+          cd ui && npx wait-on \
+            "http://${ORCHESTRATOR_HTTP_ADDR}/healthz" \
+            "http://127.0.0.1:8081/healthz" \
+            "${CYPRESS_BASE_URL}" \
+            --timeout 480000
+
+          kill $TAIL_PID 2>/dev/null || true
+
+      - name: Seed admin user
+        run: make seed
+        env:
+          MONGO_FLAGS: authSource=admin
+          MONGO_DATABASE: platform_orchestrator
+          VAULT_ADDRESS: http://127.0.0.1:8200
+          VAULT_APPROLE_ROLE_ID: my-role
+
+      - name: Run Cypress
+        run: npx cypress run --spec "${{ inputs.cypress_spec }}"
+        working-directory: ui
+        env:
+          CYPRESS_LOGIN_EMAIL: ${{ vars.CYPRESS_LOGIN_EMAIL || 'admin@local' }}
+          CYPRESS_LOGIN_PASSWORD: ${{ secrets.CYPRESS_LOGIN_PASSWORD || 'admin' }}
+
+      - name: Upload Cypress screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ui/cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Upload full-stack startup logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-full-stack-logs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/up-app.log
+          if-no-files-found: ignore
+
+      - name: Stop full stack
+        if: always()
+        run: |
+          make down || true
+          if [ -f /tmp/up-app.pid ]; then
+            kill "$(cat /tmp/up-app.pid)" 2>/dev/null || true
+          fi

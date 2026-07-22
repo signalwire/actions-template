@@ -1,0 +1,118 @@
+name: Go tests with service containers
+
+# Reusable workflow: Go build/vet/format/lint/vulncheck (via ./.github/actions/test-go)
+# plus `go test` against Mongo + Redis service containers. A composite action can't
+# declare job-level `services:`, so this exists as its own workflow rather than an
+# action — use it when your Go tests need a real DB/cache, not just ci-check.yml.
+
+on:
+  workflow_call:
+    inputs:
+      GO_VERSION:
+        required: false
+        type: string
+        default: ''
+        description: 'Go version to use. Defaults to go.mod if not set.'
+      MONGO_VERSION:
+        required: false
+        type: string
+        default: '7.0'
+      MONGO_ROOT_USERNAME:
+        required: false
+        type: string
+        default: 'root'
+        description: 'Set both this and MONGO_ROOT_PASSWORD to empty strings to run Mongo with auth disabled.'
+      MONGO_ROOT_PASSWORD:
+        required: false
+        type: string
+        default: 'rootpassword'
+      REDIS_VERSION:
+        required: false
+        type: string
+        default: '7-alpine'
+      TEST_ENV:
+        required: false
+        type: string
+        default: ''
+        description: 'Extra env for the `go test` step, one KEY=VALUE per line (e.g. MONGO_TEST_HOST=127.0.0.1).'
+      GOPRIVATE:
+        required: false
+        type: string
+        default: ''
+        description: 'GOPRIVATE pattern, e.g. github.com/org/*. Requires PRIVATE_GO_MODULES_TOKEN if set.'
+      RUN_LINT:
+        required: false
+        type: boolean
+        default: true
+      RUN_VULNCHECK:
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      PRIVATE_GO_MODULES_TOKEN:
+        required: false
+        description: 'PAT with read access to GOPRIVATE modules.'
+
+jobs:
+  test:
+    name: Go test (with services)
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:${{ inputs.MONGO_VERSION }}
+        ports: ['27017:27017']
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{ inputs.MONGO_ROOT_USERNAME }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ inputs.MONGO_ROOT_PASSWORD }}
+        # `ping` doesn't require auth even with a root user configured, so this
+        # health-cmd works the same whether MONGO_ROOT_USERNAME/PASSWORD are set or empty.
+        options: >-
+          --health-cmd "mongosh --quiet --eval \"db.adminCommand({ ping: 1 })\""
+          --health-interval 5s
+          --health-timeout 10s
+          --health-retries 12
+          --health-start-period 20s
+      redis:
+        image: redis:${{ inputs.REDIS_VERSION }}
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Checkout actions
+        uses: actions/checkout@v7
+        with:
+          repository: signalwire/actions-template
+          ref: main
+          path: actions
+
+      - name: Configure Git for private Go modules
+        if: ${{ inputs.GOPRIVATE != '' }}
+        env:
+          TOKEN: ${{ secrets.PRIVATE_GO_MODULES_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          git config --global url."https://x-access-token:${TOKEN}@github.com/${OWNER}/".insteadOf "https://github.com/${OWNER}/"
+
+      - name: Build, vet, format, lint, vulncheck
+        uses: ./actions/.github/actions/test-go
+        with:
+          GO_VERSION: ${{ inputs.GO_VERSION }}
+          RUN_TESTS: false
+          RUN_LINT: ${{ inputs.RUN_LINT }}
+          RUN_VULNCHECK: ${{ inputs.RUN_VULNCHECK }}
+
+      - name: Run tests
+        env:
+          TEST_ENV: ${{ inputs.TEST_ENV }}
+        run: |
+          set -a
+          while IFS= read -r line; do
+            [ -n "$line" ] && export "${line?}"
+          done <<< "$TEST_ENV"
+          set +a
+          go test ./... -count=1

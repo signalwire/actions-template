@@ -44,6 +44,11 @@ on:
         type: string
         default: ''
         description: 'Explicit image tag. If empty: refs/tags/v* pushes use the tag without its v prefix, everything else uses the 12-char short SHA.'
+      PUSH_IMAGES:
+        required: false
+        type: boolean
+        default: true
+        description: 'Push built images to IMAGE_REPO. When false, images are built and loaded locally only (e.g. PR validation) — scan/sign/SBOM steps are skipped since there is nothing in the registry to act on.'
       ENABLE_TRIVY_IMAGE_SCAN:
         required: false
         type: boolean
@@ -104,6 +109,12 @@ jobs:
             echo "::error::ENABLE_SBOM requires ENABLE_COSIGN_SIGN to also be true (SBOMs are attested with Cosign)."
             fail=1
           fi
+          # docker buildx build --load (used when PUSH_IMAGES is false) can't load a
+          # multi-platform manifest into the local Docker engine.
+          if [ "${{ inputs.PUSH_IMAGES }}" != "true" ] && [[ "${{ inputs.PLATFORMS }}" == *,* ]]; then
+            echo "::error::PUSH_IMAGES is false but PLATFORMS ('${{ inputs.PLATFORMS }}') lists more than one platform — buildx --load doesn't support multi-platform images. Set PUSH_IMAGES: true or use a single platform."
+            fail=1
+          fi
           exit "$fail"
 
       - name: Resolve services list and image tag
@@ -131,12 +142,12 @@ jobs:
       matrix:
         service: ${{ fromJSON(needs.resolve.outputs.services_json) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       - name: Authenticate to Google Cloud (WIF)
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ inputs.WORKLOAD_IDENTITY_PROVIDER }}
           project_id: ${{ inputs.PROJECT_ID }}
@@ -153,35 +164,42 @@ jobs:
           SVC: ${{ matrix.service }}
           CACHE_REF: ${{ inputs.IMAGE_REPO }}/cache/${{ matrix.service }}
           EXTRA_BUILD_ARGS: ${{ inputs.EXTRA_BUILD_ARGS }}
+          PUSH_IMAGES: ${{ inputs.PUSH_IMAGES }}
         run: |
           BUILD_ARGS=(--build-arg "SERVICE=${SVC}")
           while IFS= read -r line; do
             [ -n "$line" ] && BUILD_ARGS+=(--build-arg "$line")
           done <<< "$EXTRA_BUILD_ARGS"
 
+          OUTPUT_ARGS=(--load)
+          CACHE_ARGS=(--cache-from "type=registry,ref=${CACHE_REF}")
+          if [ "${PUSH_IMAGES}" = "true" ]; then
+            OUTPUT_ARGS=(--push)
+            CACHE_ARGS+=(--cache-to "type=registry,ref=${CACHE_REF},mode=max")
+          fi
+
           docker buildx build \
             --platform "${{ inputs.PLATFORMS }}" \
             "${BUILD_ARGS[@]}" \
-            --cache-from "type=registry,ref=${CACHE_REF}" \
-            --cache-to "type=registry,ref=${CACHE_REF},mode=max" \
+            "${CACHE_ARGS[@]}" \
             -f "${{ inputs.DOCKERFILE }}" \
             -t "${IMAGE_REPO}/${SVC}:${TAG}" \
-            --push \
+            "${OUTPUT_ARGS[@]}" \
             .
 
   sign-and-attest:
     name: Scan, sign & attest images
     needs: [resolve, build]
-    if: ${{ inputs.ENABLE_TRIVY_IMAGE_SCAN || inputs.ENABLE_COSIGN_SIGN }}
+    if: ${{ inputs.PUSH_IMAGES && (inputs.ENABLE_TRIVY_IMAGE_SCAN || inputs.ENABLE_COSIGN_SIGN) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Authenticate to Google Cloud (WIF)
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ inputs.WORKLOAD_IDENTITY_PROVIDER }}
           project_id: ${{ inputs.PROJECT_ID }}
@@ -285,7 +303,7 @@ jobs:
 
       - name: Upload SBOM artifacts
         if: ${{ inputs.ENABLE_SBOM }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-spdx-${{ github.run_id }}
           path: sbom-*.spdx.json
