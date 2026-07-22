@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/signalwire/actions-template/compare/v1.0.0...v1.1.0) (2026-07-22)
+
+
+### Features
+
+* Add reusable workflows for Go DB-backed tests, Helm OCI push, and GitOps value bumps ([#427](https://github.com/signalwire/actions-template/issues/427)) ([09fbae0](https://github.com/signalwire/actions-template/commit/09fbae05b0ef1e751ad891e6b8de1915b5277e21))
+
 ## [1.0.0](https://github.com/signalwire/actions-template/compare/v0.1.0...v1.0.0) (2026-07-22)
 
 
