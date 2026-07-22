@@ -1,0 +1,140 @@
+name: Helm chart OCI push & sign
+
+# Reusable workflow: packages a Helm chart, pushes it to an OCI registry, and
+# optionally signs the pushed digest with Cosign via a GCP KMS key. Chart version
+# is ref-aware: v* tag -> tag sans v, DEV_BRANCH -> <base>-dev.<shortsha>,
+# anything else -> <base>-ci.<shortsha> — unless CHART_VERSION overrides it.
+
+on:
+  workflow_call:
+    inputs:
+      CHART_DIR:
+        required: true
+        type: string
+        description: 'Path to the Helm chart directory (containing Chart.yaml).'
+      IMAGE_REPO:
+        required: true
+        type: string
+        description: 'OCI repo, e.g. us-east1-docker.pkg.dev/<project>/<repo>.'
+      WORKLOAD_IDENTITY_PROVIDER:
+        required: true
+        type: string
+      PROJECT_ID:
+        required: true
+        type: string
+      DEV_BRANCH:
+        required: false
+        type: string
+        default: 'dev'
+        description: 'Branch that gets a -dev.<shortsha> version instead of -ci.<shortsha>.'
+      CHART_VERSION:
+        required: false
+        type: string
+        default: ''
+        description: 'Explicit chart version override. If empty, derived from the ref.'
+      ENABLE_COSIGN_SIGN:
+        required: false
+        type: boolean
+        default: false
+      KMS_KEY_PATH:
+        required: false
+        type: string
+        default: ''
+        description: 'GCP KMS key resource path for Cosign signing. Required when ENABLE_COSIGN_SIGN is true.'
+    outputs:
+      chart_version:
+        description: 'The chart version that was pushed.'
+        value: ${{ jobs.helm-push.outputs.chart_version }}
+
+jobs:
+  helm-push:
+    name: Push Helm chart
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      chart_version: ${{ steps.push.outputs.chart_version }}
+    steps:
+      - name: Validate signing inputs
+        run: |
+          if [ "${{ inputs.ENABLE_COSIGN_SIGN }}" = "true" ] && [ -z "${{ inputs.KMS_KEY_PATH }}" ]; then
+            echo "::error::ENABLE_COSIGN_SIGN is true but KMS_KEY_PATH is empty."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ inputs.WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: ${{ inputs.PROJECT_ID }}
+
+      - uses: google-github-actions/setup-gcloud@v3.0.1
+
+      - name: Authenticate Docker to Artifact Registry
+        run: gcloud auth configure-docker "$(echo '${{ inputs.IMAGE_REPO }}' | cut -d/ -f1)" --quiet
+
+      - uses: azure/setup-helm@v5
+
+      - name: Package and push chart (OCI)
+        id: push
+        env:
+          CHART_DIR: ${{ inputs.CHART_DIR }}
+          IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
+          DEV_BRANCH: ${{ inputs.DEV_BRANCH }}
+          CHART_VERSION_OVERRIDE: ${{ inputs.CHART_VERSION }}
+        run: |
+          BASE_VERSION="$(awk -F': ' '/^version:/{print $2}' "${CHART_DIR}/Chart.yaml" | tr -d '"')"
+          if [ -z "${BASE_VERSION}" ]; then
+            echo "::error::Could not read chart version from ${CHART_DIR}/Chart.yaml"
+            exit 1
+          fi
+
+          if [ -n "${CHART_VERSION_OVERRIDE}" ]; then
+            CHART_VERSION="${CHART_VERSION_OVERRIDE}"
+          elif [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            CHART_VERSION="${GITHUB_REF_NAME#v}"
+          elif [[ "${GITHUB_REF}" == "refs/heads/${DEV_BRANCH}" ]]; then
+            CHART_VERSION="${BASE_VERSION}-dev.$(echo "${GITHUB_SHA}" | cut -c1-7)"
+          else
+            CHART_VERSION="${BASE_VERSION}-ci.$(echo "${GITHUB_SHA}" | cut -c1-7)"
+          fi
+          echo "Helm OCI chart version: ${CHART_VERSION} (Chart.yaml base: ${BASE_VERSION})"
+
+          CHART_NAME="$(awk -F': ' '/^name:/{print $2}' "${CHART_DIR}/Chart.yaml" | tr -d '"')"
+          CHART_PKG="${CHART_NAME}-${CHART_VERSION}.tgz"
+          helm dependency build "${CHART_DIR}"
+          helm package "${CHART_DIR}" --destination . --version "${CHART_VERSION}"
+          gcloud auth print-access-token | helm registry login -u oauth2accesstoken --password-stdin "$(echo "${IMAGE_REPO}" | cut -d/ -f1)"
+          helm push "${CHART_PKG}" "oci://${IMAGE_REPO}"
+
+          echo "chart_version=${CHART_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "chart_name=${CHART_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Cosign
+        if: ${{ inputs.ENABLE_COSIGN_SIGN }}
+        uses: sigstore/cosign-installer@v3
+
+      # RSA-PKCS1 KMS keys fail Rekor verification, so --tlog-upload is disabled —
+      # the registry plus GCP Cloud Audit Logs are the audit trail (matches
+      # container-build-sign.yml's image-signing rationale).
+      - name: Sign chart
+        if: ${{ inputs.ENABLE_COSIGN_SIGN }}
+        env:
+          IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
+          CHART_NAME: ${{ steps.push.outputs.chart_name }}
+          CHART_VERSION: ${{ steps.push.outputs.chart_version }}
+          KMS_KEY_PATH: ${{ inputs.KMS_KEY_PATH }}
+        run: |
+          CHART_REF="${IMAGE_REPO}/${CHART_NAME}:${CHART_VERSION}"
+          DIGEST=$(gcloud artifacts docker images describe "${CHART_REF}" --format='value(image_summary.digest)')
+          TOKEN=$(gcloud auth print-access-token)
+          cosign sign \
+            --key "gcpkms://${KMS_KEY_PATH}" \
+            --tlog-upload=false \
+            --yes \
+            --registry-username=oauth2accesstoken \
+            --registry-password="${TOKEN}" \
+            "${IMAGE_REPO}/${CHART_NAME}@${DIGEST}"

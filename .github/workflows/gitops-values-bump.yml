@@ -1,0 +1,135 @@
+name: GitOps values bump
+
+# Reusable workflow: bumps an image tag in a Helm values file, either committing
+# directly to a branch (e.g. auto-deploy to dev) or opening a review PR (e.g.
+# gated production release). ArgoCD (or equivalent) picks up the change on sync.
+
+on:
+  workflow_call:
+    inputs:
+      VALUES_FILE:
+        required: true
+        type: string
+        description: 'Path to the values YAML file to update.'
+      YQ_PATH:
+        required: true
+        type: string
+        description: 'yq path to the tag field, e.g. .platformImage.tag'
+      IMAGE_TAG:
+        required: true
+        type: string
+      MODE:
+        required: true
+        type: string
+        description: 'direct-commit or pull-request'
+      TARGET_BRANCH:
+        required: true
+        type: string
+        description: 'Branch to commit to (direct-commit) or PR base branch (pull-request).'
+      PR_BRANCH_PREFIX:
+        required: false
+        type: string
+        default: 'release/'
+      PR_TITLE:
+        required: false
+        type: string
+        default: ''
+        description: 'Defaults to "Release <IMAGE_TAG> to <TARGET_BRANCH>" if empty.'
+      PR_BODY:
+        required: false
+        type: string
+        default: ''
+        description: 'Defaults to a standard review checklist if empty.'
+      COMMIT_MESSAGE:
+        required: false
+        type: string
+        default: ''
+        description: 'Defaults to "chore: update image tag to <IMAGE_TAG> [skip ci]" if empty.'
+
+jobs:
+  bump:
+    name: Bump ${{ inputs.YQ_PATH }} -> ${{ inputs.IMAGE_TAG }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Validate mode
+        run: |
+          case "${{ inputs.MODE }}" in
+            direct-commit|pull-request) ;;
+            *)
+              echo "::error::MODE must be direct-commit or pull-request, got '${{ inputs.MODE }}'."
+              exit 1
+              ;;
+          esac
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.MODE == 'direct-commit' && inputs.TARGET_BRANCH || github.ref }}
+
+      - name: Bump value
+        env:
+          VALUES_FILE: ${{ inputs.VALUES_FILE }}
+          YQ_PATH: ${{ inputs.YQ_PATH }}
+          IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+        run: |
+          yq -i "${YQ_PATH} = strenv(IMAGE_TAG)" "${VALUES_FILE}"
+
+      - name: Commit directly to target branch
+        if: ${{ inputs.MODE == 'direct-commit' }}
+        env:
+          VALUES_FILE: ${{ inputs.VALUES_FILE }}
+          IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+          TARGET_BRANCH: ${{ inputs.TARGET_BRANCH }}
+          COMMIT_MESSAGE: ${{ inputs.COMMIT_MESSAGE }}
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add "${VALUES_FILE}"
+          git diff --cached --quiet && exit 0
+          MSG="${COMMIT_MESSAGE:-chore: update image tag to ${IMAGE_TAG} [skip ci]}"
+          git commit -m "${MSG}"
+          git pull --rebase origin "${TARGET_BRANCH}"
+          git push origin "${TARGET_BRANCH}"
+
+      - name: Open review PR
+        if: ${{ inputs.MODE == 'pull-request' }}
+        env:
+          VALUES_FILE: ${{ inputs.VALUES_FILE }}
+          IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+          TARGET_BRANCH: ${{ inputs.TARGET_BRANCH }}
+          PR_BRANCH: ${{ inputs.PR_BRANCH_PREFIX }}${{ inputs.IMAGE_TAG }}
+          PR_TITLE: ${{ inputs.PR_TITLE }}
+          PR_BODY: ${{ inputs.PR_BODY }}
+          COMMIT_MESSAGE: ${{ inputs.COMMIT_MESSAGE }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git checkout -b "${PR_BRANCH}"
+          git add "${VALUES_FILE}"
+          MSG="${COMMIT_MESSAGE:-chore: release ${IMAGE_TAG} [skip ci]}"
+          git commit -m "${MSG}"
+          git push origin "${PR_BRANCH}"
+
+          TITLE="${PR_TITLE:-Release ${IMAGE_TAG} to ${TARGET_BRANCH}}"
+          if [ -n "${PR_BODY}" ]; then
+            printf '%s\n' "${PR_BODY}" > /tmp/pr-body.md
+          else
+            printf '%s\n' \
+              "Automated GitOps PR — updates \`${VALUES_FILE}\` to image tag \`${IMAGE_TAG}\`." \
+              "" \
+              "**Review checklist:**" \
+              "- [ ] Staging smoke tests passed" \
+              "- [ ] No outstanding incidents" \
+              "" \
+              "Merging this PR will update the target Application on the next sync." \
+              > /tmp/pr-body.md
+          fi
+
+          gh pr create \
+            --title "${TITLE}" \
+            --body-file /tmp/pr-body.md \
+            --base "${TARGET_BRANCH}" \
+            --head "${PR_BRANCH}"
