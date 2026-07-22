@@ -17,6 +17,15 @@ on:
         required: false
         type: string
         default: '7.0'
+      MONGO_ROOT_USERNAME:
+        required: false
+        type: string
+        default: 'root'
+        description: 'Set both this and MONGO_ROOT_PASSWORD to empty strings to run Mongo with auth disabled.'
+      MONGO_ROOT_PASSWORD:
+        required: false
+        type: string
+        default: 'rootpassword'
       REDIS_VERSION:
         required: false
         type: string
@@ -53,10 +62,12 @@ jobs:
         image: mongo:${{ inputs.MONGO_VERSION }}
         ports: ['27017:27017']
         env:
-          MONGO_INITDB_ROOT_USERNAME: root
-          MONGO_INITDB_ROOT_PASSWORD: rootpassword
+          MONGO_INITDB_ROOT_USERNAME: ${{ inputs.MONGO_ROOT_USERNAME }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ inputs.MONGO_ROOT_PASSWORD }}
+        # `ping` doesn't require auth even with a root user configured, so this
+        # health-cmd works the same whether MONGO_ROOT_USERNAME/PASSWORD are set or empty.
         options: >-
-          --health-cmd "mongosh --quiet -u root -p \"$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --eval \"db.adminCommand({ ping: 1 })\""
+          --health-cmd "mongosh --quiet --eval \"db.adminCommand({ ping: 1 })\""
           --health-interval 5s
           --health-timeout 10s
           --health-retries 12
