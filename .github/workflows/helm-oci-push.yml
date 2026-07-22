@@ -86,7 +86,7 @@ jobs:
           DEV_BRANCH: ${{ inputs.DEV_BRANCH }}
           CHART_VERSION_OVERRIDE: ${{ inputs.CHART_VERSION }}
         run: |
-          BASE_VERSION="$(awk -F': ' '/^version:/{print $2}' "${CHART_DIR}/Chart.yaml" | tr -d '"')"
+          BASE_VERSION="$(yq '.version' "${CHART_DIR}/Chart.yaml")"
           if [ -z "${BASE_VERSION}" ]; then
             echo "::error::Could not read chart version from ${CHART_DIR}/Chart.yaml"
             exit 1
@@ -103,7 +103,7 @@ jobs:
           fi
           echo "Helm OCI chart version: ${CHART_VERSION} (Chart.yaml base: ${BASE_VERSION})"
 
-          CHART_NAME="$(awk -F': ' '/^name:/{print $2}' "${CHART_DIR}/Chart.yaml" | tr -d '"')"
+          CHART_NAME="$(yq '.name' "${CHART_DIR}/Chart.yaml")"
           CHART_PKG="${CHART_NAME}-${CHART_VERSION}.tgz"
           helm dependency build "${CHART_DIR}"
           helm package "${CHART_DIR}" --destination . --version "${CHART_VERSION}"
