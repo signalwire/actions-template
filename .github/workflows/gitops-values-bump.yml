@@ -3,6 +3,11 @@ name: GitOps values bump
 # Reusable workflow: bumps an image tag in a Helm values file, either committing
 # directly to a branch (e.g. auto-deploy to dev) or opening a review PR (e.g.
 # gated production release). ArgoCD (or equivalent) picks up the change on sync.
+#
+# Split into mode-specific jobs (rather than one job with both branches) so
+# each only requests the permissions it actually needs: a caller running
+# direct-commit mode shouldn't have to grant pull-requests: write just because
+# the pull-request-mode code path also lives in this workflow.
 
 on:
   workflow_call:
@@ -47,15 +52,11 @@ on:
         description: 'Defaults to "chore: update image tag to <IMAGE_TAG> [skip ci]" if empty.'
 
 jobs:
-  bump:
-    name: Bump ${{ inputs.YQ_PATH }} -> ${{ inputs.IMAGE_TAG }}
+  validate:
+    name: Validate mode
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
-      - name: Validate mode
-        run: |
+      - run: |
           case "${{ inputs.MODE }}" in
             direct-commit|pull-request) ;;
             *)
@@ -64,6 +65,14 @@ jobs:
               ;;
           esac
 
+  direct-commit:
+    name: Bump ${{ inputs.YQ_PATH }} -> ${{ inputs.IMAGE_TAG }} (direct commit)
+    needs: [validate]
+    if: ${{ inputs.MODE == 'direct-commit' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.TARGET_BRANCH }}
@@ -77,7 +86,6 @@ jobs:
           yq -i "${YQ_PATH} = strenv(IMAGE_TAG)" "${VALUES_FILE}"
 
       - name: Commit directly to target branch
-        if: ${{ inputs.MODE == 'direct-commit' }}
         env:
           VALUES_FILE: ${{ inputs.VALUES_FILE }}
           IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
@@ -93,8 +101,28 @@ jobs:
           git pull --rebase origin "${TARGET_BRANCH}"
           git push origin "${TARGET_BRANCH}"
 
+  pull-request:
+    name: Bump ${{ inputs.YQ_PATH }} -> ${{ inputs.IMAGE_TAG }} (PR)
+    needs: [validate]
+    if: ${{ inputs.MODE == 'pull-request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.TARGET_BRANCH }}
+
+      - name: Bump value
+        env:
+          VALUES_FILE: ${{ inputs.VALUES_FILE }}
+          YQ_PATH: ${{ inputs.YQ_PATH }}
+          IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+        run: |
+          yq -i "${YQ_PATH} = strenv(IMAGE_TAG)" "${VALUES_FILE}"
+
       - name: Open review PR
-        if: ${{ inputs.MODE == 'pull-request' }}
         env:
           VALUES_FILE: ${{ inputs.VALUES_FILE }}
           IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
