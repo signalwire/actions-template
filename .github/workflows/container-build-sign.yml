@@ -44,6 +44,11 @@ on:
         type: string
         default: ''
         description: 'Explicit image tag. If empty: refs/tags/v* pushes use the tag without its v prefix, everything else uses the 12-char short SHA.'
+      PUSH_IMAGES:
+        required: false
+        type: boolean
+        default: true
+        description: 'Push built images to IMAGE_REPO. When false, images are built and loaded locally only (e.g. PR validation) — scan/sign/SBOM steps are skipped since there is nothing in the registry to act on.'
       ENABLE_TRIVY_IMAGE_SCAN:
         required: false
         type: boolean
@@ -153,26 +158,33 @@ jobs:
           SVC: ${{ matrix.service }}
           CACHE_REF: ${{ inputs.IMAGE_REPO }}/cache/${{ matrix.service }}
           EXTRA_BUILD_ARGS: ${{ inputs.EXTRA_BUILD_ARGS }}
+          PUSH_IMAGES: ${{ inputs.PUSH_IMAGES }}
         run: |
           BUILD_ARGS=(--build-arg "SERVICE=${SVC}")
           while IFS= read -r line; do
             [ -n "$line" ] && BUILD_ARGS+=(--build-arg "$line")
           done <<< "$EXTRA_BUILD_ARGS"
 
+          OUTPUT_ARGS=(--load)
+          CACHE_ARGS=(--cache-from "type=registry,ref=${CACHE_REF}")
+          if [ "${PUSH_IMAGES}" = "true" ]; then
+            OUTPUT_ARGS=(--push)
+            CACHE_ARGS+=(--cache-to "type=registry,ref=${CACHE_REF},mode=max")
+          fi
+
           docker buildx build \
             --platform "${{ inputs.PLATFORMS }}" \
             "${BUILD_ARGS[@]}" \
-            --cache-from "type=registry,ref=${CACHE_REF}" \
-            --cache-to "type=registry,ref=${CACHE_REF},mode=max" \
+            "${CACHE_ARGS[@]}" \
             -f "${{ inputs.DOCKERFILE }}" \
             -t "${IMAGE_REPO}/${SVC}:${TAG}" \
-            --push \
+            "${OUTPUT_ARGS[@]}" \
             .
 
   sign-and-attest:
     name: Scan, sign & attest images
     needs: [resolve, build]
-    if: ${{ inputs.ENABLE_TRIVY_IMAGE_SCAN || inputs.ENABLE_COSIGN_SIGN }}
+    if: ${{ inputs.PUSH_IMAGES && (inputs.ENABLE_TRIVY_IMAGE_SCAN || inputs.ENABLE_COSIGN_SIGN) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
