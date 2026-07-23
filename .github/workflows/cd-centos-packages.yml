@@ -12,7 +12,7 @@ on:
         type: string
       RUNNER:
         required: false
-        default: self-hosted
+        default: ubuntu-latest
         type: string
       APPROVERS:
         required: false
@@ -30,7 +30,7 @@ on:
       TELEPORT_VERSION:
         required: false
         type: string
-        default: 11.1.0
+        default: 18.1.4
       K8S_CLUSTER_NAME:
         required: true
         type: string
@@ -69,12 +69,12 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
     - name: Checkout actions
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: signalwire/actions-template
         ref: main

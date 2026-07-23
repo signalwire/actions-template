@@ -1,0 +1,154 @@
+name: Repository AUTH client
+
+inputs:
+  domain:
+    required: false
+    default: 'repo-auth-service.freeswitch.org'
+    description: Domain of AUTH service
+  mode:
+    required: true
+    description: Mode of operation
+    type: choice
+    options:
+      - nonce
+      - issue
+      - revoke
+outputs:
+  nonce:
+    description: Nonce value from AUTH service (only available in nonce mode)
+    value: ${{ steps.get-nonce.outputs.nonce || '' }}
+  token:
+    description: Token value from AUTH service (only available in issue mode)
+    value: ${{ steps.issue-token.outputs.token || '' }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get Nonce
+      if: inputs.mode == 'nonce'
+      id: get-nonce
+      shell: python
+      run: |
+        import os
+        import requests
+        import sys
+        from requests.adapters import HTTPAdapter, Retry
+        from urllib.parse import urlencode
+
+        def create_https_session_with_retries(
+            retries=5, backoff_factor=1.0, status_forcelist=(500, 502, 504, 400, 403, 404)
+        ):
+            session = requests.Session()
+            retry = Retry(
+                total=retries,
+                read=retries,
+                connect=retries,
+                backoff_factor=backoff_factor,
+                status_forcelist=status_forcelist,
+            )
+            adapter = HTTPAdapter(max_retries=retry)
+            session.mount("https://", adapter)
+            return session
+
+        def GET(url, session):
+            response = session.get(url)
+            response.raise_for_status()
+            return response.text.strip()
+
+        session = create_https_session_with_retries()
+
+        try:
+            nonce = GET(
+                f"https://${{ inputs.domain }}/auth.php", session
+            )
+
+            with open(os.getenv('GITHUB_OUTPUT'), 'a') as f:
+                f.write(f'nonce={nonce}\n')
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            sys.exit(1)
+
+    - name: Issue Token
+      if: inputs.mode == 'issue'
+      id: issue-token
+      shell: python
+      run: |
+        import os
+        import requests
+        import sys
+        from requests.adapters import HTTPAdapter, Retry
+        from urllib.parse import urlencode
+
+        def create_https_session_with_retries(
+            retries=5, backoff_factor=1.0, status_forcelist=(500, 502, 504, 400, 403, 404)
+        ):
+            session = requests.Session()
+            retry = Retry(
+                total=retries,
+                read=retries,
+                connect=retries,
+                backoff_factor=backoff_factor,
+                status_forcelist=status_forcelist,
+            )
+            adapter = HTTPAdapter(max_retries=retry)
+            session.mount("https://", adapter)
+            return session
+
+        def GET(url, session):
+            response = session.get(url)
+            response.raise_for_status()
+            return response.text.strip()
+
+        session = create_https_session_with_retries()
+
+        try:
+            token = GET(
+                f'https://${{ inputs.domain }}/?{urlencode({"verify": "${{ env.NONCE }}"})}', session
+            )
+
+            with open(os.getenv('GITHUB_OUTPUT'), 'a') as f:
+                f.write(f'token={token}\n')
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            sys.exit(1)
+
+    - name: Revoke Token
+      if: inputs.mode == 'revoke'
+      id: revoke-token
+      shell: python
+      run: |
+        import os
+        import requests
+        import sys
+        from requests.adapters import HTTPAdapter, Retry
+        from urllib.parse import urlencode
+
+        def create_https_session_with_retries(
+            retries=5, backoff_factor=1.0, status_forcelist=(500, 502, 504, 400, 403, 404)
+        ):
+            session = requests.Session()
+            retry = Retry(
+                total=retries,
+                read=retries,
+                connect=retries,
+                backoff_factor=backoff_factor,
+                status_forcelist=status_forcelist,
+            )
+            adapter = HTTPAdapter(max_retries=retry)
+            session.mount("https://", adapter)
+            return session
+
+        def GET(url, session):
+            response = session.get(url)
+            response.raise_for_status()
+            return response.text.strip()
+
+        session = create_https_session_with_retries()
+
+        try:
+            token = GET(
+                f'https://${{ inputs.domain }}/?{urlencode({"revoke": "${{ env.TOKEN }}"})}', session
+            )
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred: {e}")
+            sys.exit(1)

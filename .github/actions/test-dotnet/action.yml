@@ -5,32 +5,63 @@ inputs:
   DOTNET_VERSION:
     required: false
     default: "6.0.403"
+    description: .NET version
+  RUN_TESTS:
+    required: false
+    default: 'true'
+    description: Whenever you wanna run tests.
+  DOTNET_INSTALL_DIR:
+    required: false
+    default: './.dotnet'
+    description: Set a custom .NET install dir
+  DOTNET_TEST_ARGS:
+    required: false
+    default: ''
+    description: Extra arguments appended to the dotnet test command.
 
 runs:
   using: "composite"
   steps:
+    # - name: Cache dotnet
+    #   id: cache-dotnet
+    #   uses: actions/cache@v3
+    #   with:
+    #     path: ${{ inputs.DOTNET_INSTALL_DIR }}
+    #     key: ${{ runner.os }}-dotnet-7
+    #     restore-keys: ${{ runner.os }}-dotnet-7
+
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      # if: ${{ steps.cache-dotnet.outputs.cache-hit != 'true' }}
+      uses: actions/setup-dotnet@v4.1.0
       with:
         dotnet-version: ${{ inputs.DOTNET_VERSION }}
+      env:
+        DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
 
     - name: test docker-compose
       run: docker ps
       shell: bash
-      
+    
     - name: Build
       run: dotnet build --configuration Release
       shell: bash
+    
+    - name: Load .env file
+      uses: xom9ikk/dotenv@v2
+      with:
+        mode: ci
+        load-mode: skip
 
     - name: Test
-      run: dotnet test --logger "trx;LogFileName=test-results.trx" -p:DefineConstants=TESTING || true
+      run: dotnet test --logger "trx;LogFileName=test-results.trx" --verbosity minimal -p:DefineConstants=LOCALTESTING ${{ inputs.DOTNET_TEST_ARGS }} || true
+      if: inputs.RUN_TESTS != 'false'
       shell: bash
 
     - name: Test Report
       uses: dorny/test-reporter@v1
-      if: always()
+      if: always() && inputs.RUN_TESTS == 'true'
       with:
         name: DotNET Tests
         path: "**/test-results.trx"                            
         reporter: dotnet-trx
-        fail-on-error: false #TODO: fix me
+        fail-on-error: true

@@ -1,0 +1,118 @@
+name: Ansible
+description: Run ansible using AWX
+
+inputs:
+  AWX_HOST:
+    description: "AWX or Ansible Tower URL."
+    required: true
+  AWX_OAUTH_TOKEN:
+    description: "AWX or Ansible Tower Oauth token."
+    required: true
+  AWX_VERIFY_SSL:
+    description: "Require valid SSL certificate"
+    required: false
+    default: "true"
+  RESOURCE_TYPE:
+    description: "One of resource types: project, job_template or workflow_job_template."
+    required: true
+  RESOURCE_NAME:
+    description: "Name or ID of project, job_template or workflow_job_template."
+    required: true
+  JOB_TYPE:
+    description: "Run or chek playbook."
+    required: false
+  LIMIT:
+    description: "Host pattern that will be managed or affected by the playbook."
+    required: false
+  TAGS:
+    description: "Playbook tags to apply."
+    required: false
+  SKIP_TAGS:
+    description: "Playbook tags to skip."
+    required: false
+  TIMEOUT:
+    description: "If set with monitor, time out waiting on job completion."
+    required: false
+  INVENTORY:
+    description: "Name or ID of the associated inventory."
+    required: false
+  BRANCH:
+    description: "SCM branch to override."
+    required: false
+  MONITOR:
+    description: "Monitor job progress in realtime."
+    required: false
+    default: "true"
+  EXTRA_VARS:
+    description: "Pass extra command line variables to the playbook."
+    required: false
+  CREDENTIALS:
+    description: "Credentials to use for this job."
+    required: false
+    
+runs:
+  using: "composite"
+  steps:
+
+    - name: "Run ${{ inputs.RESOURCE_TYPE}} for ${{ inputs.RESOURCE_NAME}}"
+      id: awx_job
+      uses: fitbeard/action-trigger-awx@v24.6.1
+      with:
+        controller_host: ${{ env.AWX_HOST }}
+        controller_oauth_token: ${{ env.AWX_OAUTH_TOKEN }}
+        controller_verify_ssl: ${{ inputs.AWX_VERIFY_SSL }}
+        resource_type: ${{ inputs.RESOURCE_TYPE }}
+        resource_name: ${{ inputs.RESOURCE_NAME }}
+        limit: ${{ inputs.LIMIT }}
+        extra_vars: ${{ inputs.EXTRA_VARS }}
+        branch: ${{ inputs.BRANCH }}
+        inventory: ${{ inputs.INVENTORY }}
+        tags: ${{ inputs.TAGS }}
+        skip_tags: ${{ inputs.SKIP_TAGS }}
+        monitor: ${{ inputs.MONITOR }}
+        timeout: ${{ inputs.TIMEOUT }}
+        credentials: ${{ inputs.CREDENTIALS }}
+
+    - name: "Validate AWX Job Status"
+      if: always()
+      shell: bash
+      run: |
+        # First check if the AWX action step itself failed
+        if [[ "${{ steps.awx_job.outcome }}" != "success" ]]; then
+          echo "::error::AWX action step failed or was cancelled"
+          exit 1
+        fi
+
+        # Now check the actual AWX job status using the job ID
+        JOB_ID="${{ steps.awx_job.outputs.job_id }}"
+
+        if [[ -z "$JOB_ID" ]]; then
+          echo "::error::No job ID returned from AWX"
+          exit 1
+        fi
+
+        echo "Checking status of AWX job $JOB_ID"
+
+        # Query AWX API for job status
+        RESPONSE=$(curl -s -k -H "Authorization: Bearer ${{ env.AWX_OAUTH_TOKEN }}" \
+          "${{ env.AWX_HOST }}/api/v2/jobs/$JOB_ID/")
+
+        STATUS=$(echo "$RESPONSE" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+        FAILED=$(echo "$RESPONSE" | grep -o '"failed":[^,}]*' | cut -d':' -f2)
+
+        echo "Job status: $STATUS"
+        echo "Failed flag: $FAILED"
+
+        # Check if job failed
+        if [[ "$STATUS" == "failed" ]] || [[ "$FAILED" == "true" ]]; then
+          echo "::error::AWX job $JOB_ID failed"
+          exit 1
+        fi
+
+        if [[ "$STATUS" != "successful" ]]; then
+          echo "::error::AWX job $JOB_ID did not complete successfully (status: $STATUS)"
+          exit 1
+        fi
+
+        echo "AWX job $JOB_ID completed successfully"
+

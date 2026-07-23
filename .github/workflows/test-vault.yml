@@ -1,0 +1,55 @@
+name: 'Terragrunt GitHub Actions'
+on:
+
+  workflow_call:
+    inputs:
+      TELEPORT_PROXY_URL:
+        required: false
+        type: string
+        default: ''
+        description: Default Teleport URL
+      TELEPORT_APP:
+        required: false
+        type: string
+        default: ''
+        description: An app registered on teleport to authenticate using proxy
+      VAULT_SECRETS:
+        required: false
+        type: string
+        default: ''
+        description: A new line list of vault secrets to be fetched
+    secrets:
+      TELEPORT_TOKEN:
+        required: false
+        description: Teleport Token name
+      VAULT_TOKEN:
+        required: false
+        description: A Vault token in case vault is required
+
+jobs:
+  terragrunt:
+    name: 'Test vault'
+    runs-on: self-hosted
+    permissions: write-all
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+
+      - name: Checkout actions
+        uses: actions/checkout@v4
+        with:
+          repository: signalwire/actions-template
+          ref: vault-secrets
+          path: actions
+     
+      - name: vault secrets 
+        uses: ./actions/.github/actions/vault-secrets
+        env:
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+          VAULT_ADDR: https://${{ inputs.TELEPORT_PROXY_URL }}
+          TELEPORT_TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+          TELEPORT_APP: vault
+          TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+          SECRETS: ${{ inputs.VAULT_SECRETS }}
+      

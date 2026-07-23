@@ -10,50 +10,120 @@ on:
       STACK_NAME:
         required: true
         type: string
+        description: Stack name on Portainer.
       APPROVERS:
         required: false
         type: string
+        description: A list of approvers comma separated.
       IMAGE_TAG:
         required: true
         type: string
+        description: The image tag to be updated.
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: The environment which this deploy refers to.
+      RUNNER: 
+        required: false
+        type: string
+        default: ubuntu-latest
+        description: The default runner.
+      NOTIFY_SLACK:
+        required: false
+        type: boolean
+        default: true
+      SLACK_CHANNEL:
+        required: false
+        type: string
+        description: Default slack channel to post a message
+      ENDPOINT_ID:
+        required: false
+        type: string
+        description: Another option to set ENDPOINT_ID.
+        default: ''
+      PORTAINER_DOMAIN:
+        required: true
+        type: string
+        description: Portainer Domain
+        default: deploy.signalwire.cloud
+      PORTAINER_DOMAIN_PROTOCOL:
+        required: false
+        type: string
+        description: Portainer Protocol
+        default: http
     secrets:
       ENDPOINT_ID:
         required: false
+        description: Portainer Endpoint ID.
       PORTAINER_API_KEY:
-        required: false
+        required: true
+        description: Portainer API KEY.
       GH_APPROVAL_APP_ID:
         required: false
+        description: App ID for Approval
       GH_APPROVAL_APP_PKEY:
         required: false
+        description: App Key for Approval
+      SLACK_WEBHOOK_URL:
+        required: true
+        description: Slack WebHook URL
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   deploy:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest 
-    name: Build
+    runs-on: ${{ inputs.RUNNER }}
+    name: Deploy to Swarm
+    environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
+    - name: Checkout actions
+      uses: actions/checkout@v4
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+
     - uses: ./actions/.github/actions/approval
       name: Request approval
-      if: ${{ inputs.APPROVERS != null }}
+      if: inputs.APPROVERS != null
       env:
         GH_APPROVAL_APP_ID: ${{ secrets.GH_APPROVAL_APP_ID }}
         GH_APPROVAL_APP_PKEY: ${{ secrets.GH_APPROVAL_APP_PKEY }}
       with:
         APPROVERS: ${{ inputs.APPROVERS }}
+
+    - name: Parse ENDPOINT_ID if it's an input
+      run: echo ENDPOINT_ID=${{inputs.ENDPOINT_ID}} >> $GITHUB_ENV 
+      if: ${{ inputs.ENDPOINT_ID != '' }} 
+    
+    - name: Parse ENDPOINT_ID if it's stored as a secret
+      run: echo ENDPOINT_ID=$ID >> $GITHUB_ENV 
+      env:
+        ID: ${{ secrets.ENDPOINT_ID }} 
+      if: ${{ env.ENDPOINT_ID == '' }} 
     
     - uses: ./actions/.github/actions/swarm-deploy
       name: Deploy to a Swarm Cluster
+      id: swarm-deploy
       env:
         PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
-        ENDPOINT_ID: ${{ secrets.ENDPOINT_ID }}
+        ENDPOINT_ID: ${{ env.ENDPOINT_ID }}
       with:
         STACK_NAME: ${{ inputs.STACK_NAME }}
         IMAGE_TAG: ${{ inputs.IMAGE_TAG }}
+        PORTAINER_DOMAIN: ${{ inputs.PORTAINER_DOMAIN }}
+        PORTAINER_DOMAIN_PROTOCOL: ${{ inputs.PORTAINER_DOMAIN_PROTOCOL }}
 
-
+    - uses: ./actions/.github/actions/slack
+      if: ${{ inputs.NOTIFY_SLACK  == true }}
+      name: slack notification
+      with:
+        MESSAGE: 'Update Service - ${{ inputs.STACK_NAME }}!\n>GitHub Action result - ${{ github.event.pull_request.html_url || github.event.head_commit.url }}\n>*Previous Image:* ${{ steps.swarm-deploy.outputs.PREVIOUS_IMAGE }}\n>*New Image:* ${{ inputs.IMAGE_TAG }}'
+        CHANNEL: "${{ inputs.SLACK_CHANNEL }}"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

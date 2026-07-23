@@ -1,0 +1,243 @@
+name: Build and Distribute (via Docker)
+
+on:
+  workflow_call:
+    inputs:
+      REF:
+        required: false
+        description: The branch, tag or SHA to checkout
+        type: string
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: Environment where the variables and secrets are scoped to
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        description: A GitHub runner type
+        type: string
+      REPO_DOMAIN:
+        required: false
+        description: Domain name of repository
+        type: string
+      PLATFORM:
+        required: true
+        description: Default Linux Arch (amd64/arm32v7/...)
+        type: string
+      DOCKERFILE:
+        required: true
+        description: Path to Dockerfile
+        type: string
+      MAINTAINER:
+        required: true
+        description: Package maintainer
+        type: string
+      ARTIFACTS_PATTERN:
+        required: false
+        default: '.*\.(deb|rpm)$'
+        description: Regexp that matches artifacts
+        type: string
+      TARGET_ARTIFACT_NAME:
+        required: true
+        description: Artifact name
+        type: string
+      UPLOAD_BUILD_ARTIFACTS:
+        required: false
+        type: boolean
+        default: true
+        description: Enable upload build artifacts related steps
+      LOG_RETENTION_DAYS:
+        required: false
+        type: number
+        default: 7
+        description: Number of days to keep build log artifacts
+      META_FILE_PATH_PREFIX:
+        required: true
+        type: string
+        default: ""
+        description: A prefix to append to meta file (also target folder where the files should be sent on remote)
+      META_REPO:
+        required: false
+        type: string
+        default: ""
+        description: DEPRECATED - Target meta repo to sync metadata changes
+      META_REPO_BRANCH:
+        required: false
+        type: string
+        default: ""
+        description: DEPRECATED - Target meta repo branch name
+      META_REPO_DEFAULT_BRANCH:
+        required: false
+        type: string
+        default: "main"
+        description: DEPRECATED - Target meta repo default branch name
+      CODE_WORKING_DIRECTORY:
+        required: false
+        type: string
+        default: "code"
+        description: Working directory to place code into
+      ARTIFACTS_DIR:
+        required: false
+        type: string
+        default: "build"
+        description: Directory to place produced artifacts into (will be inside CODE_WORKING_DIRECTORY)
+      PUSH_TO_S3:
+        required: false
+        type: boolean
+        default: false
+        description: Push artifacts into S3 bucket
+      S3_BUCKET:
+        required: false
+        type: string
+        default: ""
+        description: S3 bucket name
+      S3_PROVIDER:
+        required: false
+        type: string
+        default: "AWS"
+        description: S3 provider type
+      S3_REGION:
+        required: false
+        type: string
+        default: "us-east-2"
+        description: AWS S3 region
+      S3_LOCATION_CONSTRAINT:
+        required: false
+        type: string
+        default: "us-east-2"
+        description: AWS S3 location constraint
+      S3_STORAGE_CLASS:
+        required: false
+        type: string
+        default: ""
+        description: AWS S3 storage class
+
+    secrets:
+      HOSTNAME:
+        required: true
+      PROXY_URL:
+        required: true
+      TELEPORT_TOKEN:
+        required: true
+      USERNAME:
+        required: true
+      REPO_USERNAME:
+        required: false
+      REPO_PASSWORD:
+        required: false
+      DEPLOYMENT_TOKEN:
+        required: false
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
+      # GH_BOT_DEPLOY_TOKEN is DEPRECATED
+      GH_BOT_DEPLOY_TOKEN:
+        required: false
+
+jobs:
+  build-and-distribute:
+    runs-on: ${{ inputs.RUNNER }}
+    permissions:
+      contents: read
+      id-token: write
+    environment: ${{ inputs.ENVIRONMENT }}
+    steps:
+      - name: Checkout code
+        if: ${{ inputs.REF == '' }}
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          path: ${{ inputs.CODE_WORKING_DIRECTORY }}
+
+      - name: Checkout code by REF
+        if: ${{ inputs.REF != '' }}
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.REF }}
+          fetch-depth: 0
+          path: ${{ inputs.CODE_WORKING_DIRECTORY }}
+
+      - name: Checkout reusable actions
+        uses: actions/checkout@v6
+        with:
+          repository: signalwire/actions-template
+          ref: main
+          fetch-depth: 1
+          path: actions
+          sparse-checkout: |
+            .github/actions/teleport/action.yml
+            .github/actions/rclone-s3-sync/action.yml
+            .github/actions/docker-build-artifacts/action.yml
+          sparse-checkout-cone-mode: false
+
+      - name: Build artifacts via Docker
+        uses: ./actions/.github/actions/docker-build-artifacts
+        with:
+          REPO_DOMAIN: ${{ inputs.REPO_DOMAIN }}
+          PLATFORM: ${{ inputs.PLATFORM }}
+          DOCKERFILE: ${{ inputs.DOCKERFILE }}
+          MAINTAINER: ${{ inputs.MAINTAINER }}
+          WORKING_DIRECTORY: ${{ inputs.CODE_WORKING_DIRECTORY }}
+          ARTIFACTS_PATTERN: ${{ inputs.ARTIFACTS_PATTERN }}
+          ARTIFACTS_DIR: ${{ inputs.ARTIFACTS_DIR }}
+          BUILD_LOG_FILENAME: "artifacts-${GITHUB_RUN_ID}-${GITHUB_SHA}.log"
+        env:
+          REPO_USERNAME: ${{ secrets.REPO_USERNAME }}
+          REPO_PASSWORD: ${{ secrets.REPO_PASSWORD }}
+          DEPLOYMENT_TOKEN: ${{ secrets.DEPLOYMENT_TOKEN }}
+
+      - name: Upload build logs
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.TARGET_ARTIFACT_NAME }}.log
+          path: ${{ inputs.CODE_WORKING_DIRECTORY }}/artifacts-*.log
+          if-no-files-found: warn
+          retention-days: ${{ inputs.LOG_RETENTION_DAYS }}
+
+      - name: Create hash file
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && inputs.PUSH_TO_S3 }}
+        shell: bash
+        working-directory: ${{ inputs.CODE_WORKING_DIRECTORY }}
+        run: |
+          echo "${{ github.sha }}" > ${{ inputs.ARTIFACTS_DIR }}/hash.txt
+
+      - name: Upload artifacts to S3
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && inputs.PUSH_TO_S3 }}
+        uses: ./actions/.github/actions/rclone-s3-sync
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        with:
+          SRC: ${{ inputs.CODE_WORKING_DIRECTORY }}/${{ inputs.ARTIFACTS_DIR }}
+          DST: ${{ inputs.META_FILE_PATH_PREFIX }}
+          S3_BUCKET: ${{ inputs.S3_BUCKET }}
+          S3_PROVIDER: ${{ inputs.S3_PROVIDER }}
+          S3_REGION: ${{ inputs.S3_REGION }}
+          S3_LOCATION_CONSTRAINT: ${{ inputs.S3_LOCATION_CONSTRAINT }}
+          S3_STORAGE_CLASS: ${{ inputs.S3_STORAGE_CLASS }}
+          SYNC_TYPE: local-to-remote
+
+      - name: Compress build artifacts
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && !inputs.PUSH_TO_S3 }}
+        shell: bash
+        working-directory: ${{ inputs.CODE_WORKING_DIRECTORY }}
+        env:
+          ARTIFACTS_DIR: ${{ inputs.ARTIFACTS_DIR }}
+        run: |
+          tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz -C "${ARTIFACTS_DIR}" $(ls -1 "${ARTIFACTS_DIR}")
+
+      - name: Copy/Exec artifacts/commands to/on remote host
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && !inputs.PUSH_TO_S3 }}
+        uses: ./actions/.github/actions/teleport
+        with:
+          EXEC_COMMANDS_PRE: "mkdir -p ${{ inputs.META_FILE_PATH_PREFIX }}"
+          FILES: "./${{ inputs.CODE_WORKING_DIRECTORY }}/*.tar.gz"
+          EXEC_COMMANDS: 'echo "${{ github.sha }}" > ${{ inputs.META_FILE_PATH_PREFIX }}/hash.txt'
+          FILES_FOLDER: ${{ inputs.META_FILE_PATH_PREFIX }}
+          TELEPORT_VERSION: "18.1.4"
+        env:
+          HOSTNAME: ${{ secrets.HOSTNAME }}
+          PROXY_URL: ${{ secrets.PROXY_URL }}
+          TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+          USERNAME: ${{ secrets.USERNAME }}

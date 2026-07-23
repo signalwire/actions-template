@@ -1,0 +1,95 @@
+name: Go Build & Test
+description: Go build, vet, format check, unit tests, lint, and vulnerability scan
+
+inputs:
+  GO_VERSION:
+    required: false
+    default: ""
+    description: "Go version to use. Defaults to the version in go.mod (go-version-file) if not set."
+  RUN_TESTS:
+    required: false
+    default: true
+    description: "Whether to run go test."
+  RUN_LINT:
+    required: false
+    default: true
+    description: "Whether to run golangci-lint."
+  RUN_VULNCHECK:
+    required: false
+    default: true
+    description: "Whether to run govulncheck."
+  GOLANGCI_LINT_VERSION:
+    required: false
+    default: "latest"
+    description: "golangci-lint-action version pin."
+  GOVULNCHECK_VERSION:
+    required: false
+    default: "latest"
+    description: "govulncheck version to install (e.g. a pinned release instead of latest, for reproducible CI)."
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Go (pinned version)
+      if: ${{ inputs.GO_VERSION != '' }}
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.GO_VERSION }}
+        cache: true
+
+    - name: Setup Go (from go.mod)
+      if: ${{ inputs.GO_VERSION == '' }}
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+        cache: true
+
+    - name: Build
+      shell: bash
+      run: go build ./...
+
+    - name: Vet
+      shell: bash
+      run: go vet ./...
+
+    - name: Format check
+      shell: bash
+      run: |
+        UNFORMATTED=$(gofmt -l $(go list -f '{{.Dir}}' ./...))
+        if [ -n "$UNFORMATTED" ]; then
+          echo "The following files are not gofmt-formatted:"
+          echo "$UNFORMATTED"
+          exit 1
+        fi
+
+    - name: Test
+      if: ${{ inputs.RUN_TESTS == 'true' || inputs.RUN_TESTS == true }}
+      shell: bash
+      run: go test -json ./... -race -coverprofile=coverage.out > test-results.json || true
+
+    - name: Test Report
+      uses: dorny/test-reporter@v2
+      if: always() && (inputs.RUN_TESTS == 'true' || inputs.RUN_TESTS == true)
+      with:
+        name: Go Tests
+        path: test-results.json
+        reporter: golang-json
+        fail-on-error: true
+        # v2 defaults to true, which only writes a Job Summary entry and
+        # never calls the Checks API - no check run is created at all in
+        # that mode. False matches test-dotnet/test-javascript's existing
+        # dorny/test-reporter@v1 behavior (always creates a real check run).
+        use-actions-summary: false
+
+    - name: Lint
+      if: ${{ inputs.RUN_LINT == 'true' || inputs.RUN_LINT == true }}
+      uses: golangci/golangci-lint-action@v9
+      with:
+        version: ${{ inputs.GOLANGCI_LINT_VERSION }}
+
+    - name: Vulnerability scan
+      if: ${{ inputs.RUN_VULNCHECK == 'true' || inputs.RUN_VULNCHECK == true }}
+      shell: bash
+      run: |
+        go install golang.org/x/vuln/cmd/govulncheck@${{ inputs.GOVULNCHECK_VERSION }}
+        "$(go env GOPATH)/bin/govulncheck" ./...

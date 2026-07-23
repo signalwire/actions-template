@@ -1,0 +1,117 @@
+name: Push libs metadata to another Git repo
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+        description: Environment where the variables and secrets are scoped to
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        type: string
+        description: A GitHub runner type
+      ARTIFACT_NAME:
+        required: false
+        default: ''
+        description: The artifact name to pull from a previous step
+        type: string
+      # FILE_PATH:
+      #   required: true
+      #   default: ''
+      #   description: File full-path
+      #   type: string
+      SOURCE_BRANCH:
+        required: true
+        default: ''
+        description: The source branch name.
+        type: string
+      TARGET_REPO:
+        required: true
+        default: ''
+        description: Target repo to sync changes.
+        type: string
+      TARGET_REPO_DEFAULT_BRANCH:
+        required: false
+        default: 'main'
+        description: Target repo default branch name.
+        type: string
+      TARGET_OS:
+        required: true
+        default: ''
+        description: OS base name.
+        type: string
+      # TARGET_OS_VERSION:
+      #   required: false
+      #   default: ''
+      #   description: OS version.
+      #   type: string
+      TARGET_PLATFORM:
+        required: true
+        default: ''
+        description: OS version.
+        type: string
+      LIB_NAME:
+        required: true
+        default: ''
+        type: string
+        description: Lib name that will be used as target branch.
+    secrets:
+      GH_BOT_DEPLOY_TOKEN:
+        required: false
+        description: 'Personal access token used to fetch submodules.'
+      GH_BOT_DEPLOY_KEY:
+        required: false
+        description: Key used to clone private repos
+
+jobs:
+  sync:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Sync metadata for ${{ inputs.LIB_NAME }} at ${{ inputs.FILE_PATH }}/${{ inputs.ARTIFACT_NAME }}
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+      - name: Checkout metadatarepo (${{ inputs.LIB_NAME }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }})
+        uses: actions/checkout@v4
+        continue-on-error: true
+        id: metabranch
+        with:
+          repository: ${{ inputs.TARGET_REPO }}
+          ref: ${{ inputs.LIB_NAME }}/${{ inputs.SOURCE_BRANCH }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
+          # ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+          token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
+      
+      - name: Checkout metadatarepo (${{ inputs.TARGET_REPO_DEFAULT_BRANCH }})
+        uses: actions/checkout@v4
+        if: steps.metabranch.outcome != 'success'
+        with:
+          repository: ${{ inputs.TARGET_REPO }}
+          ref: ${{ inputs.TARGET_REPO_DEFAULT_BRANCH }}
+          # ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+          token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
+          clean: true
+      
+      - name: Create remote
+        if: steps.metabranch.outcome != 'success'
+        run: |
+          git checkout -b ${{ inputs.LIB_NAME }}/${{ inputs.SOURCE_BRANCH }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
+          git push --set-upstream origin ${{ inputs.LIB_NAME }}/${{ inputs.SOURCE_BRANCH }}/${{ inputs.TARGET_OS }}/${{ inputs.TARGET_PLATFORM }}
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.ARTIFACT_NAME }}
+
+      - name: Sync changes
+        shell: sh
+        run: |
+          git status --porcelain | grep -q . || exit 0
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+          git add -v metafile.txt
+          git commit --branch -m "update metadata"
+          git push --atomic -v

@@ -1,0 +1,25 @@
+name: Semgrep Scan
+description: Run Semgrep SAST as a CI gate.
+
+inputs:
+  CONFIG:
+    required: false
+    default: 'p/owasp-top-ten'
+    description: 'Semgrep config/ruleset to scan with (e.g. a p/ registry ruleset or a local path).'
+  VERSION:
+    required: false
+    default: ''
+    description: 'Pinned semgrep version (e.g. 1.90.0). Empty installs the latest release.'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Semgrep
+      shell: bash
+      run: |
+        python3 -m pip install --quiet --user "semgrep${{ inputs.VERSION != '' && format('=={0}', inputs.VERSION) || '' }}"
+        echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
+
+    - name: Run Semgrep
+      shell: bash
+      run: semgrep scan --config "${{ inputs.CONFIG }}" --error .

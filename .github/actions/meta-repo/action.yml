@@ -1,0 +1,66 @@
+name: Push data to meta-repo
+
+inputs:
+  META_CONTENT:
+    required: true
+    default: ''
+    description: Data to put into `metafile.txt`
+  META_REPO:
+    required: true
+    default: ''
+    description: Target meta repo to sync metadata changes
+  META_REPO_BRANCH:
+    required: true
+    default: ''
+    description: Target meta repo branch name
+  META_REPO_DEFAULT_BRANCH:
+    required: false
+    default: 'main'
+    description: Target meta repo default branch name
+
+runs:
+  using: "composite"
+  steps:
+
+    - name: Encode '${{ inputs.META_REPO_BRANCH }}' and write to ENV
+      id: encode-meta-repo-branch
+      shell: bash
+      run: |
+        echo "META_REPO_BRANCH_B64=$(echo -n ${{ inputs.META_REPO_BRANCH }} | base64)" | tee -a "${GITHUB_ENV}"
+        echo "meta-repo-branch-b64=$(echo -n ${{ inputs.META_REPO_BRANCH }} | base64)" | tee -a "${GITHUB_OUTPUT}"
+
+    - name: Checkout metadata repo (${{ inputs.META_REPO_BRANCH }})
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.META_REPO }}
+        ref: ${{ inputs.META_REPO_DEFAULT_BRANCH }}
+        token: ${{ env.GH_BOT_DEPLOY_TOKEN || github.token }}
+        path: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
+        clean: true
+
+    - name: Push data to metadata repo (${{ inputs.META_REPO_BRANCH }})
+      shell: bash
+      working-directory: ${{ steps.encode-meta-repo-branch.outputs.meta-repo-branch-b64 }}
+      run: |
+        git config user.email "github-actions@github.com" || exit 1
+        git config user.name "GitHub Actions" || exit 1
+
+        git fetch --all
+
+        if git branch -a | grep -q "${{ inputs.META_REPO_BRANCH }}"; then
+            git checkout "${{ inputs.META_REPO_BRANCH }}" || exit 1
+            git pull origin "${{ inputs.META_REPO_BRANCH }}" || exit 1
+        else
+            git checkout -b "${{ inputs.META_REPO_BRANCH }}" || exit 1
+        fi
+
+        echo "${{ inputs.META_CONTENT }}" | tee metafile.txt || exit 1
+
+        git add metafile.txt || exit 1
+
+        if git status --porcelain | grep -q .; then
+            git commit -m "update metadata" || exit 1
+            git push --set-upstream origin "${{ inputs.META_REPO_BRANCH }}" --atomic -v || exit 1
+        else
+            echo "No changes to commit"
+        fi

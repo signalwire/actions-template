@@ -1,0 +1,11 @@
+name: 'GCloud CloudRun'
+description: 'Google CloudRun deploy'
+
+runs:
+  using: composite
+  steps:
+    - id: 'deploy'
+      uses: 'google-github-actions/deploy-cloudrun@v2'
+      with:
+        service: ${{ inputs.SERVICE }}
+        image: 'gcr.io/cloudrun/hello'

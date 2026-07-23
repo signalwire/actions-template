@@ -1,0 +1,102 @@
+name: Build Deb Packages
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: self-hosted
+        type: string
+      PROJECT_NAME:
+        required: true
+        type: string
+      RUN_BACKGROUND:
+        required: false
+        type: string
+        default: 'false'
+      PACKAGER:
+        required: false
+        type: string
+        default: 'false'
+      AUTHOR_EMAIL:
+        required: true
+        type: string
+        description: Author email used to send files to GitHub.
+      TARGET_BRANCH:
+        required: true
+        type: string
+        description: Target branch to make a PR.
+      OS_FAMILIES:
+        required: true
+        type: string
+        description: Comma-separated list to inlcude all Debian families.
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+      PAT:
+        required: false
+
+jobs:
+  deploy:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Build
+    permissions: write-all
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Checkout actions
+      uses: actions/checkout@v4
+      with:
+        repository: signalwire/actions-template
+        ref: main
+        path: actions
+
+    - name: Build Deb Packages
+      uses: signalwire/build-deb-${{matrix.os_name}}-packages-action@main
+    
+    - name: Set default time
+      run: |
+        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_ENV
+        echo current_time=$(date "+%Y.%m.%d-%H.%M.%S") >> $GITHUB_OUTPUT
+
+    - name: Create dummy file to ilustrate that the copy has finished
+      run: echo $GITHUB_SHA > ready.txt
+      if: inputs.TRANSFER_CONFIRMATION == true
+      env:
+         GITHUB_SHA: ${{ github.sha }}
+ 
+    - name: Compress files
+      run: |
+        tar -czvf $current_time-${{matrix.os_name}}.tar.gz $(ls | grep '.rpm\|ready.txt')
+
+    - name: Generate SHA checksum
+      run: |
+        sha512sum $current_time-${{matrix.os_name}}.tar.gz > $current_time-${{matrix.os_name}}.sha1
+      
+    - uses: actions/upload-artifact@v4
+      with:
+        name: deb-${{matrix.os_name}}-artifact
+        path: |
+          *.tar.gz
+          *.sha1
+
+    - uses: ./actions/.github/actions/git_add_pr
+      name: Sync changelog
+      with:
+        AUTHOR_EMAIL: ${{ inputs.AUTHOR_EMAIL }}
+        MESSAGE: Sync changelog ${{ github.sha }}
+        FILES: ./debian/changelog
+        SOURCE_BRANCH: feat/${{ github.sha }}
+        TARGET_BRANCH: ${{ inputs.TARGET_BRANCH }}

@@ -1,0 +1,42 @@
+
+name: Helm remote chart
+
+on:
+
+inputs:
+  APP_NAME:
+    required: true
+    type: string
+  CHART_URL:
+    required: true
+    type: string
+  CHART_NAME:
+    required: true
+    type: string
+  NAMESPACE:
+    required: true
+    type: string
+env:
+  CLOUD_PROVIDER:
+    required: true
+    type: string
+  REGION:
+    required: true
+    type: string
+  CLUSTER_NAME:
+    required: true
+    type: string
+  KUBECONFIG:
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Add dependencies
+      uses: WyriHaximus/github-action-helm3@v4
+      with:
+        exec: helm repo add ${{ env.CHART_URL }}
+    - name: Deploy
+      uses: WyriHaximus/github-action-helm3@v4
+      with:
+        exec: helm upgrade '${{ env.APP_NAME }}' ${{ env.CHART_NAME }} --install --create-namespace --namespace=${{ env.NAMESPACE }} -f=${{ env.APP_NAME }}/values/${{ inputs.CLOUD_PROVIDER }}/values_${{ inputs.REGION }}_${{ inputs.CLUSTER_NAME }}.yaml
+        kubeconfig: '${{ secrets.KUBECONFIG }}'

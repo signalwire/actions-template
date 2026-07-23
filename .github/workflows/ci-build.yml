@@ -12,7 +12,7 @@ on:
         type: string
       PUSH:
         required: false
-        type: string
+        type: boolean
         default: false
       FILE:
         required: false
@@ -77,28 +77,98 @@ on:
         type: boolean
         default: true
         description: 'Whenever the container should be tested on pr.'
+      CONTAINER_TEST_RUN_OPTIONS:
+        type: string
+        default: ''
+        description: 'Custom options for the docker run command that executes the test'
       CONTAINER_TEST_COMMAND:
         type: string
         default: ''
         description: 'A custom command to test the docker container.'
       RUNNER:
         type: string
-        default: 'ubuntu'
+        default: 'ubuntu-latest'
         description: 'The default runner.'
+      ENVIRONMENT: 
+        type: string
+        description: 'The environment related to an WF execution.'
+      OUTPUT_TAG_INDEX:
+        type: number
+        default: 0
+        description: 'Return a custom tag in case more than one is requested.'
+        required: false
+      REVISION_PATH:
+        type: string
+        default: .
+        description: Whenever the WF requires a different path than . for the revision file
+        required: false
+      REF:
+        type: string
+        description:  ref to pull and build default to github.ref
+        required: false
+      ENABLE_DOCKER_BUILD_CACHE:
+        type: boolean
+        default: false
+        description: 'Whether to use cache when building the image'
+        required: false
+      ## Vault Secrets
+      VAULT_SECRETS:
+        type: string
+        default: ''
+        description: 'A comma separated list of secrets to fetch from Vault.'
+        required: false
+      TELEPORT_APP:
+        type: string
+        default: ''
+        description: 'The Teleport app to use.'
+        required: false
+      TELEPORT_PROXY_URL:
+        type: string
+        default: ''
+        description: 'The Teleport proxy URL to use.'
+        required: false
     secrets:
       DOCKERHUB_USERNAME:
         required: false
+        description: 'DockerHub username.'
       DOCKERHUB_TOKEN:
         required: false
+        description: 'DockerHub PAT.'
       GPG_PASSPHRASE:
         required: false
+        description: 'Passphrase used to decode GPG Key.'
       GH_BOT_DEPLOY_KEY:
         required: false
+        description: 'SSH key used to fetch submodules.'
+      GH_BOT_DEPLOY_TOKEN:
+        required: false
+        description: 'Personal access token used to fetch submodules.'
       GCP_SA:
         required: false
+        description: 'GCP Service Account'
       GCP_WIP:
         required: false
-
+        description: 'GCP Workload-Identity Provider.'
+      DOCKER_SECRETS:
+        required: false
+        description: 'Docker internal secrets.'
+      BUILD_ARGS:
+        required: false
+        description: Whenever we wanna use secrets and mount them as env
+      # Vault Secrets
+      VAULT_TOKEN:
+        required: false
+        description: 'Vault token.'
+      TELEPORT_TOKEN:
+        required: false
+        description: 'Teleport token.'
+    outputs:
+      IMAGE_TAG: 
+        value: ${{ jobs.build.outputs.IMAGE_TAG }}
+        description: Container image tag from docker build
+      IMAGE_MATRIX:
+        description: Image based matrix
+        value: ${{ jobs.build.outputs.IMAGE_MATRIX }}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -106,41 +176,62 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ${{ inputs.RUNNER }}
+    environment: ${{ inputs.ENVIRONMENT }}
     name: BUILD
     permissions:
       id-token: write
       contents: read
     outputs:
       IMAGE_TAG: ${{ steps.build.outputs.IMAGE_TAG }}
+      IMAGE_MATRIX: ${{ fromJson(steps.out.outputs.result).image }}
+
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
+        ref: ${{ inputs.REF || github.ref }}
         fetch-depth: 0
 
-    - uses: actions/checkout@v3
+    - name: Retrieve artifacts
+      if: ${{ inputs.ARTIFACT_NAME != '' }}
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.ARTIFACT_NAME }}
+
+
+    - name: Update git
+      if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
+      run: |
+        sudo apt update
+        sudo apt install -y git
+
+    - uses: actions/checkout@v4
       name: Checkout private submoules recursively
       id: private
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == true }}
       with:
+        ref: ${{ inputs.REF || github.ref }}
         ssh-key: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+        token: ${{ secrets.GH_BOT_DEPLOY_TOKEN || github.token }}
         submodules: 'recursive'
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Checkout public submoules recursively
       id: public
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true && inputs.SUBMODULES_PRIVATE == false }}
       with:
+        ref: ${{ inputs.REF || github.ref }}
         submodules: 'recursive'
 
-    - run: git submodule status > REVISION
+    - run: git submodule status > ${{inputs.REVISION_PATH}}/REVISION
       if: ${{ inputs.SUBMODULES_RECURSIVE  == true }}
-
+      
+    - run: git show -s --oneline --no-abbrev-commit >> ${{inputs.REVISION_PATH}}/REVISION
 
     - name: Checkout actions
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: signalwire/actions-template
-        ref: main 
+        ref: main
         path: actions
         
     - uses: ./actions/.github/actions/gpg
@@ -163,6 +254,17 @@ jobs:
     #     GCP_WIP: ${{ secrets.GCP_WIP }}
     #     GCP_SA: ${{ secrets.GCP_SA }}
 
+    - name: Retrieve Secrets from HashiCorp Vault
+      uses: ./actions/.github/actions/vault-secrets
+      if: ${{ inputs.VAULT_SECRETS != '' }}
+      env:
+        VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+        VAULT_ADDR: https://${{ inputs.TELEPORT_PROXY_URL }}
+        TELEPORT_TOKEN: ${{ secrets.TELEPORT_TOKEN }}
+        TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+        TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+        SECRETS: ${{ inputs.VAULT_SECRETS }}
+
     - uses: ./actions/.github/actions/docker
       name: Docker build
       id: build
@@ -177,13 +279,28 @@ jobs:
         IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
         BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
         CONTAINER_TEST: ${{ inputs.CONTAINER_TEST }}
+        CONTAINER_TEST_RUN_OPTIONS: ${{ inputs.CONTAINER_TEST_RUN_OPTIONS }}
         CONTAINER_TEST_COMMAND: ${{ inputs.CONTAINER_TEST_COMMAND }}
+        OUTPUT_TAG_INDEX: ${{ inputs.OUTPUT_TAG_INDEX }}
+        ENABLE_CACHE: ${{ inputs.ENABLE_DOCKER_BUILD_CACHE }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        DOCKER_SECRETS: ${{ secrets.DOCKER_SECRETS }}
+        BUILD_ARGS: |
+          ${{ secrets.BUILD_ARGS }}
+          ${{ inputs.BUILD_ARGS }}
         # GCLOUD_ACCESS_TOKEN: ${{ steps.gcloud_auth.outputs.GCLOUD_TOKEN }}    
     
+    - uses: cloudposse/github-action-matrix-outputs-write@main
+      id: out
+      with:
+        matrix-step-name: buildimg
+        matrix-key: ${{ inputs.PROJECT_NAME }}
+        outputs: |-
+          image: ${{ steps.build.outputs.IMAGE_TAG }}
+          
     # Disabled due performance issues
     # - uses: ./actions/.github/actions/trivy
     #   name: Container Scan

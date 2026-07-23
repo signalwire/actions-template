@@ -1,0 +1,174 @@
+name: Rclone S3 Sync
+description: Sync files between local and S3 or between S3 locations using rclone
+
+inputs:
+  SRC:
+    required: true
+    description: "Source path (local directory or S3 path in bucket)"
+  DST:
+    required: true
+    description: "Destination path (local directory or S3 path in bucket)"
+  SYNC_TYPE:
+    required: false
+    default: "local-to-remote"
+    description: "Sync type: local-to-remote, remote-to-local, or remote-to-remote"
+  S3_BUCKET:
+    required: true
+    description: "S3 bucket name"
+  S3_PROVIDER:
+    required: false
+    default: "aws"
+    description: "S3 provider type"
+  S3_REGION:
+    required: false
+    default: "us-east-2"
+    description: "AWS S3 region"
+  S3_LOCATION_CONSTRAINT:
+    required: false
+    default: "us-east-2"
+    description: "AWS S3 location constraint"
+  S3_STORAGE_CLASS:
+    required: false
+    default: ""
+    description: "AWS S3 storage class"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Detect architecture
+      id: arch
+      shell: bash
+      run: |
+        case "$(uname -m)" in
+          x86_64) echo "arch=amd64" >> $GITHUB_OUTPUT ;;
+          aarch64|arm64) echo "arch=arm64" >> $GITHUB_OUTPUT ;;
+          armv7l) echo "arch=arm-v7" >> $GITHUB_OUTPUT ;;
+          armv6l) echo "arch=arm-v6" >> $GITHUB_OUTPUT ;;
+          arm*) echo "arch=arm" >> $GITHUB_OUTPUT ;;
+          *) echo "Unsupported architecture: $(uname -m)"; exit 1 ;;
+        esac
+
+    - name: Install dependencies
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y curl unzip
+
+    - name: Download rclone
+      shell: bash
+      run: curl -O https://downloads.rclone.org/rclone-current-linux-${{ steps.arch.outputs.arch }}.zip
+
+    - name: Extract rclone
+      shell: bash
+      run: unzip rclone-current-linux-${{ steps.arch.outputs.arch }}.zip
+
+    - name: Install rclone binary
+      shell: bash
+      run: |
+        cd rclone-*-linux-${{ steps.arch.outputs.arch }}
+        sudo cp rclone /usr/bin/
+        sudo chown root:root /usr/bin/rclone
+        sudo chmod 755 /usr/bin/rclone
+
+    - name: Verify rclone installation
+      shell: bash
+      run: rclone version
+
+    - name: Cleanup installation files
+      shell: bash
+      run: rm -rf rclone-*-linux-${{ steps.arch.outputs.arch }}*
+
+    - name: Create rclone config directory
+      if: ${{ inputs.S3_PROVIDER == 'aws' }}
+      shell: bash
+      run: mkdir -p ~/.config/rclone
+
+    - name: Create base S3 configuration
+      if: ${{ inputs.S3_PROVIDER == 'aws' }}
+      shell: bash
+      run: |
+        cat > ~/.config/rclone/rclone.conf << EOF
+        [s3]
+        type = s3
+        provider = AWS
+        env_auth = true
+        region = ${{ inputs.S3_REGION }}
+        no_check_bucket = true
+        EOF
+
+    - name: Add location constraint to config
+      if: ${{ inputs.S3_PROVIDER == 'aws' && inputs.S3_LOCATION_CONSTRAINT != '' }}
+      shell: bash
+      run: echo "location_constraint = ${{ inputs.S3_LOCATION_CONSTRAINT }}" >> ~/.config/rclone/rclone.conf
+
+    - name: Add storage class to config
+      if: ${{ inputs.S3_PROVIDER == 'aws' && inputs.S3_STORAGE_CLASS != '' }}
+      shell: bash
+      run: echo "storage_class = ${{ inputs.S3_STORAGE_CLASS }}" >> ~/.config/rclone/rclone.conf
+
+    - name: Verify rclone configuration
+      if: ${{ inputs.S3_PROVIDER == 'aws' }}
+      shell: bash
+      run: rclone config show s3
+
+    - name: Sanitize paths
+      id: sanitized
+      shell: bash
+      run: |
+        SRC_CLEAN=$(python3 -c "import os; path=os.path.normpath('${{ inputs.SRC }}'); print(path.lstrip('/'))")
+        DST_CLEAN=$(python3 -c "import os; path=os.path.normpath('${{ inputs.DST }}'); print(path.lstrip('/'))")
+
+        echo "src_clean=$SRC_CLEAN" >> $GITHUB_OUTPUT
+        echo "dst_clean=$DST_CLEAN" >> $GITHUB_OUTPUT
+
+    - name: Determine sync paths
+      id: paths
+      shell: bash
+      run: |
+        case "${{ inputs.SYNC_TYPE }}" in
+          "local-to-remote")
+            echo "src=${{ steps.sanitized.outputs.src_clean }}" >> $GITHUB_OUTPUT
+            echo "dst=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.dst_clean }}" >> $GITHUB_OUTPUT
+            echo "Syncing from local directory to S3"
+            ;;
+          "remote-to-local")
+            echo "src=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.src_clean }}" >> $GITHUB_OUTPUT
+            echo "dst=${{ steps.sanitized.outputs.dst_clean }}" >> $GITHUB_OUTPUT
+            echo "Syncing from S3 to local directory"
+            ;;
+          "remote-to-remote")
+            echo "src=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.src_clean }}" >> $GITHUB_OUTPUT
+            echo "dst=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.dst_clean }}" >> $GITHUB_OUTPUT
+            echo "Syncing between S3 locations"
+            ;;
+          *)
+            echo "Error: Invalid SYNC_TYPE '${{ inputs.SYNC_TYPE }}'. Must be local-to-remote, remote-to-local, or remote-to-remote"
+            exit 1
+            ;;
+        esac
+
+    - name: Perform rclone sync
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        echo "Syncing from ${{ steps.paths.outputs.src }} to ${{ steps.paths.outputs.dst }}"
+        rclone sync "${{ steps.paths.outputs.src }}/" "${{ steps.paths.outputs.dst }}/"
+
+    - name: Run deduplication on S3
+      if: ${{ inputs.SYNC_TYPE == 'local-to-remote' || inputs.SYNC_TYPE == 'remote-to-remote' }}
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        echo "Running deduplication on S3 destination by hash, keeping newest files"
+        rclone dedupe --by-hash --dedupe-mode newest "${{ steps.paths.outputs.dst }}/"
+
+    - name: List destination contents
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        echo "Listing destination contents:"
+        rclone ls "${{ steps.paths.outputs.dst }}/"

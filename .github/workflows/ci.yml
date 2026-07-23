@@ -24,10 +24,28 @@ on:
       RUBY_VERSION:
         required: false
         type: string
-        default: "2.7.4"
-      PUSH:
+        default: "3.0.6"
+      PYTHON_VERSION:
         required: false
         type: string
+        default: "3.10"
+      GO_VERSION:
+        required: false
+        type: string
+        description: 'Go version to use. Defaults to the version in go.mod if not set.'
+      RUN_LINT:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to run golangci-lint (Go).'
+      RUN_VULNCHECK:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to run govulncheck (Go).'
+      PUSH:
+        required: false
+        type: boolean
         default: false
       FILE:
         required: false
@@ -53,14 +71,11 @@ on:
         required: false
         type: boolean
         default: false
-      STACK_NAME:
-        required: false
-        type: string
-      DEPLOY:
+      TEST_DEPENDENCIES:
         required: false
         type: boolean
-        default: true
-      TEST_DEPENDENCIES:
+        default: false
+      TEST_DEPENDENCIES_PRIVATE:
         required: false
         type: boolean
         default: false
@@ -72,6 +87,16 @@ on:
         required: false
         type: string
         default: "6.0.403"
+      TAG:
+        required: false
+        type: string
+        default: |
+          type=schedule
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=sha
       SUBMODULES_PRIVATE: 
         required: false
         type: boolean
@@ -84,10 +109,96 @@ on:
         type: boolean
         default: true
         description: 'Whenever the container should be tested on pr.'
+      CONTAINER_TEST_RUN_OPTIONS:
+        type: string
+        default: ''
+        description: 'Custom options for the docker run command that executes the test'
+      CONTAINER_TEST_COMMAND:
+        type: string
+        default: ''
+        description: 'A custom command to test the docker container.'
       RUNNER:
         type: string
-        default: 'ubuntu'
+        default: 'ubuntu-latest'
         description: 'The default runner.'
+      ENVIRONMENT: 
+        type: string
+        description: 'The environment related to an WF execution'
+      ENV_PATH: 
+        type: string
+        description: 'The .env file for CI.'
+      TEST_CREATE_NETWORK: 
+        type: boolean
+        description: 'Whenever you want to create a docker network for test dependencies.'
+      RUBY_RAKE_COMMANDS:
+        type: string
+        description: A comma-separated list of rake commands.
+      ADDITIONAL_SETUP:
+        type: string
+        default: '[]'
+        description: 'JSON array of additional setup commands'
+      ZEITWERK:
+        type: boolean
+        description: Zeitwerk run.
+        default: true
+      BRAKEMAN:
+        type: boolean
+        default: true
+        description: Brakeman run.
+      RUBOCOP:
+        type: boolean
+        description: Rubocop run.
+        default: true
+      RUN_TESTS:
+        type: boolean
+        description: Whenever you wanna run tests.
+        default: true
+      DOTNET_INSTALL_DIR:
+        type: string
+        required: false
+        default: '/usr/share/dotnet'
+        description: Set a custom .NET install dir
+      DOTNET_TEST_ARGS:
+        type: string
+        required: false
+        default: ''
+        description: Extra arguments appended to the dotnet test command.
+      BUILD_ARGS:
+        required: false
+        type: string
+        default: ''
+        description: Docker build args.
+      OUTPUT_TAG_INDEX:
+        type: number
+        default: 0
+        description: 'Return a custom tag in case more than one is requested.'
+        required: false
+      REVISION_PATH:
+        type: string
+        default: .
+        description: Whenever the WF requires a different path than . for the revision file
+        required: false
+      ENABLE_DOCKER_BUILD_CACHE:
+        type: boolean
+        default: false
+        description: 'Whether to use cache when building the image'
+        required: false
+      ## Vault Secrets
+      VAULT_SECRETS:
+        type: string
+        default: ''
+        description: 'A comma separated list of secrets to fetch from Vault.'
+        required: false
+      TELEPORT_APP:
+        type: string
+        default: ''
+        description: 'The Teleport app to use.'
+        required: false
+      TELEPORT_PROXY_URL:
+        type: string
+        default: ''
+        description: 'The Teleport proxy URL to use.'
+        required: false
     secrets:
       SONAR_HOST_URL:
         required: false
@@ -103,35 +214,78 @@ on:
         required: false
       GH_BOT_DEPLOY_KEY:
         required: false
+      CONTRIBSYS_CREDENTIALS:
+        required: false
+        description: Contribsys credentials used for ruby gems
+      DOCKER_SECRETS:
+        required: false
+        description: 'Docker internal secrets.'
+      BUILD_ARGS:
+        required: false
+        description: Whenever we wanna use secrets and mount them as env
+      # Vault Secrets
+      VAULT_TOKEN:
+        required: false
+        description: 'Vault token.'
+      TELEPORT_TOKEN:
+        required: false
+        description: 'Teleport token.'
+    outputs:
+      IMAGE_TAG: 
+        value: ${{ jobs.BUILD.outputs.IMAGE_TAG }}
+        description: Container image tag from docker build
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+
   CHECK:
     name: CI
-    uses: signalwire/actions-template/.github/workflows/ci-check.yml@main 
+    uses: signalwire/actions-template/.github/workflows/ci-check.yml@main
     with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
       LANGUAGE: ${{ inputs.LANGUAGE }}
       COVERAGE: ${{ inputs.COVERAGE }}
       NODE_VERSION: ${{ inputs.NODE_VERSION }}
       RUBY_VERSION: ${{ inputs.RUBY_VERSION }}
       DOTNET_VERSION: ${{ inputs.DOTNET_VERSION }}
+      PYTHON_VERSION: ${{ inputs.PYTHON_VERSION }}
+      GO_VERSION: ${{ inputs.GO_VERSION }}
+      RUN_LINT: ${{ inputs.RUN_LINT }}
+      RUN_VULNCHECK: ${{ inputs.RUN_VULNCHECK }}
       TEST_DEPENDENCIES: ${{ inputs.TEST_DEPENDENCIES }}
+      TEST_DEPENDENCIES_PRIVATE: ${{ inputs.TEST_DEPENDENCIES_PRIVATE }}
       DEPENDENCIES_FILE: ${{ inputs.DEPENDENCIES_FILE }}
       SUBMODULES_RECURSIVE: ${{ inputs.SUBMODULES_RECURSIVE }}
       RUNNER: ${{ inputs.RUNNER }}
+      ENV_PATH: ${{ inputs.ENV_PATH }}
+      TEST_CREATE_NETWORK: ${{ inputs.TEST_CREATE_NETWORK }}
+      RUBY_RAKE_COMMANDS: ${{ inputs.RUBY_RAKE_COMMANDS }}
+      ADDITIONAL_SETUP: ${{ inputs.ADDITIONAL_SETUP }}
+      ZEITWERK: ${{ inputs.ZEITWERK }}
+      BRAKEMAN: ${{ inputs.BRAKEMAN }}
+      RUBOCOP: ${{ inputs.RUBOCOP }}
+      RUN_TESTS: ${{ inputs.RUN_TESTS }}
+      DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
+      DOTNET_TEST_ARGS: ${{ inputs.DOTNET_TEST_ARGS }}
+      VAULT_SECRETS: ${{ inputs.VAULT_SECRETS }}
+      TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+      TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
       SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      TELEPORT_TOKEN: ${{ secrets.TELEPORT_TOKEN }}
 
   BUILD:
     name: BUILD
     needs: CHECK
     uses: signalwire/actions-template/.github/workflows/ci-build.yml@main
     with:
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
       PROJECT_NAME: ${{ inputs.PROJECT_NAME }}
       SUBMODULES_RECURSIVE: ${{ inputs.SUBMODULES_RECURSIVE }}
       SUBMODULES_PRIVATE: ${{ inputs.SUBMODULES_PRIVATE }}
@@ -143,9 +297,23 @@ jobs:
       PLATFORMS: ${{ inputs.PLATFORMS }}
       CONTAINER_SCAN: ${{ inputs.CONTAINER_SCAN }}
       CONTAINER_TEST: ${{ inputs.CONTAINER_TEST }}
+      CONTAINER_TEST_RUN_OPTIONS: ${{ inputs.CONTAINER_TEST_RUN_OPTIONS }}
+      CONTAINER_TEST_COMMAND: ${{ inputs.CONTAINER_TEST_COMMAND }}
       RUNNER: ${{ inputs.RUNNER }}
+      TAG: ${{ inputs.TAG }}
+      BUILD_ARGS: ${{ inputs.BUILD_ARGS }}
+      OUTPUT_TAG_INDEX: ${{ inputs.OUTPUT_TAG_INDEX }}
+      REVISION_PATH: ${{ inputs.REVISION_PATH }}
+      VAULT_SECRETS: ${{ inputs.VAULT_SECRETS }}
+      TELEPORT_APP: ${{ inputs.TELEPORT_APP }}
+      TELEPORT_PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+      ENABLE_DOCKER_BUILD_CACHE: ${{ inputs.ENABLE_DOCKER_BUILD_CACHE }}
     secrets:
       GH_BOT_DEPLOY_KEY: ${{ secrets.GH_BOT_DEPLOY_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      DOCKER_SECRETS: ${{ secrets.DOCKER_SECRETS }}
+      BUILD_ARGS: ${{ secrets.BUILD_ARGS }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      TELEPORT_TOKEN: ${{ secrets.TELEPORT_TOKEN }}
 

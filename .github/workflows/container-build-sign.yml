@@ -1,0 +1,342 @@
+name: Container build, sign & SBOM
+
+# Reusable workflow: builds one Dockerfile against a list of services (matrix),
+# pushes each image to a GCP Artifact Registry repo via Workload Identity
+# Federation, then optionally scans/signs/attests them. Everything project-
+# specific is passed in via inputs — nothing here is hardcoded to a particular
+# GCP project, registry, or signing key.
+
+on:
+  workflow_call:
+    inputs:
+      IMAGE_REPO:
+        required: true
+        type: string
+        description: 'Artifact Registry repo, e.g. us-east1-docker.pkg.dev/<project>/<repo>.'
+      WORKLOAD_IDENTITY_PROVIDER:
+        required: true
+        type: string
+        description: 'GCP Workload Identity Federation provider for google-github-actions/auth.'
+      PROJECT_ID:
+        required: true
+        type: string
+        description: 'GCP project id.'
+      SERVICES:
+        required: true
+        type: string
+        description: 'Space-separated service names. Each is built from DOCKERFILE with --build-arg SERVICE=<name> and pushed as IMAGE_REPO/<name>:tag.'
+      DOCKERFILE:
+        required: false
+        type: string
+        default: 'Dockerfile'
+        description: 'Dockerfile used to build every service in SERVICES.'
+      EXTRA_BUILD_ARGS:
+        required: false
+        type: string
+        default: ''
+        description: 'Extra --build-arg entries, one KEY=VALUE per line.'
+      PLATFORMS:
+        required: false
+        type: string
+        default: 'linux/amd64'
+      IMAGE_TAG:
+        required: false
+        type: string
+        default: ''
+        description: 'Explicit image tag. If empty: refs/tags/v* pushes use the tag without its v prefix, everything else uses the 12-char short SHA.'
+      PUSH_IMAGES:
+        required: false
+        type: boolean
+        default: true
+        description: 'Push built images to IMAGE_REPO. When false, images are built and loaded locally only (e.g. PR validation) — scan/sign/SBOM steps are skipped since there is nothing in the registry to act on.'
+      ENABLE_TRIVY_IMAGE_SCAN:
+        required: false
+        type: boolean
+        default: true
+        description: 'Scan each pushed image with Trivy (CRITICAL/HIGH, ignore-unfixed) before signing.'
+      ENABLE_COSIGN_SIGN:
+        required: false
+        type: boolean
+        default: false
+        description: 'Sign each image (by digest) with Cosign using a GCP KMS key. Requires KMS_KEY_PATH.'
+      KMS_KEY_PATH:
+        required: false
+        type: string
+        default: ''
+        description: 'GCP KMS key resource path for Cosign signing (used as gcpkms://<path>). Required when ENABLE_COSIGN_SIGN is true.'
+      ENABLE_BINAUTHZ:
+        required: false
+        type: boolean
+        default: false
+        description: 'Create a Binary Authorization attestation per image after signing. Requires ENABLE_COSIGN_SIGN and BINAUTHZ_ATTESTOR.'
+      BINAUTHZ_ATTESTOR:
+        required: false
+        type: string
+        default: ''
+        description: 'Binary Authorization attestor name. Required when ENABLE_BINAUTHZ is true.'
+      ENABLE_SBOM:
+        required: false
+        type: boolean
+        default: false
+        description: 'Generate a Syft SPDX SBOM per image, attest it with Cosign, and upload all SBOMs as a workflow artifact. Requires ENABLE_COSIGN_SIGN.'
+      GO_VENDOR:
+        required: false
+        type: boolean
+        default: false
+        description: 'Run `go mod vendor` before the build so a Dockerfile that does `COPY vendor/` works without vendor/ being committed. Requires PRIVATE_GO_MODULES_TOKEN when the module graph includes private repos.'
+      GO_VERSION:
+        required: false
+        type: string
+        default: '1.26'
+        description: 'Go toolchain version used for the GO_VENDOR pre-build step.'
+    secrets:
+      PRIVATE_GO_MODULES_TOKEN:
+        required: false
+        description: 'PAT with read access to private Go module repos (github.com/signalwire/*). Used by the GO_VENDOR step to configure git before `go mod vendor`.'
+
+jobs:
+  resolve:
+    name: Resolve service matrix
+    runs-on: ubuntu-latest
+    outputs:
+      services_json: ${{ steps.resolve.outputs.services_json }}
+      image_tag: ${{ steps.resolve.outputs.image_tag }}
+    steps:
+      - name: Validate signing/attestation/SBOM inputs
+        run: |
+          fail=0
+          if [ "${{ inputs.ENABLE_COSIGN_SIGN }}" = "true" ] && [ -z "${{ inputs.KMS_KEY_PATH }}" ]; then
+            echo "::error::ENABLE_COSIGN_SIGN is true but KMS_KEY_PATH is empty."
+            fail=1
+          fi
+          if [ "${{ inputs.ENABLE_BINAUTHZ }}" = "true" ]; then
+            if [ "${{ inputs.ENABLE_COSIGN_SIGN }}" != "true" ]; then
+              echo "::error::ENABLE_BINAUTHZ requires ENABLE_COSIGN_SIGN to also be true."
+              fail=1
+            fi
+            if [ -z "${{ inputs.BINAUTHZ_ATTESTOR }}" ]; then
+              echo "::error::ENABLE_BINAUTHZ is true but BINAUTHZ_ATTESTOR is empty."
+              fail=1
+            fi
+          fi
+          if [ "${{ inputs.ENABLE_SBOM }}" = "true" ] && [ "${{ inputs.ENABLE_COSIGN_SIGN }}" != "true" ]; then
+            echo "::error::ENABLE_SBOM requires ENABLE_COSIGN_SIGN to also be true (SBOMs are attested with Cosign)."
+            fail=1
+          fi
+          # docker buildx build --load (used when PUSH_IMAGES is false) can't load a
+          # multi-platform manifest into the local Docker engine.
+          if [ "${{ inputs.PUSH_IMAGES }}" != "true" ] && [[ "${{ inputs.PLATFORMS }}" == *,* ]]; then
+            echo "::error::PUSH_IMAGES is false but PLATFORMS ('${{ inputs.PLATFORMS }}') lists more than one platform — buildx --load doesn't support multi-platform images. Set PUSH_IMAGES: true or use a single platform."
+            fail=1
+          fi
+          exit "$fail"
+
+      - name: Resolve services list and image tag
+        id: resolve
+        run: |
+          echo "services_json=$(echo '${{ inputs.SERVICES }}' | jq -R -c 'split(" ") | map(select(length > 0))')" >> "$GITHUB_OUTPUT"
+
+          if [ -n "${{ inputs.IMAGE_TAG }}" ]; then
+            echo "image_tag=${{ inputs.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "image_tag=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "image_tag=$(echo "${GITHUB_SHA}" | cut -c1-12)" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Build — ${{ matrix.service }}
+    needs: [resolve]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.resolve.outputs.services_json) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ inputs.WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: ${{ inputs.PROJECT_ID }}
+
+      - uses: google-github-actions/setup-gcloud@v3.0.1
+
+      - name: Authenticate to Artifact Registry
+        run: gcloud auth configure-docker "$(echo '${{ inputs.IMAGE_REPO }}' | cut -d/ -f1)" --quiet
+
+      - name: Set up Go (for vendoring)
+        if: ${{ inputs.GO_VENDOR }}
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ inputs.GO_VERSION }}
+          cache: false
+
+      - name: Vendor Go modules
+        if: ${{ inputs.GO_VENDOR }}
+        env:
+          TOKEN: ${{ secrets.PRIVATE_GO_MODULES_TOKEN }}
+          GOPRIVATE: github.com/signalwire/*
+        run: |
+          if [ -n "${TOKEN}" ]; then
+            git config --global url."https://x-access-token:${TOKEN}@github.com/signalwire/".insteadOf "https://github.com/signalwire/"
+          fi
+          go mod vendor
+
+      - name: Build & push ${{ matrix.service }}
+        env:
+          TAG: ${{ needs.resolve.outputs.image_tag }}
+          IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
+          SVC: ${{ matrix.service }}
+          CACHE_REF: ${{ inputs.IMAGE_REPO }}/cache/${{ matrix.service }}
+          EXTRA_BUILD_ARGS: ${{ inputs.EXTRA_BUILD_ARGS }}
+          PUSH_IMAGES: ${{ inputs.PUSH_IMAGES }}
+        run: |
+          BUILD_ARGS=(--build-arg "SERVICE=${SVC}")
+          while IFS= read -r line; do
+            [ -n "$line" ] && BUILD_ARGS+=(--build-arg "$line")
+          done <<< "$EXTRA_BUILD_ARGS"
+
+          OUTPUT_ARGS=(--load)
+          CACHE_ARGS=(--cache-from "type=registry,ref=${CACHE_REF}")
+          if [ "${PUSH_IMAGES}" = "true" ]; then
+            OUTPUT_ARGS=(--push)
+            CACHE_ARGS+=(--cache-to "type=registry,ref=${CACHE_REF},mode=max")
+          fi
+
+          docker buildx build \
+            --platform "${{ inputs.PLATFORMS }}" \
+            "${BUILD_ARGS[@]}" \
+            "${CACHE_ARGS[@]}" \
+            -f "${{ inputs.DOCKERFILE }}" \
+            -t "${IMAGE_REPO}/${SVC}:${TAG}" \
+            "${OUTPUT_ARGS[@]}" \
+            .
+
+  sign-and-attest:
+    name: Scan, sign & attest images
+    needs: [resolve, build]
+    if: ${{ inputs.PUSH_IMAGES && (inputs.ENABLE_TRIVY_IMAGE_SCAN || inputs.ENABLE_COSIGN_SIGN) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ inputs.WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: ${{ inputs.PROJECT_ID }}
+
+      - uses: google-github-actions/setup-gcloud@v3.0.1
+        with:
+          install_components: beta
+
+      - name: Authenticate to Artifact Registry
+        run: gcloud auth configure-docker "$(echo '${{ inputs.IMAGE_REPO }}' | cut -d/ -f1)" --quiet
+
+      - name: Install Trivy
+        if: ${{ inputs.ENABLE_TRIVY_IMAGE_SCAN }}
+        uses: aquasecurity/setup-trivy@v0.3.1
+
+      - name: Trivy — scan each image
+        if: ${{ inputs.ENABLE_TRIVY_IMAGE_SCAN }}
+        env:
+          TAG: ${{ needs.resolve.outputs.image_tag }}
+          IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
+          SERVICES: ${{ inputs.SERVICES }}
+        run: |
+          for svc in $SERVICES; do
+            echo "::group::Trivy — ${svc}"
+            trivy image \
+              --severity CRITICAL,HIGH \
+              --ignore-unfixed \
+              --exit-code 1 \
+              --format table \
+              "${IMAGE_REPO}/${svc}:${TAG}"
+            echo "::endgroup::"
+          done
+
+      - name: Install Cosign
+        if: ${{ inputs.ENABLE_COSIGN_SIGN }}
+        uses: sigstore/cosign-installer@v3
+
+      # RSA-PKCS1 KMS keys fail Rekor verification, so --tlog-upload is
+      # disabled — the registry plus GCP Cloud Audit Logs are the audit trail.
+      - name: Sign images
+        if: ${{ inputs.ENABLE_COSIGN_SIGN }}
+        env:
+          TAG: ${{ needs.resolve.outputs.image_tag }}
+          IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
+          SERVICES: ${{ inputs.SERVICES }}
+          KMS_KEY_PATH: ${{ inputs.KMS_KEY_PATH }}
+        run: |
+          for svc in $SERVICES; do
+            IMAGE="${IMAGE_REPO}/${svc}:${TAG}"
+            DIGEST=$(gcloud artifacts docker images describe "${IMAGE}" --format='value(image_summary.digest)')
+            IMAGE_BY_DIGEST="${IMAGE_REPO}/${svc}@${DIGEST}"
+            cosign sign --key "gcpkms://${KMS_KEY_PATH}" --tlog-upload=false --yes "${IMAGE_BY_DIGEST}"
+          done
+
+      - name: Binary Authorization attestation
+        if: ${{ inputs.ENABLE_BINAUTHZ }}
+        env:
+          TAG: ${{ needs.resolve.outputs.image_tag }}
+          IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
+          SERVICES: ${{ inputs.SERVICES }}
+          KMS_KEY_PATH: ${{ inputs.KMS_KEY_PATH }}
+          PROJECT_ID: ${{ inputs.PROJECT_ID }}
+          BINAUTHZ_ATTESTOR: ${{ inputs.BINAUTHZ_ATTESTOR }}
+        run: |
+          for svc in $SERVICES; do
+            IMAGE="${IMAGE_REPO}/${svc}:${TAG}"
+            DIGEST=$(gcloud artifacts docker images describe "${IMAGE}" --format='value(image_summary.digest)')
+            IMAGE_BY_DIGEST="${IMAGE_REPO}/${svc}@${DIGEST}"
+            gcloud beta container binauthz attestations sign-and-create \
+              --artifact-url="${IMAGE_BY_DIGEST}" \
+              --attestor="${BINAUTHZ_ATTESTOR}" \
+              --attestor-project="${PROJECT_ID}" \
+              --keyversion="${KMS_KEY_PATH}"
+          done
+
+      - name: Install Syft
+        if: ${{ inputs.ENABLE_SBOM }}
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Generate SBOM and attest per image
+        if: ${{ inputs.ENABLE_SBOM }}
+        env:
+          TAG: ${{ needs.resolve.outputs.image_tag }}
+          IMAGE_REPO: ${{ inputs.IMAGE_REPO }}
+          SERVICES: ${{ inputs.SERVICES }}
+          KMS_KEY_PATH: ${{ inputs.KMS_KEY_PATH }}
+        run: |
+          for svc in $SERVICES; do
+            IMAGE="${IMAGE_REPO}/${svc}:${TAG}"
+            DIGEST=$(gcloud artifacts docker images describe "${IMAGE}" --format='value(image_summary.digest)')
+            IMAGE_BY_DIGEST="${IMAGE_REPO}/${svc}@${DIGEST}"
+            syft "${IMAGE_BY_DIGEST}" -o spdx-json > "sbom-${svc}.spdx.json"
+            cosign attest \
+              --key "gcpkms://${KMS_KEY_PATH}" \
+              --tlog-upload=false \
+              --yes \
+              --type spdxjson \
+              --predicate "sbom-${svc}.spdx.json" \
+              "${IMAGE_BY_DIGEST}"
+          done
+
+      - name: Upload SBOM artifacts
+        if: ${{ inputs.ENABLE_SBOM }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom-spdx-${{ github.run_id }}
+          path: sbom-*.spdx.json
+          if-no-files-found: error

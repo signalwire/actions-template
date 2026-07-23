@@ -1,0 +1,120 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build RPM Packages
+
+# Controls when the workflow will run
+on:
+
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+      RUNNER:
+        required: false
+        default: ubuntu-latest
+        type: string
+      PROJECT_NAME:
+        required: true
+        type: string
+      RUN_BACKGROUND:
+        required: false
+        type: string
+        default: 'false'
+      PACKAGER:
+        required: false
+        type: string
+        default: 'false'
+      PLATFORM:
+        required: false
+        description: Default OS/Arch
+        default: amd64
+        type: string
+      TARGET_ARTIFACT_NAME:
+        required: false
+        description: Artifact name.
+        default: centos
+        type: string
+      USE_CMAKE:
+        required: false
+        type: boolean
+        default: false
+        description: Use CMAKE for building
+      CMAKE_BUILD_TYPE:
+        required: false
+        type: string
+        default: 'Release'
+        description: Set СMAKE_BUILD_TYPE variable
+      CMAKE_INSTALL_PREFIX:
+        required: false
+        type: string
+        default: '/usr'
+        description: Set CMAKE_INSTALL_PREFIX variable
+      ADDITIONAL_PACKAGES:
+        required: false
+        type: string
+        default: ''
+        description: 'Additional packages to install (space delimited)'
+      UPLOAD_ARTIFACTS:
+        required: false
+        type: boolean
+        default: true
+        description: 'Enable upload artifacts related steps'
+
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+      SIGNALWIRE_USERNAME:
+        required: false
+      SIGNALWIRE_TOKEN:
+        required: false
+
+jobs:
+  deploy:
+
+    runs-on: ${{ inputs.RUNNER }}
+    name: Build
+    environment: ${{ inputs.ENVIRONMENT }}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Build RPM Packages
+      uses: signalwire/build-rpm-packages-action@main
+      with:
+        project_name: ${{ inputs.PROJECT_NAME }}
+        packager: ${{ inputs.PACKAGER }}
+        use_cmake: ${{ inputs.USE_CMAKE }}
+        cmake_build_type: ${{ inputs.CMAKE_BUILD_TYPE }}
+        cmake_install_prefix: ${{ inputs.CMAKE_INSTALL_PREFIX }}
+        additional_packages: ${{ inputs.ADDITIONAL_PACKAGES }}
+        signalwire_username: ${{ secrets.SIGNALWIRE_USERNAME }}
+        signalwire_token: ${{ secrets.SIGNALWIRE_TOKEN }}
+
+    - name: Generate hash file
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
+      run: echo $GITHUB_SHA > hash.txt
+      env:
+        GITHUB_SHA: ${{ github.sha }}
+
+    - name: Compress files
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
+      run: |
+        tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz $(ls -1 | grep -E '(.rpm|hash.txt)$' | tr -s '\n' ' ')
+
+    - name: Generate SHA checksum
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
+      run: |
+        sha512sum ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz > ${{ inputs.TARGET_ARTIFACT_NAME }}.sha1
+      
+    - uses: actions/upload-artifact@v4
+      if: ${{ inputs.UPLOAD_ARTIFACTS }}
+      with:
+        name: rpm-${{ inputs.PLATFORM }}-artifact
+        path: |
+          *.tar.gz
+          *.sha1
