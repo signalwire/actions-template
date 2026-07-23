@@ -50,6 +50,15 @@ on:
         type: string
         default: ''
         description: 'Defaults to "chore: update image tag to <IMAGE_TAG> [skip ci]" if empty.'
+      APP_ID:
+        required: false
+        type: string
+        default: ''
+        description: 'GitHub App ID used to mint a PR-creation token for MODE: pull-request. Unused (and optional) in direct-commit mode.'
+    secrets:
+      APP_PRIVATE_KEY:
+        required: false
+        description: 'Private key for APP_ID. Required when MODE is pull-request — the reusable GITHUB_TOKEN often cannot open PRs (org policy), so pull-request mode always authenticates as this App instead.'
 
 jobs:
   validate:
@@ -64,6 +73,34 @@ jobs:
               exit 1
               ;;
           esac
+      - if: ${{ inputs.MODE == 'pull-request' && inputs.APP_ID == '' }}
+        run: |
+          echo "::error::APP_ID is required when MODE is pull-request."
+          exit 1
+
+  # Mints a short-lived token from a GitHub App to open the review PR.
+  # pull-request mode never relies on the reusable GITHUB_TOKEN for this —
+  # many orgs disable "Allow GitHub Actions to create pull requests" as
+  # policy, which makes GITHUB_TOKEN-based PR creation fail workflow
+  # *validation* entirely (not just at runtime) the moment a caller's job
+  # requests pull-requests: write. An externally-authenticated App token
+  # isn't subject to that restriction and needs no permissions grant from
+  # the caller at all.
+  generate-token:
+    name: Generate GitOps PR token
+    needs: [validate]
+    if: ${{ inputs.MODE == 'pull-request' }}
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      token: ${{ steps.generate-token.outputs.token }}
+    steps:
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ inputs.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
   direct-commit:
     name: Bump ${{ inputs.YQ_PATH }} -> ${{ inputs.IMAGE_TAG }} (direct commit)
@@ -103,16 +140,18 @@ jobs:
 
   pull-request:
     name: Bump ${{ inputs.YQ_PATH }} -> ${{ inputs.IMAGE_TAG }} (PR)
-    needs: [validate]
+    needs: [validate, generate-token]
     if: ${{ inputs.MODE == 'pull-request' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
+    # No GITHUB_TOKEN permissions requested — all git/gh operations below
+    # authenticate as the App token from generate-token instead, so this
+    # job's validity doesn't depend on the org's GITHUB_TOKEN PR policy.
+    permissions: {}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.TARGET_BRANCH }}
+          token: ${{ needs.generate-token.outputs.token }}
 
       - name: Bump value
         env:
@@ -131,7 +170,7 @@ jobs:
           PR_TITLE: ${{ inputs.PR_TITLE }}
           PR_BODY: ${{ inputs.PR_BODY }}
           COMMIT_MESSAGE: ${{ inputs.COMMIT_MESSAGE }}
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ needs.generate-token.outputs.token }}
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
