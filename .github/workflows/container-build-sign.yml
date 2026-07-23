@@ -79,6 +79,20 @@ on:
         type: boolean
         default: false
         description: 'Generate a Syft SPDX SBOM per image, attest it with Cosign, and upload all SBOMs as a workflow artifact. Requires ENABLE_COSIGN_SIGN.'
+      GO_VENDOR:
+        required: false
+        type: boolean
+        default: false
+        description: 'Run `go mod vendor` before the build so a Dockerfile that does `COPY vendor/` works without vendor/ being committed. Requires PRIVATE_GO_MODULES_TOKEN when the module graph includes private repos.'
+      GO_VERSION:
+        required: false
+        type: string
+        default: '1.26'
+        description: 'Go toolchain version used for the GO_VENDOR pre-build step.'
+    secrets:
+      PRIVATE_GO_MODULES_TOKEN:
+        required: false
+        description: 'PAT with read access to private Go module repos (github.com/signalwire/*). Used by the GO_VENDOR step to configure git before `go mod vendor`.'
 
 jobs:
   resolve:
@@ -156,6 +170,24 @@ jobs:
 
       - name: Authenticate to Artifact Registry
         run: gcloud auth configure-docker "$(echo '${{ inputs.IMAGE_REPO }}' | cut -d/ -f1)" --quiet
+
+      - name: Set up Go (for vendoring)
+        if: ${{ inputs.GO_VENDOR }}
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ inputs.GO_VERSION }}
+          cache: false
+
+      - name: Vendor Go modules
+        if: ${{ inputs.GO_VENDOR }}
+        env:
+          TOKEN: ${{ secrets.PRIVATE_GO_MODULES_TOKEN }}
+          GOPRIVATE: github.com/signalwire/*
+        run: |
+          if [ -n "${TOKEN}" ]; then
+            git config --global url."https://x-access-token:${TOKEN}@github.com/signalwire/".insteadOf "https://github.com/signalwire/"
+          fi
+          go mod vendor
 
       - name: Build & push ${{ matrix.service }}
         env:
