@@ -78,30 +78,6 @@ jobs:
           echo "::error::APP_ID is required when MODE is pull-request."
           exit 1
 
-  # Mints a short-lived token from a GitHub App to open the review PR.
-  # pull-request mode never relies on the reusable GITHUB_TOKEN for this —
-  # many orgs disable "Allow GitHub Actions to create pull requests" as
-  # policy, which makes GITHUB_TOKEN-based PR creation fail workflow
-  # *validation* entirely (not just at runtime) the moment a caller's job
-  # requests pull-requests: write. An externally-authenticated App token
-  # isn't subject to that restriction and needs no permissions grant from
-  # the caller at all.
-  generate-token:
-    name: Generate GitOps PR token
-    needs: [validate]
-    if: ${{ inputs.MODE == 'pull-request' }}
-    runs-on: ubuntu-latest
-    permissions: {}
-    outputs:
-      token: ${{ steps.generate-token.outputs.token }}
-    steps:
-      - name: Generate a token
-        id: generate-token
-        uses: actions/create-github-app-token@v3
-        with:
-          app-id: ${{ inputs.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
   direct-commit:
     name: Bump ${{ inputs.YQ_PATH }} -> ${{ inputs.IMAGE_TAG }} (direct commit)
     needs: [validate]
@@ -140,18 +116,31 @@ jobs:
 
   pull-request:
     name: Bump ${{ inputs.YQ_PATH }} -> ${{ inputs.IMAGE_TAG }} (PR)
-    needs: [validate, generate-token]
+    needs: [validate]
     if: ${{ inputs.MODE == 'pull-request' }}
     runs-on: ubuntu-latest
     # No GITHUB_TOKEN permissions requested — all git/gh operations below
-    # authenticate as the App token from generate-token instead, so this
-    # job's validity doesn't depend on the org's GITHUB_TOKEN PR policy.
+    # authenticate as the App token minted in this same job instead, so
+    # this job's validity doesn't depend on the org's GITHUB_TOKEN PR
+    # policy. The token must be minted here rather than in a separate job:
+    # actions/create-github-app-token masks its output as a secret, and
+    # GitHub silently empties masked values when forwarded through a job's
+    # `outputs:` to another job (see "Skip output 'token' since it may
+    # contain secret" in the run log) — it only survives within the job
+    # that generated it.
     permissions: {}
     steps:
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ inputs.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.TARGET_BRANCH }}
-          token: ${{ needs.generate-token.outputs.token }}
+          token: ${{ steps.generate-token.outputs.token }}
 
       - name: Bump value
         env:
@@ -170,7 +159,7 @@ jobs:
           PR_TITLE: ${{ inputs.PR_TITLE }}
           PR_BODY: ${{ inputs.PR_BODY }}
           COMMIT_MESSAGE: ${{ inputs.COMMIT_MESSAGE }}
-          GH_TOKEN: ${{ needs.generate-token.outputs.token }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
