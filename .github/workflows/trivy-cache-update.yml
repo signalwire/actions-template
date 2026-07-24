@@ -1,0 +1,76 @@
+name: Update Trivy Cache
+
+# Reusable workflow: downloads the Trivy vulnerability DB and Java DB via ORAS
+# and saves them to the Actions cache. Scan workflows should restore that cache
+# and set TRIVY_SKIP_DB_UPDATE=true / TRIVY_SKIP_JAVA_DB_UPDATE=true so they
+# do not re-download on every run.
+#
+# This workflow only updates the cache — pair it with a separate scan workflow.
+# Callers own the schedule (or workflow_dispatch) trigger in their repo.
+
+on:
+  workflow_call:
+    inputs:
+      RUNNER:
+        required: false
+        type: string
+        default: ubuntu-latest
+        description: 'GitHub Actions runner label.'
+      CACHE_KEY_PREFIX:
+        required: false
+        type: string
+        default: cache-trivy
+        description: 'Prefix for the Actions cache key. Final key is <prefix>-YYYY-MM-DD.'
+      TRIVY_DB_REF:
+        required: false
+        type: string
+        default: ghcr.io/aquasecurity/trivy-db:2
+        description: 'ORAS image reference for the Trivy vulnerability DB.'
+      TRIVY_JAVA_DB_REF:
+        required: false
+        type: string
+        default: ghcr.io/aquasecurity/trivy-java-db:1
+        description: 'ORAS image reference for the Trivy Java DB.'
+    outputs:
+      CACHE_KEY:
+        description: 'Cache key written by this run (cache-trivy-YYYY-MM-DD).'
+        value: ${{ jobs.update-trivy-db.outputs.cache_key }}
+
+permissions: {}
+
+jobs:
+  update-trivy-db:
+    name: Update Trivy DB cache
+    runs-on: ${{ inputs.RUNNER }}
+    outputs:
+      cache_key: ${{ steps.date.outputs.cache_key }}
+    steps:
+      - name: Setup oras
+        uses: oras-project/setup-oras@v1
+
+      - name: Get current date
+        id: date
+        run: |
+          DATE="$(date +'%Y-%m-%d')"
+          echo "date=${DATE}" >> "$GITHUB_OUTPUT"
+          echo "cache_key=${{ inputs.CACHE_KEY_PREFIX }}-${DATE}" >> "$GITHUB_OUTPUT"
+
+      - name: Download and extract the vulnerability DB
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/.cache/trivy/db"
+          oras pull "${{ inputs.TRIVY_DB_REF }}"
+          tar -xzf db.tar.gz -C "${GITHUB_WORKSPACE}/.cache/trivy/db"
+          rm db.tar.gz
+
+      - name: Download and extract the Java DB
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/.cache/trivy/java-db"
+          oras pull "${{ inputs.TRIVY_JAVA_DB_REF }}"
+          tar -xzf javadb.tar.gz -C "${GITHUB_WORKSPACE}/.cache/trivy/java-db"
+          rm javadb.tar.gz
+
+      - name: Cache DBs
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}/.cache/trivy
+          key: ${{ steps.date.outputs.cache_key }}
