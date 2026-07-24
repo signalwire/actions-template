@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  app:
+    image: acme-org/my-service:20260115-700-oldsha12
+    environment:
+      GIT_SHA: oldsha1234567890abcdef1234567890abcdef12
+    deploy:
+      replicas: 3
