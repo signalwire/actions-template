@@ -149,6 +149,13 @@ on:
         type: boolean
         description: Rubocop run.
         default: true
+      RUBOCOP_FAIL_LEVEL:
+        type: string
+        required: false
+        default: 'fatal'
+        description: >-
+          Lowest RuboCop severity that fails the build. Defaults to fatal, which lets
+          offenses report without failing. Set to convention to fail on any offense.
       RUN_TESTS:
         type: boolean
         description: Whenever you wanna run tests.
@@ -264,6 +271,7 @@ jobs:
       ZEITWERK: ${{ inputs.ZEITWERK }}
       BRAKEMAN: ${{ inputs.BRAKEMAN }}
       RUBOCOP: ${{ inputs.RUBOCOP }}
+      RUBOCOP_FAIL_LEVEL: ${{ inputs.RUBOCOP_FAIL_LEVEL }}
       RUN_TESTS: ${{ inputs.RUN_TESTS }}
       DOTNET_INSTALL_DIR: ${{ inputs.DOTNET_INSTALL_DIR }}
       DOTNET_TEST_ARGS: ${{ inputs.DOTNET_TEST_ARGS }}
