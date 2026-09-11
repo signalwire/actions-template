@@ -22,6 +22,12 @@ inputs:
   RUBOCOP:
     required: false
     description: Rubocop run.
+  RUBOCOP_FAIL_LEVEL:
+    required: false
+    default: 'fatal'
+    description: >-
+      Lowest RuboCop severity that fails the build. Defaults to fatal, which lets
+      offenses report without failing. Set to convention to fail on any offense.
   REVIEWDOG:
     required: false
     description: Reviewdog report
@@ -110,14 +116,15 @@ runs:
     # formatter without the require aborts RuboCop with "uninitialized constant
     # RdjsonFormatter", so those options are passed only when REVIEWDOG is on.
     #
-    # --fail-level=fatal keeps offenses non-blocking while leaving RuboCop's exit code
-    # 2 intact for a run that could not execute, which preserve_exitcode then surfaces
-    # as a failed step.
+    # --fail-level governs which offenses fail the build; at the default of fatal
+    # they only report. It does not affect RuboCop's exit code 2 for a run that
+    # could not execute, which preserve_exitcode surfaces as a failed step either
+    # way.
     - name: Generate RuboCop report
       if: inputs.RUBOCOP == 'true'
       uses: d-lebed/rubocop-run-action@v0.12.0
       with:
-        options: ${{ inputs.REVIEWDOG == 'true' && '--format=RdjsonFormatter --out=reviewdog-report.json' || '' }} --fail-level=fatal --format=progress
+        options: ${{ inputs.REVIEWDOG == 'true' && '--format=RdjsonFormatter --out=reviewdog-report.json' || '' }} --fail-level=${{ inputs.RUBOCOP_FAIL_LEVEL }} --format=progress
         rdjson_formatter: ${{ inputs.REVIEWDOG }}
         preserve_exitcode: true
 
