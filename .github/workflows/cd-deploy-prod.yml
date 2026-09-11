@@ -1,0 +1,221 @@
+name: Deploy to Production (GitOps PR)
+
+on:
+  workflow_call:
+    inputs:
+      SERVICE_NAME:
+        required: true
+        type: string
+        description: 'Service name (e.g., my-service, my-app). Used for image naming, stack file paths, and PR titles.'
+      REASON:
+        required: true
+        type: string
+        description: 'Reason for this production deployment (included in PR body and tag annotation).'
+      DRY_RUN:
+        required: false
+        type: boolean
+        default: false
+        description: 'Dry run mode - verify everything but do not create tag or PR.'
+      BRANCH_PREFIX:
+        required: false
+        type: string
+        default: ''
+        description: 'Branch prefix for deployment PRs in the prod GitOps repo (default: SERVICE_NAME).'
+      GITOPS_STAGING_REPO:
+        required: true
+        type: string
+        description: 'GitOps staging repository to read current staging image from (e.g., org/repo-staging).'
+      GITOPS_PROD_REPO:
+        required: true
+        type: string
+        description: 'GitOps production repository to create deployment PR in (e.g., org/repo-prod).'
+      STACK_FILE_PATH:
+        required: false
+        type: string
+        default: ''
+        description: 'Path to stack file in staging GitOps repo for reading current image (default: infrastructure/${SERVICE_NAME}.stack.yml). Also used for prod if PROD_STACK_FILE_PATHS is not set.'
+      PROD_STACK_FILE_PATHS:
+        required: false
+        type: string
+        default: ''
+        description: 'Comma-separated list of stack file paths in the PROD GitOps repo to update. If not set, uses STACK_FILE_PATH for prod as well. Useful when prod has multiple files (e.g., per-region stacks).'
+      DOCKER_REPOSITORY:
+        required: false
+        type: string
+        default: ''
+        description: 'Docker repository for image verification (default: signalwire/${SERVICE_NAME}).'
+      SOURCE_REPO:
+        required: false
+        type: string
+        default: ''
+        description: 'Source repository for commit comparison links (default: signalwire/${SERVICE_NAME}).'
+      BASE_BRANCH:
+        required: false
+        type: string
+        default: 'main'
+        description: 'Base branch in the prod GitOps repo for PR creation.'
+      RUNNER:
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+        description: 'Runner to use for the deployment job.'
+      ACTIONS_REF:
+        required: false
+        type: string
+        default: 'main'
+        description: 'Ref of signalwire/actions-template to use. Override to test action changes on a branch.'
+      NOTIFY_SLACK:
+        required: false
+        type: boolean
+        default: false
+        description: 'Send Slack notification on deployment PR creation.'
+      SLACK_CHANNEL:
+        required: false
+        type: string
+        default: ''
+        description: 'Slack channel for deployment notifications.'
+    secrets:
+      GITOPS_PAT_STAGING:
+        required: true
+        description: 'PAT with read access to the staging GitOps repo.'
+      GITOPS_PAT_PROD:
+        required: true
+        description: 'PAT with read/write access to the production GitOps repo (branch creation + PR).'
+      DOCKERHUB_USERNAME:
+        required: true
+        description: 'Docker Hub username for image verification.'
+      DOCKERHUB_TOKEN:
+        required: true
+        description: 'Docker Hub token for image verification.'
+      SLACK_WEBHOOK_URL:
+        required: false
+        description: 'Slack webhook URL for deployment notifications.'
+    outputs:
+      NEW_TAG:
+        description: 'The timestamp tag created on the source repo.'
+        value: ${{ jobs.deploy-prod.outputs.new_tag }}
+      PR_URL:
+        description: 'URL of the deployment PR created in the prod GitOps repo.'
+        value: ${{ jobs.deploy-prod.outputs.pr_url }}
+      STAGING_IMAGE_TAG:
+        description: 'The image tag extracted from staging (production-ready, staging- prefix stripped).'
+        value: ${{ jobs.deploy-prod.outputs.staging_image_tag }}
+      PREVIOUS_MERGED:
+        description: 'Whether the previous deployment PR for this service was merged.'
+        value: ${{ jobs.deploy-prod.outputs.previous_merged }}
+
+jobs:
+  deploy-prod:
+    name: 'Create Production Deployment PR'
+    runs-on: ${{ inputs.RUNNER }}
+    permissions:
+      contents: write
+    outputs:
+      new_tag: ${{ steps.deploy.outputs.new_tag }}
+      pr_url: ${{ steps.deploy.outputs.pr_url }}
+      staging_image_tag: ${{ steps.deploy.outputs.staging_image_tag }}
+      previous_merged: ${{ steps.deploy.outputs.previous_merged }}
+
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Checkout actions-template
+        uses: actions/checkout@v4
+        with:
+          repository: signalwire/actions-template
+          ref: ${{ inputs.ACTIONS_REF }}
+          path: actions
+
+      - name: Install yq
+        uses: mikefarah/yq@2be0094729a1006f61e8339ce9934bfb3cbb549f # v4.52.2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Run deploy-prod action
+        id: deploy
+        uses: ./actions/.github/actions/deploy-prod
+        with:
+          SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+          REASON: ${{ inputs.REASON }}
+          DRY_RUN: ${{ inputs.DRY_RUN }}
+          BRANCH_PREFIX: ${{ inputs.BRANCH_PREFIX }}
+          GITOPS_STAGING_REPO: ${{ inputs.GITOPS_STAGING_REPO }}
+          GITOPS_PROD_REPO: ${{ inputs.GITOPS_PROD_REPO }}
+          STACK_FILE_PATH: ${{ inputs.STACK_FILE_PATH }}
+          PROD_STACK_FILE_PATHS: ${{ inputs.PROD_STACK_FILE_PATHS }}
+          DOCKER_REPOSITORY: ${{ inputs.DOCKER_REPOSITORY }}
+          SOURCE_REPO: ${{ inputs.SOURCE_REPO }}
+          BASE_BRANCH: ${{ inputs.BASE_BRANCH }}
+        env:
+          GH_TOKEN: ${{ secrets.GITOPS_PAT_PROD }}
+          GITOPS_PAT_STAGING: ${{ secrets.GITOPS_PAT_STAGING }}
+          GITOPS_PAT_PROD: ${{ secrets.GITOPS_PAT_PROD }}
+          SOURCE_REPO_TOKEN: ${{ github.token }}
+
+      - name: Job Summary
+        if: always()
+        shell: bash
+        env:
+          DRY_RUN: ${{ inputs.DRY_RUN }}
+          SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+          NEW_TAG: ${{ steps.deploy.outputs.new_tag }}
+          PR_URL: ${{ steps.deploy.outputs.pr_url }}
+          STAGING_TAG: ${{ steps.deploy.outputs.staging_image_tag }}
+          PREV_MERGED: ${{ steps.deploy.outputs.previous_merged }}
+          DOCKER_REPO: ${{ inputs.DOCKER_REPOSITORY }}
+          REASON: ${{ inputs.REASON }}
+        run: |
+          if [[ -z "$DOCKER_REPO" ]]; then
+            DOCKER_REPO="signalwire/${SERVICE_NAME}"
+          fi
+
+          if [[ "$DRY_RUN" == "true" ]]; then
+            echo "## Production Deployment (DRY RUN)" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo ":test_tube: **This was a dry run - no changes were made**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Production Deployment" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Service** | \`${SERVICE_NAME}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Tag** | \`${NEW_TAG}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Image** | \`${DOCKER_REPO}:${STAGING_TAG}\` |" >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$DRY_RUN" != "true" && -n "$PR_URL" ]]; then
+            echo "| **PR** | ${PR_URL} |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Previous Deployment Status" >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$PREV_MERGED" == "false" ]]; then
+            echo ":warning: Previous deployment PR was **NOT merged**" >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$PREV_MERGED" == "true" ]]; then
+            echo ":white_check_mark: Previous deployment PR was merged successfully" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No previous deployment PRs found (this may be the first automated deployment)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Reason for Deploy" >> "$GITHUB_STEP_SUMMARY"
+          echo "$REASON" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Slack notification
+        if: ${{ inputs.NOTIFY_SLACK == true && inputs.DRY_RUN == false && steps.deploy.outputs.pr_url != '' }}
+        uses: ./actions/.github/actions/slack
+        with:
+          MESSAGE: ':rocket: Production deployment PR created for *${{ inputs.SERVICE_NAME }}*\n>*PR:* ${{ steps.deploy.outputs.pr_url }}\n>*Image:* ${{ steps.deploy.outputs.staging_image_tag }}\n>*Reason:* ${{ inputs.REASON }}'
+          CHANNEL: ${{ inputs.SLACK_CHANNEL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

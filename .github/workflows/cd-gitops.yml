@@ -50,6 +50,15 @@ on:
         required: false
         description: The branch name to create if CREATE_PR is true.
         type: string
+      GIT_SHA:
+        required: false
+        type: string
+        description: Git SHA to update in the stack file.
+      DRY_RUN:
+        required: false
+        type: boolean
+        default: false
+        description: Verify changes without pushing.
     secrets:
       GITOPS_PAT:
         required: true
@@ -89,5 +98,7 @@ jobs:
         ORCHESTRATOR: ${{ inputs.ORCHESTRATOR }}
         BRANCH_NAME: ${{ inputs.BRANCH_NAME }}
         CREATE_PR: ${{ inputs.CREATE_PR }}
-      env: 
+        GIT_SHA: ${{ inputs.GIT_SHA }}
+        DRY_RUN: ${{ inputs.DRY_RUN }}
+      env:
         GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
