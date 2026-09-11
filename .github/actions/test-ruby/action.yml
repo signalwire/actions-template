@@ -102,16 +102,24 @@ runs:
 #         REPORT_PATH: tmp/brakeman.json
 
     - name: Install Reviewdog
-      if: inputs.RUBOCOP == 'true'
+      if: inputs.REVIEWDOG == 'true' && inputs.RUBOCOP == 'true'
       uses: reviewdog/action-setup@v1
 
+    # RdjsonFormatter is defined by a file inside the action's container, and the
+    # entrypoint requires that file only when rdjson_formatter is true. Requesting the
+    # formatter without the require aborts RuboCop with "uninitialized constant
+    # RdjsonFormatter", so those options are passed only when REVIEWDOG is on.
+    #
+    # --fail-level=fatal keeps offenses non-blocking while leaving RuboCop's exit code
+    # 2 intact for a run that could not execute, which preserve_exitcode then surfaces
+    # as a failed step.
     - name: Generate RuboCop report
       if: inputs.RUBOCOP == 'true'
       uses: d-lebed/rubocop-run-action@v0.12.0
       with:
-        options: --format=RdjsonFormatter --out=reviewdog-report.json --format=progress
+        options: ${{ inputs.REVIEWDOG == 'true' && '--format=RdjsonFormatter --out=reviewdog-report.json' || '' }} --fail-level=fatal --format=progress
         rdjson_formatter: ${{ inputs.REVIEWDOG }}
-        preserve_exitcode: false
+        preserve_exitcode: true
 
     - name: Post Review
       if: inputs.REVIEWDOG == 'true' && inputs.RUBOCOP == 'true'
