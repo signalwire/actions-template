@@ -43,6 +43,11 @@ on:
         type: boolean
         default: true
         description: 'Whether to run govulncheck (Go).'
+      GOPRIVATE:
+        required: false
+        type: string
+        default: ''
+        description: 'GOPRIVATE pattern, e.g. github.com/org/*. Requires PRIVATE_GO_MODULES_TOKEN if set.'
       RUN_GOSEC:
         required: false
         type: boolean
@@ -163,6 +168,9 @@ on:
         required: false
       GH_BOT_DEPLOY_KEY:
         required: false
+      PRIVATE_GO_MODULES_TOKEN:
+        required: false
+        description: 'PAT with read access to GOPRIVATE modules.'
       CONTRIBSYS_CREDENTIALS:
         required: false
         description: Contribsys credentials used for ruby gems
@@ -267,6 +275,14 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Configure Git for private Go modules
+      if: ${{ inputs.LANGUAGE == 'Go' && inputs.GOPRIVATE != '' }}
+      env:
+        TOKEN: ${{ secrets.PRIVATE_GO_MODULES_TOKEN }}
+        OWNER: ${{ github.repository_owner }}
+      run: |
+        git config --global url."https://x-access-token:${TOKEN}@github.com/${OWNER}/".insteadOf "https://github.com/${OWNER}/"
+
     - name: Test Go
       if: ${{ inputs.LANGUAGE == 'Go' }}
       uses: ./actions/.github/actions/test-go
@@ -315,6 +331,14 @@ jobs:
           repository: signalwire/actions-template
           ref: main
           path: actions
+
+      - name: Configure Git for private Go modules
+        if: ${{ inputs.GOPRIVATE != '' }}
+        env:
+          TOKEN: ${{ secrets.PRIVATE_GO_MODULES_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          git config --global url."https://x-access-token:${TOKEN}@github.com/${OWNER}/".insteadOf "https://github.com/${OWNER}/"
 
       - uses: ./actions/.github/actions/gosec-scan
 
