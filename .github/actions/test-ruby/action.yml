@@ -122,7 +122,7 @@ runs:
     # way.
     - name: Generate RuboCop report
       if: inputs.RUBOCOP == 'true'
-      uses: d-lebed/rubocop-run-action@v0.12.0
+      uses: d-lebed/rubocop-run-action@v0.14.0
       with:
         options: ${{ inputs.REVIEWDOG == 'true' && '--format=RdjsonFormatter --out=reviewdog-report.json' || '' }} --fail-level=${{ inputs.RUBOCOP_FAIL_LEVEL }} --format=progress
         rdjson_formatter: ${{ inputs.REVIEWDOG }}
