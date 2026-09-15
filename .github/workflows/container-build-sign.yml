@@ -300,11 +300,27 @@ jobs:
             IMAGE="${IMAGE_REPO}/${svc}:${TAG}"
             DIGEST=$(gcloud artifacts docker images describe "${IMAGE}" --format='value(image_summary.digest)')
             IMAGE_BY_DIGEST="${IMAGE_REPO}/${svc}@${DIGEST}"
-            gcloud beta container binauthz attestations sign-and-create \
+            set +e
+            attest_err=$(gcloud beta container binauthz attestations sign-and-create \
               --artifact-url="${IMAGE_BY_DIGEST}" \
               --attestor="${BINAUTHZ_ATTESTOR}" \
               --attestor-project="${PROJECT_ID}" \
-              --keyversion="${KMS_KEY_PATH}"
+              --keyversion="${KMS_KEY_PATH}" 2>&1)
+            attest_rc=$?
+            set -e
+            if [ "${attest_rc}" -ne 0 ]; then
+              case "${attest_err}" in
+                *"subject of a conflict"*|*ALREADY_EXISTS*)
+                  echo "attestation already present for ${svc}@${DIGEST}, skipping"
+                  ;;
+                *)
+                  echo "${attest_err}" >&2
+                  exit "${attest_rc}"
+                  ;;
+              esac
+            else
+              echo "${attest_err}"
+            fi
           done
 
       - name: Install Syft
