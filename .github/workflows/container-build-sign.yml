@@ -300,12 +300,6 @@ jobs:
             IMAGE="${IMAGE_REPO}/${svc}:${TAG}"
             DIGEST=$(gcloud artifacts docker images describe "${IMAGE}" --format='value(image_summary.digest)')
             IMAGE_BY_DIGEST="${IMAGE_REPO}/${svc}@${DIGEST}"
-            # sign-and-create is not idempotent: it fails with an occurrence
-            # conflict when this digest already carries an attestation. That is
-            # the normal state of any re-run - the same content builds to the
-            # same digest, so a job that attested some images and then failed
-            # later (a flaky token fetch, a timeout) can never be re-run green.
-            # An attestation that is already there is the end state we want.
             set +e
             attest_err=$(gcloud beta container binauthz attestations sign-and-create \
               --artifact-url="${IMAGE_BY_DIGEST}" \
