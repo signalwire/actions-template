@@ -36,6 +36,12 @@ on:
     secrets:
       GH_BOT_DEPLOY_TOKEN:
         required: true
+      SLACK_WEBHOOK_URL:
+        required: false
+        description: Slack WebHook URL
+      SLACK_DEVOPS_CI_CHANNEL:
+        required: false
+        description: Slack channel ID to notify on failure
 
 jobs:
   meta-repo-content-push:
@@ -47,7 +53,7 @@ jobs:
     steps:
 
       - name: Checkout reusable actions
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: signalwire/actions-template
           ref: main
@@ -55,6 +61,7 @@ jobs:
           path: actions
           sparse-checkout: |
             .github/actions/meta-repo/action.yml
+            .github/actions/slack/action.yml
           sparse-checkout-cone-mode: false
 
       - name: Push build specific data to meta-repo
@@ -66,3 +73,12 @@ jobs:
           META_REPO_DEFAULT_BRANCH: ${{ inputs.META_REPO_DEFAULT_BRANCH }}
         env:
           GH_BOT_DEPLOY_TOKEN: ${{ secrets.GH_BOT_DEPLOY_TOKEN }}
+
+      - name: Slack notification
+        if: failure()
+        uses: ./actions/.github/actions/slack
+        with:
+          CHANNEL: ${{ secrets.SLACK_DEVOPS_CI_CHANNEL }}
+          MESSAGE: ':x: Push to meta-repo failed for *${{ inputs.META_REPO }}* (branch `${{ inputs.META_REPO_BRANCH }}`)\n>Repo: ${{ github.repository }}\n>Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
