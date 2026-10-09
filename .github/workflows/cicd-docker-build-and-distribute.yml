@@ -46,6 +46,11 @@ on:
         type: boolean
         default: true
         description: Enable upload build artifacts related steps
+      DOCKER_REGISTRY:
+        required: false
+        type: string
+        default: ""
+        description: Docker registry to log in to (e.g. <name>.azurecr.io), empty means Docker Hub
       LOG_RETENTION_DAYS:
         required: false
         type: number
@@ -127,6 +132,10 @@ on:
         required: false
       DEPLOYMENT_TOKEN:
         required: false
+      DOCKER_REGISTRY_USERNAME:
+        required: false
+      DOCKER_REGISTRY_PASSWORD:
+        required: false
       AWS_ACCESS_KEY_ID:
         required: false
       AWS_SECRET_ACCESS_KEY:
@@ -170,6 +179,24 @@ jobs:
             .github/actions/rclone-s3-sync/action.yml
             .github/actions/docker-build-artifacts/action.yml
           sparse-checkout-cone-mode: false
+
+      - name: Check Docker registry credentials
+        id: docker_registry
+        shell: bash
+        env:
+          DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+        run: |
+          if [[ -n "${DOCKER_REGISTRY_PASSWORD}" ]]; then
+            echo "enabled=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Login to Docker registry
+        if: ${{ steps.docker_registry.outputs.enabled == 'true' }}
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ inputs.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
       - name: Build artifacts via Docker
         uses: ./actions/.github/actions/docker-build-artifacts
