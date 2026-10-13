@@ -31,6 +31,11 @@ inputs:
     required: false
     description: GitHub Token for authentication
 
+outputs:
+  PR_URL:
+    description: URL of the PR created when CREATE_PR is true
+    value: ${{ steps.create_pr.outputs.url }}
+
 runs:
   using: "composite"
   steps:
@@ -128,6 +133,7 @@ runs:
           git push
     
     - name: Create PR
+      id: create_pr
       shell: bash
       if: inputs.CREATE_PR == 'true'
       working-directory: gitops
@@ -135,4 +141,5 @@ runs:
         GH_TOKEN: ${{ inputs.GH_TOKEN }}
       run: |
           git push -u origin "$BRANCH_NAME"
-          gh pr create --title "Update image tag for ${{ inputs.SERVICE_NAME }}" --body "Update image tag for ${{ inputs.SERVICE_NAME }}"
+          url=$(gh pr create --title "Update image tag for ${{ inputs.SERVICE_NAME }}" --body "Update image tag for ${{ inputs.SERVICE_NAME }}")
+          echo "url=$url" >> $GITHUB_OUTPUT
