@@ -27,7 +27,9 @@ runs:
   using: "composite"
   steps:
     - name: Install dependencies
-      run: sudo apt update ; sudo apt install curl jq -yq
+      run: |
+        sudo apt update || echo "::warning::apt update failed; installing from the existing package index"
+        sudo apt install curl jq -yq
       shell: bash
     - name: Deploy to Swarm
       id: deploy
