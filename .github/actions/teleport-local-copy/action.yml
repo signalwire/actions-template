@@ -90,17 +90,9 @@ runs:
 
     # Same copy inside the packages bucket (object paths mirror /var/www).
     # Non-blocking until the Teleport copy above is removed.
-    - name: Authenticate to GCP for package copies
-      id: gcs_auth
-      if: ${{ inputs.SRC != '' && inputs.DST != '' && inputs.SRC != inputs.DST && startsWith(inputs.SRC, '/var/www/') && startsWith(inputs.DST, '/var/www/') }}
-      continue-on-error: true
-      uses: google-github-actions/auth@v3
-      with:
-        workload_identity_provider: projects/560294807735/locations/global/workloadIdentityPools/github/providers/infrastructure-lives
-
     - name: Map SRC and DST to bucket paths
       id: gcs_paths
-      if: ${{ steps.gcs_auth.outcome == 'success' }}
+      if: ${{ inputs.SRC != '' && inputs.DST != '' && inputs.SRC != inputs.DST && startsWith(inputs.SRC, '/var/www/') && startsWith(inputs.DST, '/var/www/') }}
       continue-on-error: true
       shell: bash
       env:
@@ -122,6 +114,7 @@ runs:
         OPERATION: copyto
         S3_PROVIDER: gcs
         S3_BUCKET: gcs-prod-us-central1-ci-packages-1
+        GCS_WORKLOAD_IDENTITY_PROVIDER: projects/560294807735/locations/global/workloadIdentityPools/github/providers/infrastructure-lives
 
     - name: Fetch application credentials
       id: auth-app

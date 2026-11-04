@@ -18,7 +18,11 @@ inputs:
   S3_PROVIDER:
     required: false
     default: "aws"
-    description: "Provider: aws (credentials from AWS_* env) or gcs (Application Default Credentials, e.g. from google-github-actions/auth)"
+    description: "Provider: aws (credentials from AWS_* env) or gcs (GCS_WORKLOAD_IDENTITY_PROVIDER, else Application Default Credentials already in the environment)"
+  GCS_WORKLOAD_IDENTITY_PROVIDER:
+    required: false
+    default: ""
+    description: "gcs only: Workload Identity provider to authenticate with (needs id-token: write). Empty uses credentials already in the environment"
   OPERATION:
     required: false
     default: "sync"
@@ -39,6 +43,12 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Authenticate to Google Cloud
+      if: ${{ inputs.S3_PROVIDER == 'gcs' && inputs.GCS_WORKLOAD_IDENTITY_PROVIDER != '' }}
+      uses: google-github-actions/auth@v3
+      with:
+        workload_identity_provider: ${{ inputs.GCS_WORKLOAD_IDENTITY_PROVIDER }}
+
     - name: Detect architecture
       id: arch
       shell: bash
