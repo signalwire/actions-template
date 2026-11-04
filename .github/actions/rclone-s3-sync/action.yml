@@ -121,6 +121,7 @@ runs:
       run: echo "storage_class = ${{ inputs.S3_STORAGE_CLASS }}" >> ~/.config/rclone/rclone.conf
 
     - name: Verify rclone configuration
+      if: ${{ inputs.S3_PROVIDER == 'aws' || inputs.S3_PROVIDER == 'gcs' }}
       shell: bash
       run: rclone config show s3
 
