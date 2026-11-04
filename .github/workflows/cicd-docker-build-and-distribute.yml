@@ -268,3 +268,47 @@ jobs:
           PROXY_URL: ${{ secrets.PROXY_URL }}
           TOKEN: ${{ secrets.TELEPORT_TOKEN }}
           USERNAME: ${{ secrets.USERNAME }}
+
+      # Same artifacts to the packages bucket (object paths mirror /var/www).
+      # Non-blocking until the Teleport copy above is removed.
+      - name: Stage artifacts for GCS
+        id: gcs_stage
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && !inputs.PUSH_TO_S3 && startsWith(inputs.META_FILE_PATH_PREFIX, '/var/www/') }}
+        continue-on-error: true
+        shell: bash
+        working-directory: ${{ inputs.CODE_WORKING_DIRECTORY }}
+        env:
+          META_FILE_PATH_PREFIX: ${{ inputs.META_FILE_PATH_PREFIX }}
+        run: |
+          mkdir -p gcs-upload gcs-hash
+          ln -f ./*.tar.gz gcs-upload/
+          echo "${GITHUB_SHA}" > gcs-hash/hash.txt
+          echo "dst=${META_FILE_PATH_PREFIX#/var/www/}" >> "${GITHUB_OUTPUT}"
+
+      - name: Copy artifacts to GCS
+        id: gcs_copy
+        if: ${{ steps.gcs_stage.outcome == 'success' }}
+        continue-on-error: true
+        uses: ./actions/.github/actions/rclone-s3-sync
+        with:
+          SRC: ${{ inputs.CODE_WORKING_DIRECTORY }}/gcs-upload
+          DST: ${{ steps.gcs_stage.outputs.dst }}
+          SYNC_TYPE: local-to-remote
+          OPERATION: copy
+          S3_PROVIDER: gcs
+          S3_BUCKET: gcs-prod-us-central1-ci-packages-1
+          GCS_WORKLOAD_IDENTITY_PROVIDER: projects/560294807735/locations/global/workloadIdentityPools/github/providers/infrastructure-lives
+
+      # After the tarballs, so a run directory never has a hash before its artifacts.
+      - name: Copy hash file to GCS
+        if: ${{ steps.gcs_copy.outcome == 'success' }}
+        continue-on-error: true
+        uses: ./actions/.github/actions/rclone-s3-sync
+        with:
+          SRC: ${{ inputs.CODE_WORKING_DIRECTORY }}/gcs-hash/hash.txt
+          DST: ${{ steps.gcs_stage.outputs.dst }}/hash.txt
+          SYNC_TYPE: local-to-remote
+          OPERATION: copyto
+          S3_PROVIDER: gcs
+          S3_BUCKET: gcs-prod-us-central1-ci-packages-1
+          GCS_WORKLOAD_IDENTITY_PROVIDER: projects/560294807735/locations/global/workloadIdentityPools/github/providers/infrastructure-lives

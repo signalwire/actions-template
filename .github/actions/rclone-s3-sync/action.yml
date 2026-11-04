@@ -1,5 +1,5 @@
 name: Rclone S3 Sync
-description: Sync files between local and S3 or between S3 locations using rclone
+description: Sync files between local and S3/GCS or between bucket locations using rclone
 
 inputs:
   SRC:
@@ -18,7 +18,15 @@ inputs:
   S3_PROVIDER:
     required: false
     default: "aws"
-    description: "S3 provider type"
+    description: "Provider: aws (credentials from AWS_* env) or gcs (GCS_WORKLOAD_IDENTITY_PROVIDER, else Application Default Credentials already in the environment)"
+  GCS_WORKLOAD_IDENTITY_PROVIDER:
+    required: false
+    default: ""
+    description: "gcs only: Workload Identity provider to authenticate with (needs id-token: write). Empty uses credentials already in the environment"
+  OPERATION:
+    required: false
+    default: "sync"
+    description: "sync (mirror SRC to DST, deleting extras, then dedupe), copy (add/update only, never delete) or copyto (one file)"
   S3_REGION:
     required: false
     default: "us-east-2"
@@ -35,6 +43,12 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Authenticate to Google Cloud
+      if: ${{ inputs.S3_PROVIDER == 'gcs' && inputs.GCS_WORKLOAD_IDENTITY_PROVIDER != '' }}
+      uses: google-github-actions/auth@v3
+      with:
+        workload_identity_provider: ${{ inputs.GCS_WORKLOAD_IDENTITY_PROVIDER }}
+
     - name: Detect architecture
       id: arch
       shell: bash
@@ -79,7 +93,6 @@ runs:
       run: rm -rf rclone-*-linux-${{ steps.arch.outputs.arch }}*
 
     - name: Create rclone config directory
-      if: ${{ inputs.S3_PROVIDER == 'aws' }}
       shell: bash
       run: mkdir -p ~/.config/rclone
 
@@ -96,6 +109,17 @@ runs:
         no_check_bucket = true
         EOF
 
+    - name: Create GCS configuration
+      if: ${{ inputs.S3_PROVIDER == 'gcs' }}
+      shell: bash
+      run: |
+        cat > ~/.config/rclone/rclone.conf << EOF
+        [s3]
+        type = google cloud storage
+        env_auth = true
+        bucket_policy_only = true
+        EOF
+
     - name: Add location constraint to config
       if: ${{ inputs.S3_PROVIDER == 'aws' && inputs.S3_LOCATION_CONSTRAINT != '' }}
       shell: bash
@@ -107,7 +131,7 @@ runs:
       run: echo "storage_class = ${{ inputs.S3_STORAGE_CLASS }}" >> ~/.config/rclone/rclone.conf
 
     - name: Verify rclone configuration
-      if: ${{ inputs.S3_PROVIDER == 'aws' }}
+      if: ${{ inputs.S3_PROVIDER == 'aws' || inputs.S3_PROVIDER == 'gcs' }}
       shell: bash
       run: rclone config show s3
 
@@ -147,17 +171,24 @@ runs:
             ;;
         esac
 
-    - name: Perform rclone sync
+    - name: Perform rclone ${{ inputs.OPERATION }}
       shell: bash
       env:
         AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        OPERATION: ${{ inputs.OPERATION }}
+        SRC: ${{ steps.paths.outputs.src }}
+        DST: ${{ steps.paths.outputs.dst }}
       run: |
-        echo "Syncing from ${{ steps.paths.outputs.src }} to ${{ steps.paths.outputs.dst }}"
-        rclone sync "${{ steps.paths.outputs.src }}/" "${{ steps.paths.outputs.dst }}/"
+        echo "rclone ${OPERATION} from ${SRC} to ${DST}"
+        case "${OPERATION}" in
+          sync|copy) rclone "${OPERATION}" "${SRC}/" "${DST}/" ;;
+          copyto) rclone copyto "${SRC}" "${DST}" ;;
+          *) echo "Error: Invalid OPERATION '${OPERATION}'. Must be sync, copy or copyto"; exit 1 ;;
+        esac
 
     - name: Run deduplication on S3
-      if: ${{ inputs.SYNC_TYPE == 'local-to-remote' || inputs.SYNC_TYPE == 'remote-to-remote' }}
+      if: ${{ inputs.OPERATION == 'sync' && (inputs.SYNC_TYPE == 'local-to-remote' || inputs.SYNC_TYPE == 'remote-to-remote') }}
       shell: bash
       env:
         AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
@@ -167,6 +198,7 @@ runs:
         rclone dedupe --by-hash --dedupe-mode newest "${{ steps.paths.outputs.dst }}/"
 
     - name: List destination contents
+      if: ${{ inputs.OPERATION != 'copyto' }}
       shell: bash
       env:
         AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
