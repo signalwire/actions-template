@@ -268,3 +268,31 @@ jobs:
           PROXY_URL: ${{ secrets.PROXY_URL }}
           TOKEN: ${{ secrets.TELEPORT_TOKEN }}
           USERNAME: ${{ secrets.USERNAME }}
+
+      # Same artifacts to the packages bucket (object paths mirror /var/www).
+      # Non-blocking until the Teleport copy above is removed.
+      - name: Authenticate to GCP for package uploads
+        id: gcs_auth
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && !inputs.PUSH_TO_S3 && startsWith(inputs.META_FILE_PATH_PREFIX, '/var/www/') }}
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/560294807735/locations/global/workloadIdentityPools/github/providers/infrastructure-lives
+
+      - name: Set up gcloud for package uploads
+        if: ${{ steps.gcs_auth.outcome == 'success' }}
+        continue-on-error: true
+        uses: google-github-actions/setup-gcloud@v3.0.1
+
+      - name: Copy artifacts to GCS
+        if: ${{ steps.gcs_auth.outcome == 'success' }}
+        continue-on-error: true
+        shell: bash
+        working-directory: ${{ inputs.CODE_WORKING_DIRECTORY }}
+        env:
+          META_FILE_PATH_PREFIX: ${{ inputs.META_FILE_PATH_PREFIX }}
+        run: |
+          dst="gs://gcs-prod-us-central1-ci-packages-1/${META_FILE_PATH_PREFIX#/var/www/}"
+          gcloud storage cp ./*.tar.gz "${dst}/"
+          echo "${GITHUB_SHA}" > "${RUNNER_TEMP}/hash.txt"
+          gcloud storage cp "${RUNNER_TEMP}/hash.txt" "${dst}/hash.txt"
