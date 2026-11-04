@@ -98,12 +98,8 @@ runs:
       with:
         workload_identity_provider: projects/560294807735/locations/global/workloadIdentityPools/github/providers/infrastructure-lives
 
-    - name: Set up gcloud for package copies
-      if: ${{ steps.gcs_auth.outcome == 'success' }}
-      continue-on-error: true
-      uses: google-github-actions/setup-gcloud@v3.0.1
-
-    - name: Copy SRC to DST in GCS
+    - name: Map SRC and DST to bucket paths
+      id: gcs_paths
       if: ${{ steps.gcs_auth.outcome == 'success' }}
       continue-on-error: true
       shell: bash
@@ -111,8 +107,21 @@ runs:
         SRC: ${{ inputs.SRC }}
         DST: ${{ inputs.DST }}
       run: |
-        bucket="gs://gcs-prod-us-central1-ci-packages-1"
-        gcloud storage cp --no-clobber "${bucket}/${SRC#/var/www/}" "${bucket}/${DST#/var/www/}"
+        echo "src=${SRC#/var/www/}" >> "${GITHUB_OUTPUT}"
+        echo "dst=${DST#/var/www/}" >> "${GITHUB_OUTPUT}"
+
+    # By full reference: callers sparse-checkout only this action.
+    - name: Copy SRC to DST in GCS
+      if: ${{ steps.gcs_paths.outcome == 'success' }}
+      continue-on-error: true
+      uses: signalwire/actions-template/.github/actions/rclone-s3-sync@main
+      with:
+        SRC: ${{ steps.gcs_paths.outputs.src }}
+        DST: ${{ steps.gcs_paths.outputs.dst }}
+        SYNC_TYPE: remote-to-remote
+        OPERATION: copyto
+        S3_PROVIDER: gcs
+        S3_BUCKET: gcs-prod-us-central1-ci-packages-1
 
     - name: Fetch application credentials
       id: auth-app
