@@ -43,27 +43,28 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # Pinned with checksums from the release's SHA256SUMS; bump both together.
     - name: Detect architecture
       id: arch
       shell: bash
+      env:
+        # renovate: datasource=github-releases depName=rclone/rclone
+        RCLONE_VERSION: v1.71.2
       run: |
         case "$(uname -m)" in
-          x86_64) echo "arch=amd64" >> $GITHUB_OUTPUT; sum=ab9fa5877cee91c64fdfd61a27028a458cf618b39259e5c371dc2ec34a12e415 ;;
-          aarch64|arm64) echo "arch=arm64" >> $GITHUB_OUTPUT; sum=e2e2efc7ed143026352d60216ef0d46d3fa4fe9d647eff1bd929e6fea498e6f1 ;;
-          armv7l) echo "arch=arm-v7" >> $GITHUB_OUTPUT; sum=bd89eb49aff89be4f9d73455885283a825d356e795424e39edb39134d397325b ;;
-          armv6l) echo "arch=arm-v6" >> $GITHUB_OUTPUT; sum=d0ff6b3db6dceafa4f22e261bf1edd886c5969a8cc55e752a47ef901f3c94c4b ;;
-          arm*) echo "arch=arm" >> $GITHUB_OUTPUT; sum=74241f46ccdf1a8d0bdb0a4954ce0916b2092501e521e617043202d47a0d5d5b ;;
+          x86_64) echo "arch=amd64" >> $GITHUB_OUTPUT ;;
+          aarch64|arm64) echo "arch=arm64" >> $GITHUB_OUTPUT ;;
+          armv7l) echo "arch=arm-v7" >> $GITHUB_OUTPUT ;;
+          armv6l) echo "arch=arm-v6" >> $GITHUB_OUTPUT ;;
+          arm*) echo "arch=arm" >> $GITHUB_OUTPUT ;;
           *) echo "Unsupported architecture: $(uname -m)"; exit 1 ;;
         esac
-        echo "version=v1.71.2" >> $GITHUB_OUTPUT
-        echo "sha256=${sum}" >> $GITHUB_OUTPUT
+        echo "version=${RCLONE_VERSION}" >> $GITHUB_OUTPUT
 
     - name: Install dependencies
       shell: bash
       run: |
         sudo apt-get update || echo "::warning::apt-get update failed; installing from the existing package index"
-        sudo apt-get install -y curl unzip jq
+        sudo apt-get install -y curl unzip jq gnupg
 
     # Direct Workload Identity Federation without a third-party action (callers' Actions
     # policies may not allow one): an external_account credential that exchanges the job's
@@ -91,12 +92,24 @@ runs:
                                 format: {type: "json", subject_token_field_name: "value"}}}' > "${creds}"
         echo "GOOGLE_APPLICATION_CREDENTIALS=${creds}" >> "${GITHUB_ENV}"
 
+    # The release's SHA256SUMS is clearsigned with rclone's release key; trusting only that
+    # fingerprint keeps the integrity check without per-version checksums to maintain.
     - name: Download rclone
       shell: bash
+      env:
+        RCLONE_KEY_FINGERPRINT: FBF737ECE9F8AB18604BD2AC93935E02FF3B54FA
       run: |
+        base="https://downloads.rclone.org/${{ steps.arch.outputs.version }}"
         zip="rclone-${{ steps.arch.outputs.version }}-linux-${{ steps.arch.outputs.arch }}.zip"
-        curl -fsSLO "https://downloads.rclone.org/${{ steps.arch.outputs.version }}/${zip}"
-        echo "${{ steps.arch.outputs.sha256 }}  ${zip}" | sha256sum -c -
+        curl -fsSLO "${base}/${zip}"
+        curl -fsSL -o rclone-SHA256SUMS.asc "${base}/SHA256SUMS"
+        export GNUPGHOME="$(mktemp -d)"
+        curl -fsSL https://rclone.org/KEYS | gpg --batch --quiet --import
+        gpg --batch --status-fd 1 --output rclone-SHA256SUMS --decrypt rclone-SHA256SUMS.asc \
+          | grep "^\[GNUPG:\] VALIDSIG .* ${RCLONE_KEY_FINGERPRINT}$" > /dev/null \
+          || { echo "::error::rclone SHA256SUMS is not signed by ${RCLONE_KEY_FINGERPRINT}"; exit 1; }
+        grep " ${zip}$" rclone-SHA256SUMS | sha256sum -c -
+        rm -rf "${GNUPGHOME}" rclone-SHA256SUMS rclone-SHA256SUMS.asc
 
     - name: Extract rclone
       shell: bash
