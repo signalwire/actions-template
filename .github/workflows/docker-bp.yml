@@ -2,14 +2,8 @@
 
 name: Docker build/Push & deploy
 
-# Controls when the workflow will run
+# Reusable only: this repository's own pushes and PRs have no PROJECT_NAME to build.
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
   workflow_call:
     inputs:
       PROJECT_NAME:
