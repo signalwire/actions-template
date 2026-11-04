@@ -1,0 +1,8 @@
+# Packaging: everything the FreeSWITCH / stack / library package builds load from this repository.
+/.github/workflows/cicd-docker-build-and-distribute.yml @s3rj1k @andywolk
+/.github/workflows/meta-repo-content.yml                 @s3rj1k @andywolk
+/.github/actions/docker-build-artifacts/                 @s3rj1k @andywolk
+/.github/actions/repo-auth-client/                       @s3rj1k @andywolk
+/.github/actions/rclone-s3-sync/                         @s3rj1k @andywolk
+/.github/actions/teleport/                               @s3rj1k @andywolk
+/.github/actions/teleport-local-copy/                    @s3rj1k @andywolk
