@@ -12,6 +12,14 @@ on:
         default: ubuntu-latest
         description: A GitHub runner type
         type: string
+      # META_CONTENT is written verbatim into `metafile.txt`. It points at the published
+      # build artifacts and comes in two formats:
+      #
+      #   Teleport: absolute path on the remote host
+      #     /var/www/<project>/{fsa,public}/{release,unstable}/<ref>/<run_id>-<run_number>
+      #
+      #   GCS: gs:// URL, bucket name first, then the object path
+      #     gs://<bucket>/<project>/{fsa,public}/{release,unstable}/<ref>/<run_id>-<run_number>
       META_CONTENT:
         required: true
         type: string
