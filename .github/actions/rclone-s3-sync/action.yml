@@ -8,6 +8,10 @@ inputs:
   DST:
     required: true
     description: "Destination path (local directory or S3 path in bucket)"
+  DST_STRIP_REGEX:
+    required: false
+    default: ""
+    description: "Optional Python regex removed once from DST (matched against the normalized path, before the leading / is dropped), e.g. ^/var/www/"
   SYNC_TYPE:
     required: false
     default: "local-to-remote"
@@ -177,9 +181,20 @@ runs:
     - name: Sanitize paths
       id: sanitized
       shell: bash
+      env:
+        SRC: ${{ inputs.SRC }}
+        DST: ${{ inputs.DST }}
+        DST_STRIP_REGEX: ${{ inputs.DST_STRIP_REGEX }}
       run: |
-        SRC_CLEAN=$(python3 -c "import os; path=os.path.normpath('${{ inputs.SRC }}'); print(path.lstrip('/'))")
-        DST_CLEAN=$(python3 -c "import os; path=os.path.normpath('${{ inputs.DST }}'); print(path.lstrip('/'))")
+        SRC_CLEAN=$(python3 -c "import os; path=os.path.normpath(os.environ['SRC']); print(path.lstrip('/'))")
+        DST_CLEAN=$(python3 -c "
+        import os, re
+        path = os.path.normpath(os.environ['DST'])
+        pattern = os.environ['DST_STRIP_REGEX']
+        if pattern:
+            path = re.sub(pattern, '', path, count=1)
+        print(path.lstrip('/'))
+        ")
 
         echo "src_clean=$SRC_CLEAN" >> $GITHUB_OUTPUT
         echo "dst_clean=$DST_CLEAN" >> $GITHUB_OUTPUT
