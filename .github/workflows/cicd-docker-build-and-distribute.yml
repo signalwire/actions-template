@@ -219,6 +219,7 @@ jobs:
         id: gcs_copy
         if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
         continue-on-error: true
+        timeout-minutes: 10
         uses: ./actions/.github/actions/rclone-s3-sync
         with:
           SRC: ${{ inputs.CODE_WORKING_DIRECTORY }}/${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz
@@ -234,6 +235,7 @@ jobs:
       - name: Copy hash file to GCS
         if: ${{ steps.gcs_copy.outcome == 'success' }}
         continue-on-error: true
+        timeout-minutes: 10
         uses: ./actions/.github/actions/rclone-s3-sync
         with:
           SRC: ${{ inputs.CODE_WORKING_DIRECTORY }}/hash.txt
