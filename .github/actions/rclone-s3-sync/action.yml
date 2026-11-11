@@ -74,6 +74,7 @@ runs:
     # policies may not allow one): an external_account credential that exchanges the job's
     # GitHub OIDC token at Google STS. rclone reads it through Application Default Credentials.
     - name: Authenticate to Google Cloud
+      id: gcp_auth
       if: ${{ inputs.S3_PROVIDER == 'gcs' && inputs.GCS_WORKLOAD_IDENTITY_PROVIDER != '' }}
       shell: bash
       env:
@@ -84,16 +85,20 @@ runs:
           exit 1
         fi
         creds="${RUNNER_TEMP}/gcp-wif-$(date +%s%N).json"
+        echo "previous_creds=${GOOGLE_APPLICATION_CREDENTIALS:-}" >> "${GITHUB_OUTPUT}"
         umask 077
+        # The OIDC request URL/token are read from the environment inside jq, not passed as
+        # arguments, so they never show up in the process list
         jq -n \
           --arg aud "//iam.googleapis.com/${PROVIDER}" \
-          --arg url "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=https://iam.googleapis.com/${PROVIDER}" \
-          --arg auth "Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+          --arg provider "${PROVIDER}" \
           '{type: "external_account", audience: $aud,
             subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
             token_url: "https://sts.googleapis.com/v1/token",
-            credential_source: {url: $url, headers: {Authorization: $auth},
+            credential_source: {url: ($ENV.ACTIONS_ID_TOKEN_REQUEST_URL + "&audience=https://iam.googleapis.com/" + $provider),
+                                headers: {Authorization: ("Bearer " + $ENV.ACTIONS_ID_TOKEN_REQUEST_TOKEN)},
                                 format: {type: "json", subject_token_field_name: "value"}}}' > "${creds}"
+        echo "creds_file=${creds}" >> "${GITHUB_OUTPUT}"
         echo "GOOGLE_APPLICATION_CREDENTIALS=${creds}" >> "${GITHUB_ENV}"
 
     # The release's SHA256SUMS is clearsigned with rclone's release key; trusting only that
@@ -107,7 +112,8 @@ runs:
         zip="rclone-${{ steps.arch.outputs.version }}-linux-${{ steps.arch.outputs.arch }}.zip"
         curl -fsSLO "${base}/${zip}"
         curl -fsSL -o rclone-SHA256SUMS.asc "${base}/SHA256SUMS"
-        export GNUPGHOME="$(mktemp -d)"
+        GNUPGHOME="$(mktemp -d)"
+        export GNUPGHOME
         curl -fsSL https://rclone.org/KEYS | gpg --batch --quiet --import
         gpg --batch --status-fd 1 --output rclone-SHA256SUMS --decrypt rclone-SHA256SUMS.asc \
           | grep "^\[GNUPG:\] VALIDSIG .* ${RCLONE_KEY_FINGERPRINT}$" > /dev/null \
@@ -122,7 +128,7 @@ runs:
     - name: Install rclone binary
       shell: bash
       run: |
-        cd rclone-*-linux-${{ steps.arch.outputs.arch }}
+        cd rclone-*-linux-${{ steps.arch.outputs.arch }} || exit 1
         sudo cp rclone /usr/bin/
         sudo chown root:root /usr/bin/rclone
         sudo chmod 755 /usr/bin/rclone
@@ -273,3 +279,15 @@ runs:
       run: |
         echo "Listing destination contents:"
         rclone ls "${DST}/"
+
+    # Removes only the credentials file created by this invocation (it holds the GitHub OIDC
+    # request token) and restores GOOGLE_APPLICATION_CREDENTIALS to its previous value
+    - name: Remove Google Cloud credentials
+      if: ${{ always() && steps.gcp_auth.outputs.creds_file != '' }}
+      shell: bash
+      env:
+        CREDS_FILE: ${{ steps.gcp_auth.outputs.creds_file }}
+        PREVIOUS_CREDS: ${{ steps.gcp_auth.outputs.previous_creds }}
+      run: |
+        rm -f "${CREDS_FILE}"
+        echo "GOOGLE_APPLICATION_CREDENTIALS=${PREVIOUS_CREDS}" >> "${GITHUB_ENV}"
