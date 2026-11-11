@@ -46,11 +46,16 @@ on:
         type: boolean
         default: true
         description: Enable upload build artifacts related steps
-      TELEPORT_CONTINUE_ON_ERROR:
+      UPLOAD_WITH_TELEPORT:
         required: false
         type: boolean
-        default: false
-        description: Do not fail the job when the Teleport copy step fails
+        default: true
+        description: Upload build artifacts to the remote host via Teleport (needs UPLOAD_BUILD_ARTIFACTS)
+      UPLOAD_WITH_GCS:
+        required: false
+        type: boolean
+        default: true
+        description: Upload build artifacts to the GCS packages bucket (needs UPLOAD_BUILD_ARTIFACTS)
       DOCKER_REGISTRY:
         required: false
         type: string
@@ -223,7 +228,7 @@ jobs:
       # Non-blocking until the Teleport copy is removed.
       - name: Copy artifacts to GCS
         id: gcs_copy
-        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && inputs.UPLOAD_WITH_GCS }}
         continue-on-error: true
         timeout-minutes: 10
         uses: ./actions/.github/actions/rclone-s3-sync
@@ -254,8 +259,7 @@ jobs:
           GCS_WORKLOAD_IDENTITY_PROVIDER: ${{ env.GCS_WORKLOAD_IDENTITY_PROVIDER }}
 
       - name: Copy/Exec artifacts/commands to/on remote host
-        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
-        continue-on-error: ${{ inputs.TELEPORT_CONTINUE_ON_ERROR }}
+        if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && inputs.UPLOAD_WITH_TELEPORT }}
         uses: ./actions/.github/actions/teleport
         with:
           EXEC_COMMANDS_PRE: "mkdir -p ${{ inputs.META_FILE_PATH_PREFIX }}"
