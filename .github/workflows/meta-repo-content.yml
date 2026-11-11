@@ -43,7 +43,8 @@ on:
 
     secrets:
       GH_BOT_DEPLOY_TOKEN:
-        required: true
+        required: false
+        description: 'Personal access token used to push to the meta repo, falls back to github.token.'
 
 jobs:
   meta-repo-content-push:
