@@ -100,6 +100,11 @@ on:
         type: string
         default: "gcs-prod-us-central1-ci-packages-1"
         description: GCS bucket to upload artifacts into
+      GCS_PROVIDER:
+        required: false
+        type: string
+        default: "gcs-oidc"
+        description: "GCS auth mode: gcs-oidc (Workload Identity Federation) or gcs (HMAC keys from the S3_ACCESS_KEY_ID/S3_SECRET_ACCESS_KEY secrets)"
       GCS_DST_STRIP_REGEX:
         required: false
         type: string
@@ -124,6 +129,10 @@ on:
       DOCKER_REGISTRY_USERNAME:
         required: false
       DOCKER_REGISTRY_PASSWORD:
+        required: false
+      S3_ACCESS_KEY_ID:
+        required: false
+      S3_SECRET_ACCESS_KEY:
         required: false
       # GH_BOT_DEPLOY_TOKEN is DEPRECATED
       GH_BOT_DEPLOY_TOKEN:
@@ -238,9 +247,12 @@ jobs:
           DST_STRIP_REGEX: ${{ inputs.GCS_DST_STRIP_REGEX }}
           SYNC_TYPE: local-to-remote
           OPERATION: copyto
-          S3_PROVIDER: gcs
+          S3_PROVIDER: ${{ inputs.GCS_PROVIDER }}
           S3_BUCKET: ${{ inputs.GCS_BUCKET }}
           GCS_WORKLOAD_IDENTITY_PROVIDER: ${{ env.GCS_WORKLOAD_IDENTITY_PROVIDER }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       # After the tarballs, so a run directory never has a hash before its artifacts.
       - name: Copy hash file to GCS
@@ -254,9 +266,12 @@ jobs:
           DST_STRIP_REGEX: ${{ inputs.GCS_DST_STRIP_REGEX }}
           SYNC_TYPE: local-to-remote
           OPERATION: copyto
-          S3_PROVIDER: gcs
+          S3_PROVIDER: ${{ inputs.GCS_PROVIDER }}
           S3_BUCKET: ${{ inputs.GCS_BUCKET }}
           GCS_WORKLOAD_IDENTITY_PROVIDER: ${{ env.GCS_WORKLOAD_IDENTITY_PROVIDER }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
       - name: Copy/Exec artifacts/commands to/on remote host
         if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS && inputs.UPLOAD_WITH_TELEPORT }}
