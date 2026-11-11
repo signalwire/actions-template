@@ -46,6 +46,11 @@ on:
         type: boolean
         default: true
         description: Enable upload build artifacts related steps
+      TELEPORT_CONTINUE_ON_ERROR:
+        required: false
+        type: boolean
+        default: false
+        description: Do not fail the job when the Teleport copy step fails
       DOCKER_REGISTRY:
         required: false
         type: string
@@ -59,7 +64,6 @@ on:
       META_FILE_PATH_PREFIX:
         required: true
         type: string
-        default: ""
         description: A prefix to append to meta file (also target folder where the files should be sent on remote)
       META_REPO:
         required: false
@@ -153,6 +157,7 @@ jobs:
           repository: signalwire/actions-template
           ref: main
           fetch-depth: 1
+          persist-credentials: false
           path: actions
           sparse-checkout: |
             .github/actions/teleport/action.yml
@@ -208,8 +213,9 @@ jobs:
         working-directory: ${{ inputs.CODE_WORKING_DIRECTORY }}
         env:
           ARTIFACTS_DIR: ${{ inputs.ARTIFACTS_DIR }}
+          TARGET_ARTIFACT_NAME: ${{ inputs.TARGET_ARTIFACT_NAME }}
         run: |
-          tar -czvf ${{ inputs.TARGET_ARTIFACT_NAME }}.tar.gz -C "${ARTIFACTS_DIR}" $(ls -1 "${ARTIFACTS_DIR}")
+          tar -czvf "${TARGET_ARTIFACT_NAME}.tar.gz" -C "${ARTIFACTS_DIR}" $(ls -1 "${ARTIFACTS_DIR}")
           echo "${GITHUB_SHA}" > hash.txt
 
       # Upload artifacts to the GCS packages bucket before the Teleport copy.
@@ -249,6 +255,7 @@ jobs:
 
       - name: Copy/Exec artifacts/commands to/on remote host
         if: ${{ inputs.UPLOAD_BUILD_ARTIFACTS }}
+        continue-on-error: ${{ inputs.TELEPORT_CONTINUE_ON_ERROR }}
         uses: ./actions/.github/actions/teleport
         with:
           EXEC_COMMANDS_PRE: "mkdir -p ${{ inputs.META_FILE_PATH_PREFIX }}"

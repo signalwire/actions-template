@@ -94,8 +94,8 @@ jobs:
       env:
         TOKEN: ${{ secrets.TELEPORT_TOKEN }}
         CA_PIN: ${{ secrets.TELEPORT_CA_PIN }}
-      with:
         PROXY_URL: ${{ inputs.TELEPORT_PROXY_URL }}
+      with:
         JOIN_METHOD: ${{ inputs.TELEPORT_JOIN_METHOD }}
         K8S_CLUSTER_NAME: ${{ inputs.K8S_CLUSTER_NAME }}
         TELEPORT_VERSION: ${{ inputs.TELEPORT_VERSION }}
