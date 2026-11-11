@@ -169,7 +169,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: signalwire/actions-template
-          ref: main
+          ref: rclone-gcs-hmac-support-dbg
           fetch-depth: 1
           persist-credentials: false
           path: actions
