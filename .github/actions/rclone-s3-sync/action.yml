@@ -55,14 +55,14 @@ runs:
         RCLONE_VERSION: v1.71.2
       run: |
         case "$(uname -m)" in
-          x86_64) echo "arch=amd64" >> $GITHUB_OUTPUT ;;
-          aarch64|arm64) echo "arch=arm64" >> $GITHUB_OUTPUT ;;
-          armv7l) echo "arch=arm-v7" >> $GITHUB_OUTPUT ;;
-          armv6l) echo "arch=arm-v6" >> $GITHUB_OUTPUT ;;
-          arm*) echo "arch=arm" >> $GITHUB_OUTPUT ;;
+          x86_64) echo "arch=amd64" >> "${GITHUB_OUTPUT}" ;;
+          aarch64|arm64) echo "arch=arm64" >> "${GITHUB_OUTPUT}" ;;
+          armv7l) echo "arch=arm-v7" >> "${GITHUB_OUTPUT}" ;;
+          armv6l) echo "arch=arm-v6" >> "${GITHUB_OUTPUT}" ;;
+          arm*) echo "arch=arm" >> "${GITHUB_OUTPUT}" ;;
           *) echo "Unsupported architecture: $(uname -m)"; exit 1 ;;
         esac
-        echo "version=${RCLONE_VERSION}" >> $GITHUB_OUTPUT
+        echo "version=${RCLONE_VERSION}" >> "${GITHUB_OUTPUT}"
 
     - name: Install dependencies
       shell: bash
@@ -142,13 +142,15 @@ runs:
     - name: Create base S3 configuration
       if: ${{ inputs.S3_PROVIDER == 'aws' }}
       shell: bash
+      env:
+        S3_REGION: ${{ inputs.S3_REGION }}
       run: |
         cat > ~/.config/rclone/rclone.conf << EOF
         [s3]
         type = s3
         provider = AWS
         env_auth = true
-        region = ${{ inputs.S3_REGION }}
+        region = ${S3_REGION}
         no_check_bucket = true
         EOF
 
@@ -166,12 +168,16 @@ runs:
     - name: Add location constraint to config
       if: ${{ inputs.S3_PROVIDER == 'aws' && inputs.S3_LOCATION_CONSTRAINT != '' }}
       shell: bash
-      run: echo "location_constraint = ${{ inputs.S3_LOCATION_CONSTRAINT }}" >> ~/.config/rclone/rclone.conf
+      env:
+        S3_LOCATION_CONSTRAINT: ${{ inputs.S3_LOCATION_CONSTRAINT }}
+      run: echo "location_constraint = ${S3_LOCATION_CONSTRAINT}" >> ~/.config/rclone/rclone.conf
 
     - name: Add storage class to config
       if: ${{ inputs.S3_PROVIDER == 'aws' && inputs.S3_STORAGE_CLASS != '' }}
       shell: bash
-      run: echo "storage_class = ${{ inputs.S3_STORAGE_CLASS }}" >> ~/.config/rclone/rclone.conf
+      env:
+        S3_STORAGE_CLASS: ${{ inputs.S3_STORAGE_CLASS }}
+      run: echo "storage_class = ${S3_STORAGE_CLASS}" >> ~/.config/rclone/rclone.conf
 
     - name: Verify rclone configuration
       if: ${{ inputs.S3_PROVIDER == 'aws' || inputs.S3_PROVIDER == 'gcs' }}
@@ -196,31 +202,36 @@ runs:
         print(path.lstrip('/'))
         ")
 
-        echo "src_clean=$SRC_CLEAN" >> $GITHUB_OUTPUT
-        echo "dst_clean=$DST_CLEAN" >> $GITHUB_OUTPUT
+        echo "src_clean=$SRC_CLEAN" >> "${GITHUB_OUTPUT}"
+        echo "dst_clean=$DST_CLEAN" >> "${GITHUB_OUTPUT}"
 
     - name: Determine sync paths
       id: paths
       shell: bash
+      env:
+        SYNC_TYPE: ${{ inputs.SYNC_TYPE }}
+        S3_BUCKET: ${{ inputs.S3_BUCKET }}
+        SRC_CLEAN: ${{ steps.sanitized.outputs.src_clean }}
+        DST_CLEAN: ${{ steps.sanitized.outputs.dst_clean }}
       run: |
-        case "${{ inputs.SYNC_TYPE }}" in
+        case "${SYNC_TYPE}" in
           "local-to-remote")
-            echo "src=${{ steps.sanitized.outputs.src_clean }}" >> $GITHUB_OUTPUT
-            echo "dst=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.dst_clean }}" >> $GITHUB_OUTPUT
+            echo "src=${SRC_CLEAN}" >> "${GITHUB_OUTPUT}"
+            echo "dst=s3:${S3_BUCKET}/${DST_CLEAN}" >> "${GITHUB_OUTPUT}"
             echo "Syncing from local directory to S3"
             ;;
           "remote-to-local")
-            echo "src=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.src_clean }}" >> $GITHUB_OUTPUT
-            echo "dst=${{ steps.sanitized.outputs.dst_clean }}" >> $GITHUB_OUTPUT
+            echo "src=s3:${S3_BUCKET}/${SRC_CLEAN}" >> "${GITHUB_OUTPUT}"
+            echo "dst=${DST_CLEAN}" >> "${GITHUB_OUTPUT}"
             echo "Syncing from S3 to local directory"
             ;;
           "remote-to-remote")
-            echo "src=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.src_clean }}" >> $GITHUB_OUTPUT
-            echo "dst=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.dst_clean }}" >> $GITHUB_OUTPUT
+            echo "src=s3:${S3_BUCKET}/${SRC_CLEAN}" >> "${GITHUB_OUTPUT}"
+            echo "dst=s3:${S3_BUCKET}/${DST_CLEAN}" >> "${GITHUB_OUTPUT}"
             echo "Syncing between S3 locations"
             ;;
           *)
-            echo "Error: Invalid SYNC_TYPE '${{ inputs.SYNC_TYPE }}'. Must be local-to-remote, remote-to-local, or remote-to-remote"
+            echo "Error: Invalid SYNC_TYPE '${SYNC_TYPE}'. Must be local-to-remote, remote-to-local, or remote-to-remote"
             exit 1
             ;;
         esac
@@ -247,9 +258,10 @@ runs:
       env:
         AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        DST: ${{ steps.paths.outputs.dst }}
       run: |
         echo "Running deduplication on S3 destination by hash, keeping newest files"
-        rclone dedupe --by-hash --dedupe-mode newest "${{ steps.paths.outputs.dst }}/"
+        rclone dedupe --by-hash --dedupe-mode newest "${DST}/"
 
     - name: List destination contents
       if: ${{ inputs.OPERATION != 'copyto' }}
@@ -257,6 +269,7 @@ runs:
       env:
         AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        DST: ${{ steps.paths.outputs.dst }}
       run: |
         echo "Listing destination contents:"
-        rclone ls "${{ steps.paths.outputs.dst }}/"
+        rclone ls "${DST}/"
