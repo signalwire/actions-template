@@ -238,7 +238,7 @@ jobs:
           DST_STRIP_REGEX: ${{ inputs.GCS_DST_STRIP_REGEX }}
           SYNC_TYPE: local-to-remote
           OPERATION: copyto
-          S3_PROVIDER: gcs
+          S3_PROVIDER: gcs-oidc
           S3_BUCKET: ${{ inputs.GCS_BUCKET }}
           GCS_WORKLOAD_IDENTITY_PROVIDER: ${{ env.GCS_WORKLOAD_IDENTITY_PROVIDER }}
 
@@ -254,7 +254,7 @@ jobs:
           DST_STRIP_REGEX: ${{ inputs.GCS_DST_STRIP_REGEX }}
           SYNC_TYPE: local-to-remote
           OPERATION: copyto
-          S3_PROVIDER: gcs
+          S3_PROVIDER: gcs-oidc
           S3_BUCKET: ${{ inputs.GCS_BUCKET }}
           GCS_WORKLOAD_IDENTITY_PROVIDER: ${{ env.GCS_WORKLOAD_IDENTITY_PROVIDER }}
 
