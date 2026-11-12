@@ -21,8 +21,8 @@ inputs:
     description: "S3 bucket name"
   S3_PROVIDER:
     required: false
-    default: "aws"
-    description: "Provider: aws (credentials from AWS_* env) or gcs (GCS_WORKLOAD_IDENTITY_PROVIDER, else Application Default Credentials already in the environment)"
+    default: "gcs"
+    description: "Provider: gcs (GCS_WORKLOAD_IDENTITY_PROVIDER, else Application Default Credentials already in the environment)"
   GCS_WORKLOAD_IDENTITY_PROVIDER:
     required: false
     default: ""
@@ -31,18 +31,6 @@ inputs:
     required: false
     default: "sync"
     description: "sync (mirror SRC to DST, deleting extras, then dedupe), copy (add/update only, never delete) or copyto (one file)"
-  S3_REGION:
-    required: false
-    default: "us-east-2"
-    description: "AWS S3 region"
-  S3_LOCATION_CONSTRAINT:
-    required: false
-    default: "us-east-2"
-    description: "AWS S3 location constraint"
-  S3_STORAGE_CLASS:
-    required: false
-    default: ""
-    description: "AWS S3 storage class"
 
 runs:
   using: "composite"
@@ -145,21 +133,6 @@ runs:
       shell: bash
       run: mkdir -p ~/.config/rclone
 
-    - name: Create base S3 configuration
-      if: ${{ inputs.S3_PROVIDER == 'aws' }}
-      shell: bash
-      env:
-        S3_REGION: ${{ inputs.S3_REGION }}
-      run: |
-        cat > ~/.config/rclone/rclone.conf << EOF
-        [s3]
-        type = s3
-        provider = AWS
-        env_auth = true
-        region = ${S3_REGION}
-        no_check_bucket = true
-        EOF
-
     - name: Create GCS configuration
       if: ${{ inputs.S3_PROVIDER == 'gcs' }}
       shell: bash
@@ -171,22 +144,8 @@ runs:
         bucket_policy_only = true
         EOF
 
-    - name: Add location constraint to config
-      if: ${{ inputs.S3_PROVIDER == 'aws' && inputs.S3_LOCATION_CONSTRAINT != '' }}
-      shell: bash
-      env:
-        S3_LOCATION_CONSTRAINT: ${{ inputs.S3_LOCATION_CONSTRAINT }}
-      run: echo "location_constraint = ${S3_LOCATION_CONSTRAINT}" >> ~/.config/rclone/rclone.conf
-
-    - name: Add storage class to config
-      if: ${{ inputs.S3_PROVIDER == 'aws' && inputs.S3_STORAGE_CLASS != '' }}
-      shell: bash
-      env:
-        S3_STORAGE_CLASS: ${{ inputs.S3_STORAGE_CLASS }}
-      run: echo "storage_class = ${S3_STORAGE_CLASS}" >> ~/.config/rclone/rclone.conf
-
     - name: Verify rclone configuration
-      if: ${{ inputs.S3_PROVIDER == 'aws' || inputs.S3_PROVIDER == 'gcs' }}
+      if: ${{ inputs.S3_PROVIDER == 'gcs' }}
       shell: bash
       run: rclone config show s3
 
@@ -245,8 +204,6 @@ runs:
     - name: Perform rclone ${{ inputs.OPERATION }}
       shell: bash
       env:
-        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
         OPERATION: ${{ inputs.OPERATION }}
         SRC: ${{ steps.paths.outputs.src }}
         DST: ${{ steps.paths.outputs.dst }}
@@ -262,8 +219,6 @@ runs:
       if: ${{ inputs.OPERATION == 'sync' && (inputs.SYNC_TYPE == 'local-to-remote' || inputs.SYNC_TYPE == 'remote-to-remote') }}
       shell: bash
       env:
-        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
         DST: ${{ steps.paths.outputs.dst }}
       run: |
         echo "Running deduplication on S3 destination by hash, keeping newest files"
@@ -273,8 +228,6 @@ runs:
       if: ${{ inputs.OPERATION != 'copyto' }}
       shell: bash
       env:
-        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
         DST: ${{ steps.paths.outputs.dst }}
       run: |
         echo "Listing destination contents:"
