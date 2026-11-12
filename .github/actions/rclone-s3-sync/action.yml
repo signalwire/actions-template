@@ -21,12 +21,12 @@ inputs:
     description: "S3 bucket name"
   S3_PROVIDER:
     required: false
-    default: "gcs"
-    description: "Provider: gcs (GCS_WORKLOAD_IDENTITY_PROVIDER, else Application Default Credentials already in the environment)"
+    default: "gcs-oidc"
+    description: "Provider: gcs-oidc (GCS_WORKLOAD_IDENTITY_PROVIDER, else Application Default Credentials already in the environment)"
   GCS_WORKLOAD_IDENTITY_PROVIDER:
     required: false
     default: ""
-    description: "gcs only: Workload Identity provider to authenticate with (needs id-token: write). Empty uses credentials already in the environment"
+    description: "gcs-oidc only: Workload Identity provider to authenticate with (needs id-token: write). Empty uses credentials already in the environment"
   OPERATION:
     required: false
     default: "sync"
@@ -35,12 +35,22 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Validate S3_PROVIDER
+      shell: bash
+      env:
+        S3_PROVIDER: ${{ inputs.S3_PROVIDER }}
+      run: |
+        case "${S3_PROVIDER}" in
+          gcs-oidc) ;;
+          *) echo "::error::Invalid S3_PROVIDER '${S3_PROVIDER}'. Must be gcs-oidc"; exit 1 ;;
+        esac
+
     - name: Detect architecture
       id: arch
       shell: bash
       env:
         # renovate: datasource=github-releases depName=rclone/rclone
-        RCLONE_VERSION: v1.71.2
+        RCLONE_VERSION: v1.76.0
       run: |
         case "$(uname -m)" in
           x86_64) echo "arch=amd64" >> "${GITHUB_OUTPUT}" ;;
@@ -63,7 +73,7 @@ runs:
     # GitHub OIDC token at Google STS. rclone reads it through Application Default Credentials.
     - name: Authenticate to Google Cloud
       id: gcp_auth
-      if: ${{ inputs.S3_PROVIDER == 'gcs' && inputs.GCS_WORKLOAD_IDENTITY_PROVIDER != '' }}
+      if: ${{ inputs.S3_PROVIDER == 'gcs-oidc' && inputs.GCS_WORKLOAD_IDENTITY_PROVIDER != '' }}
       shell: bash
       env:
         PROVIDER: ${{ inputs.GCS_WORKLOAD_IDENTITY_PROVIDER }}
@@ -133,8 +143,8 @@ runs:
       shell: bash
       run: mkdir -p ~/.config/rclone
 
-    - name: Create GCS configuration
-      if: ${{ inputs.S3_PROVIDER == 'gcs' }}
+    - name: Create GCS OIDC configuration
+      if: ${{ inputs.S3_PROVIDER == 'gcs-oidc' }}
       shell: bash
       run: |
         cat > ~/.config/rclone/rclone.conf << EOF
@@ -145,7 +155,7 @@ runs:
         EOF
 
     - name: Verify rclone configuration
-      if: ${{ inputs.S3_PROVIDER == 'gcs' }}
+      if: ${{ inputs.S3_PROVIDER == 'gcs-oidc' }}
       shell: bash
       run: rclone config show s3
 
