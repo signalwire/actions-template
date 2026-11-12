@@ -22,7 +22,7 @@ inputs:
   S3_PROVIDER:
     required: false
     default: "aws"
-    description: "Provider (mutually exclusive): aws (credentials from AWS_* env), gcs (GCS S3-interop with an HMAC key pair from AWS_* env) or gcs-oidc (GCS_WORKLOAD_IDENTITY_PROVIDER, else Application Default Credentials already in the environment)"
+    description: "Provider: aws (credentials from AWS_* env) or gcs-oidc (GCS_WORKLOAD_IDENTITY_PROVIDER, else Application Default Credentials already in the environment)"
   GCS_WORKLOAD_IDENTITY_PROVIDER:
     required: false
     default: ""
@@ -171,19 +171,6 @@ runs:
         bucket_policy_only = true
         EOF
 
-    - name: Create GCS HMAC configuration
-      if: ${{ inputs.S3_PROVIDER == 'gcs' }}
-      shell: bash
-      run: |
-        cat > ~/.config/rclone/rclone.conf << EOF
-        [s3]
-        type = s3
-        provider = GCS
-        env_auth = true
-        endpoint = https://storage.googleapis.com
-        no_check_bucket = true
-        EOF
-
     - name: Add location constraint to config
       if: ${{ inputs.S3_PROVIDER == 'aws' && inputs.S3_LOCATION_CONSTRAINT != '' }}
       shell: bash
@@ -199,7 +186,7 @@ runs:
       run: echo "storage_class = ${S3_STORAGE_CLASS}" >> ~/.config/rclone/rclone.conf
 
     - name: Verify rclone configuration
-      if: ${{ inputs.S3_PROVIDER == 'aws' || inputs.S3_PROVIDER == 'gcs' || inputs.S3_PROVIDER == 'gcs-oidc' }}
+      if: ${{ inputs.S3_PROVIDER == 'aws' || inputs.S3_PROVIDER == 'gcs-oidc' }}
       shell: bash
       run: rclone config show s3
 
