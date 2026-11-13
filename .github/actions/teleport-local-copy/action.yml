@@ -112,7 +112,7 @@ runs:
         DST: ${{ steps.gcs_paths.outputs.dst }}
         SYNC_TYPE: remote-to-remote
         OPERATION: copyto
-        S3_PROVIDER: gcs
+        S3_PROVIDER: gcs-oidc
         S3_BUCKET: gcs-prod-us-central1-ci-packages-1
         GCS_WORKLOAD_IDENTITY_PROVIDER: projects/560294807735/locations/global/workloadIdentityPools/github/providers/infrastructure-lives
 

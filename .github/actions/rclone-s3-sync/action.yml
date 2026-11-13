@@ -8,6 +8,10 @@ inputs:
   DST:
     required: true
     description: "Destination path (local directory or S3 path in bucket)"
+  DST_STRIP_REGEX:
+    required: false
+    default: ""
+    description: "Optional Python regex removed once from DST (matched against the normalized path, before the leading / is dropped), e.g. ^/var/www/"
   SYNC_TYPE:
     required: false
     default: "local-to-remote"
@@ -17,48 +21,46 @@ inputs:
     description: "S3 bucket name"
   S3_PROVIDER:
     required: false
-    default: "aws"
-    description: "Provider: aws (credentials from AWS_* env) or gcs (GCS_WORKLOAD_IDENTITY_PROVIDER, else Application Default Credentials already in the environment)"
+    default: "gcs-oidc"
+    description: "Provider: gcs-oidc (GCS_WORKLOAD_IDENTITY_PROVIDER, else Application Default Credentials already in the environment)"
   GCS_WORKLOAD_IDENTITY_PROVIDER:
     required: false
     default: ""
-    description: "gcs only: Workload Identity provider to authenticate with (needs id-token: write). Empty uses credentials already in the environment"
+    description: "gcs-oidc only: Workload Identity provider to authenticate with (needs id-token: write). Empty uses credentials already in the environment"
   OPERATION:
     required: false
     default: "sync"
     description: "sync (mirror SRC to DST, deleting extras, then dedupe), copy (add/update only, never delete) or copyto (one file)"
-  S3_REGION:
-    required: false
-    default: "us-east-2"
-    description: "AWS S3 region"
-  S3_LOCATION_CONSTRAINT:
-    required: false
-    default: "us-east-2"
-    description: "AWS S3 location constraint"
-  S3_STORAGE_CLASS:
-    required: false
-    default: ""
-    description: "AWS S3 storage class"
 
 runs:
   using: "composite"
   steps:
+    - name: Validate S3_PROVIDER
+      shell: bash
+      env:
+        S3_PROVIDER: ${{ inputs.S3_PROVIDER }}
+      run: |
+        case "${S3_PROVIDER}" in
+          gcs-oidc) ;;
+          *) echo "::error::Invalid S3_PROVIDER '${S3_PROVIDER}'. Must be gcs-oidc"; exit 1 ;;
+        esac
+
     - name: Detect architecture
       id: arch
       shell: bash
       env:
         # renovate: datasource=github-releases depName=rclone/rclone
-        RCLONE_VERSION: v1.71.2
+        RCLONE_VERSION: v1.76.0
       run: |
         case "$(uname -m)" in
-          x86_64) echo "arch=amd64" >> $GITHUB_OUTPUT ;;
-          aarch64|arm64) echo "arch=arm64" >> $GITHUB_OUTPUT ;;
-          armv7l) echo "arch=arm-v7" >> $GITHUB_OUTPUT ;;
-          armv6l) echo "arch=arm-v6" >> $GITHUB_OUTPUT ;;
-          arm*) echo "arch=arm" >> $GITHUB_OUTPUT ;;
+          x86_64) echo "arch=amd64" >> "${GITHUB_OUTPUT}" ;;
+          aarch64|arm64) echo "arch=arm64" >> "${GITHUB_OUTPUT}" ;;
+          armv7l) echo "arch=arm-v7" >> "${GITHUB_OUTPUT}" ;;
+          armv6l) echo "arch=arm-v6" >> "${GITHUB_OUTPUT}" ;;
+          arm*) echo "arch=arm" >> "${GITHUB_OUTPUT}" ;;
           *) echo "Unsupported architecture: $(uname -m)"; exit 1 ;;
         esac
-        echo "version=${RCLONE_VERSION}" >> $GITHUB_OUTPUT
+        echo "version=${RCLONE_VERSION}" >> "${GITHUB_OUTPUT}"
 
     - name: Install dependencies
       shell: bash
@@ -70,7 +72,8 @@ runs:
     # policies may not allow one): an external_account credential that exchanges the job's
     # GitHub OIDC token at Google STS. rclone reads it through Application Default Credentials.
     - name: Authenticate to Google Cloud
-      if: ${{ inputs.S3_PROVIDER == 'gcs' && inputs.GCS_WORKLOAD_IDENTITY_PROVIDER != '' }}
+      id: gcp_auth
+      if: ${{ inputs.S3_PROVIDER == 'gcs-oidc' && inputs.GCS_WORKLOAD_IDENTITY_PROVIDER != '' }}
       shell: bash
       env:
         PROVIDER: ${{ inputs.GCS_WORKLOAD_IDENTITY_PROVIDER }}
@@ -80,16 +83,20 @@ runs:
           exit 1
         fi
         creds="${RUNNER_TEMP}/gcp-wif-$(date +%s%N).json"
+        echo "previous_creds=${GOOGLE_APPLICATION_CREDENTIALS:-}" >> "${GITHUB_OUTPUT}"
         umask 077
+        # The OIDC request URL/token are read from the environment inside jq, not passed as
+        # arguments, so they never show up in the process list
         jq -n \
           --arg aud "//iam.googleapis.com/${PROVIDER}" \
-          --arg url "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=https://iam.googleapis.com/${PROVIDER}" \
-          --arg auth "Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+          --arg provider "${PROVIDER}" \
           '{type: "external_account", audience: $aud,
             subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
             token_url: "https://sts.googleapis.com/v1/token",
-            credential_source: {url: $url, headers: {Authorization: $auth},
+            credential_source: {url: ($ENV.ACTIONS_ID_TOKEN_REQUEST_URL + "&audience=https://iam.googleapis.com/" + $provider),
+                                headers: {Authorization: ("Bearer " + $ENV.ACTIONS_ID_TOKEN_REQUEST_TOKEN)},
                                 format: {type: "json", subject_token_field_name: "value"}}}' > "${creds}"
+        echo "creds_file=${creds}" >> "${GITHUB_OUTPUT}"
         echo "GOOGLE_APPLICATION_CREDENTIALS=${creds}" >> "${GITHUB_ENV}"
 
     # The release's SHA256SUMS is clearsigned with rclone's release key; trusting only that
@@ -103,7 +110,8 @@ runs:
         zip="rclone-${{ steps.arch.outputs.version }}-linux-${{ steps.arch.outputs.arch }}.zip"
         curl -fsSLO "${base}/${zip}"
         curl -fsSL -o rclone-SHA256SUMS.asc "${base}/SHA256SUMS"
-        export GNUPGHOME="$(mktemp -d)"
+        GNUPGHOME="$(mktemp -d)"
+        export GNUPGHOME
         curl -fsSL https://rclone.org/KEYS | gpg --batch --quiet --import
         gpg --batch --status-fd 1 --output rclone-SHA256SUMS --decrypt rclone-SHA256SUMS.asc \
           | grep "^\[GNUPG:\] VALIDSIG .* ${RCLONE_KEY_FINGERPRINT}$" > /dev/null \
@@ -118,7 +126,7 @@ runs:
     - name: Install rclone binary
       shell: bash
       run: |
-        cd rclone-*-linux-${{ steps.arch.outputs.arch }}
+        cd rclone-*-linux-${{ steps.arch.outputs.arch }} || exit 1
         sudo cp rclone /usr/bin/
         sudo chown root:root /usr/bin/rclone
         sudo chmod 755 /usr/bin/rclone
@@ -135,21 +143,8 @@ runs:
       shell: bash
       run: mkdir -p ~/.config/rclone
 
-    - name: Create base S3 configuration
-      if: ${{ inputs.S3_PROVIDER == 'aws' }}
-      shell: bash
-      run: |
-        cat > ~/.config/rclone/rclone.conf << EOF
-        [s3]
-        type = s3
-        provider = AWS
-        env_auth = true
-        region = ${{ inputs.S3_REGION }}
-        no_check_bucket = true
-        EOF
-
-    - name: Create GCS configuration
-      if: ${{ inputs.S3_PROVIDER == 'gcs' }}
+    - name: Create GCS OIDC configuration
+      if: ${{ inputs.S3_PROVIDER == 'gcs-oidc' }}
       shell: bash
       run: |
         cat > ~/.config/rclone/rclone.conf << EOF
@@ -159,53 +154,59 @@ runs:
         bucket_policy_only = true
         EOF
 
-    - name: Add location constraint to config
-      if: ${{ inputs.S3_PROVIDER == 'aws' && inputs.S3_LOCATION_CONSTRAINT != '' }}
-      shell: bash
-      run: echo "location_constraint = ${{ inputs.S3_LOCATION_CONSTRAINT }}" >> ~/.config/rclone/rclone.conf
-
-    - name: Add storage class to config
-      if: ${{ inputs.S3_PROVIDER == 'aws' && inputs.S3_STORAGE_CLASS != '' }}
-      shell: bash
-      run: echo "storage_class = ${{ inputs.S3_STORAGE_CLASS }}" >> ~/.config/rclone/rclone.conf
-
     - name: Verify rclone configuration
-      if: ${{ inputs.S3_PROVIDER == 'aws' || inputs.S3_PROVIDER == 'gcs' }}
+      if: ${{ inputs.S3_PROVIDER == 'gcs-oidc' }}
       shell: bash
       run: rclone config show s3
 
     - name: Sanitize paths
       id: sanitized
       shell: bash
+      env:
+        SRC: ${{ inputs.SRC }}
+        DST: ${{ inputs.DST }}
+        DST_STRIP_REGEX: ${{ inputs.DST_STRIP_REGEX }}
       run: |
-        SRC_CLEAN=$(python3 -c "import os; path=os.path.normpath('${{ inputs.SRC }}'); print(path.lstrip('/'))")
-        DST_CLEAN=$(python3 -c "import os; path=os.path.normpath('${{ inputs.DST }}'); print(path.lstrip('/'))")
+        SRC_CLEAN=$(python3 -c "import os; path=os.path.normpath(os.environ['SRC']); print(path.lstrip('/'))")
+        DST_CLEAN=$(python3 -c "
+        import os, re
+        path = os.path.normpath(os.environ['DST'])
+        pattern = os.environ['DST_STRIP_REGEX']
+        if pattern:
+            path = re.sub(pattern, '', path, count=1)
+        print(path.lstrip('/'))
+        ")
 
-        echo "src_clean=$SRC_CLEAN" >> $GITHUB_OUTPUT
-        echo "dst_clean=$DST_CLEAN" >> $GITHUB_OUTPUT
+        echo "src_clean=$SRC_CLEAN" >> "${GITHUB_OUTPUT}"
+        echo "dst_clean=$DST_CLEAN" >> "${GITHUB_OUTPUT}"
 
     - name: Determine sync paths
       id: paths
       shell: bash
+      env:
+        SYNC_TYPE: ${{ inputs.SYNC_TYPE }}
+        S3_BUCKET: ${{ inputs.S3_BUCKET }}
+        SRC_CLEAN: ${{ steps.sanitized.outputs.src_clean }}
+        DST_CLEAN: ${{ steps.sanitized.outputs.dst_clean }}
       run: |
-        case "${{ inputs.SYNC_TYPE }}" in
+        case "${SYNC_TYPE}" in
           "local-to-remote")
-            echo "src=${{ steps.sanitized.outputs.src_clean }}" >> $GITHUB_OUTPUT
-            echo "dst=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.dst_clean }}" >> $GITHUB_OUTPUT
+            echo "src=${SRC_CLEAN}" >> "${GITHUB_OUTPUT}"
+            echo "dst=s3:${S3_BUCKET}/${DST_CLEAN}" >> "${GITHUB_OUTPUT}"
             echo "Syncing from local directory to S3"
             ;;
           "remote-to-local")
-            echo "src=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.src_clean }}" >> $GITHUB_OUTPUT
-            echo "dst=${{ steps.sanitized.outputs.dst_clean }}" >> $GITHUB_OUTPUT
+            echo "src=s3:${S3_BUCKET}/${SRC_CLEAN}" >> "${GITHUB_OUTPUT}"
+            echo "dst=${DST_CLEAN}" >> "${GITHUB_OUTPUT}"
             echo "Syncing from S3 to local directory"
             ;;
           "remote-to-remote")
-            echo "src=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.src_clean }}" >> $GITHUB_OUTPUT
-            echo "dst=s3:${{ inputs.S3_BUCKET }}/${{ steps.sanitized.outputs.dst_clean }}" >> $GITHUB_OUTPUT
+            echo "src=s3:${S3_BUCKET}/${SRC_CLEAN}" >> "${GITHUB_OUTPUT}"
+            echo "dst=s3:${S3_BUCKET}/${DST_CLEAN}" >> "${GITHUB_OUTPUT}"
             echo "Syncing between S3 locations"
             ;;
           *)
-            echo "Error: Invalid SYNC_TYPE '${{ inputs.SYNC_TYPE }}'. Must be local-to-remote, remote-to-local, or remote-to-remote"
+            echo "Error: Invalid SYNC_TYPE '${SYNC_TYPE}'. Must be local-to-remote, remote-to-local, or remote-to-remote"
             exit 1
             ;;
         esac
@@ -213,8 +214,6 @@ runs:
     - name: Perform rclone ${{ inputs.OPERATION }}
       shell: bash
       env:
-        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
         OPERATION: ${{ inputs.OPERATION }}
         SRC: ${{ steps.paths.outputs.src }}
         DST: ${{ steps.paths.outputs.dst }}
@@ -230,18 +229,28 @@ runs:
       if: ${{ inputs.OPERATION == 'sync' && (inputs.SYNC_TYPE == 'local-to-remote' || inputs.SYNC_TYPE == 'remote-to-remote') }}
       shell: bash
       env:
-        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        DST: ${{ steps.paths.outputs.dst }}
       run: |
         echo "Running deduplication on S3 destination by hash, keeping newest files"
-        rclone dedupe --by-hash --dedupe-mode newest "${{ steps.paths.outputs.dst }}/"
+        rclone dedupe --by-hash --dedupe-mode newest "${DST}/"
 
     - name: List destination contents
       if: ${{ inputs.OPERATION != 'copyto' }}
       shell: bash
       env:
-        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        DST: ${{ steps.paths.outputs.dst }}
       run: |
         echo "Listing destination contents:"
-        rclone ls "${{ steps.paths.outputs.dst }}/"
+        rclone ls "${DST}/"
+
+    # Removes only the credentials file created by this invocation (it holds the GitHub OIDC
+    # request token) and restores GOOGLE_APPLICATION_CREDENTIALS to its previous value
+    - name: Remove Google Cloud credentials
+      if: ${{ always() && steps.gcp_auth.outputs.creds_file != '' }}
+      shell: bash
+      env:
+        CREDS_FILE: ${{ steps.gcp_auth.outputs.creds_file }}
+        PREVIOUS_CREDS: ${{ steps.gcp_auth.outputs.previous_creds }}
+      run: |
+        rm -f "${CREDS_FILE}"
+        echo "GOOGLE_APPLICATION_CREDENTIALS=${PREVIOUS_CREDS}" >> "${GITHUB_ENV}"
