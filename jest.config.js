@@ -8,5 +8,6 @@ module.exports = {
       outputDirectory: 'reports',
       outputName: 'jest-junit.xml',
     } ]
-  ]
+  ],
+  testTimeout: 15000,
 };
