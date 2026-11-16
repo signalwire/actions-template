@@ -75,6 +75,9 @@ jobs:
     runs-on: ${{ inputs.RUNNER }}
     name: Deploy to Swarm
     environment: ${{ inputs.ENVIRONMENT }}
+    concurrency:
+      group: swarm-deploy-${{ inputs.ENVIRONMENT }}-${{ inputs.ENDPOINT_ID }}-${{ inputs.STACK_NAME }}
+      cancel-in-progress: false
 
     steps:
     - uses: actions/checkout@v4
