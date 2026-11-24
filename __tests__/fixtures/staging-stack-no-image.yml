@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  app:
+    image: unrelated-org/other-service:latest
+    environment:
+      GIT_SHA: abc123
+    deploy:
+      replicas: 1
